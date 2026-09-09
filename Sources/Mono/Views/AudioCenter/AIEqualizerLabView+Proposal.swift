@@ -2,6 +2,57 @@ import SwiftUI
 import FFmpegSwiftSDK
 
 extension AIEqualizerLabView {
+    func usesResonanceProposalLayout(_ proposal: AIEqualizerProposal) -> Bool {
+        if let mode = proposal.skillCompliance?.executionMode {
+            return mode == .trainedCoreMLModel
+        }
+        // Legacy local proposals predate execution metadata; remote model names
+        // alone must not opt custom AI services into the Resonance layout.
+        return proposal.provider == .appleIntelligence
+            && (proposal.model.hasPrefix("mono-resonance-") || proposal.model.hasPrefix("mono-audio-"))
+    }
+
+    func resonanceProposalHeader(_ proposal: AIEqualizerProposal) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(proposal.resolvedTuningProfile.title)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(accent)
+                Text(proposal.profileName)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text(proposal.profileSpecificSummary)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.white.opacity(0.5))
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            tuningReferenceRows(for: proposal)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(proposal.confidenceDisplayText)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(accent)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let timing = proposal.timing {
+                    Text(String(
+                        format: String(localized: "ai_tuning_total_time_format"),
+                        tuningDurationText(timing.total)
+                    ))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.54))
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     func proposalSection(_ proposal: AIEqualizerProposal) -> AnyView {
         AnyView(VStack(alignment: .leading, spacing: 22) {
             erasedSection(
@@ -9,36 +60,40 @@ extension AIEqualizerLabView {
                 content: AnyView(
                 VStack(spacing: 0) {
                     VStack(alignment: .leading, spacing: 16) {
-                        HStack(alignment: .firstTextBaseline) {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text(proposal.resolvedTuningProfile.title)
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(accent)
-                                Text(proposal.profileName)
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                Text(proposal.profileSpecificSummary)
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.white.opacity(0.5))
-                                    .fixedSize(horizontal: false, vertical: true)
-                                tuningReferenceRows(for: proposal)
-                            }
-                            Spacer(minLength: 12)
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text(proposal.confidenceDisplayText)
-                                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(accent)
-                                if let timing = proposal.timing {
-                                    Text(
-                                        String(
-                                            format: String(localized: "ai_tuning_total_time_format"),
-                                            tuningDurationText(timing.total)
+                        if usesResonanceProposalLayout(proposal) {
+                            resonanceProposalHeader(proposal)
+                        } else {
+                            HStack(alignment: .firstTextBaseline) {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(proposal.resolvedTuningProfile.title)
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(accent)
+                                    Text(proposal.profileName)
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundStyle(.white)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text(proposal.profileSpecificSummary)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.5))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    tuningReferenceRows(for: proposal)
+                                }
+                                Spacer(minLength: 12)
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    Text(proposal.confidenceDisplayText)
+                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(accent)
+                                    if let timing = proposal.timing {
+                                        Text(
+                                            String(
+                                                format: String(localized: "ai_tuning_total_time_format"),
+                                                tuningDurationText(timing.total)
+                                            )
                                         )
-                                    )
-                                    .font(.system(size: 10.5, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.54))
-                                    .lineLimit(1)
+                                        .font(.system(size: 10.5, weight: .semibold))
+                                        .foregroundStyle(.white.opacity(0.54))
+                                        .lineLimit(1)
+                                    }
                                 }
                             }
                         }

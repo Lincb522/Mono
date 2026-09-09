@@ -51,6 +51,10 @@ struct NowPlayingWidgetView: View {
             TypewriterWidgetTheme(entry: entry, family: family)
         case .lyrics:
             LyricsWidgetTheme(entry: entry, family: family)
+        case .lyricsDark:
+            LyricsWidgetTheme(entry: entry, family: family, isDark: true)
+        case .lyricsCover:
+            LyricsCoverWidgetTheme(entry: entry, family: family)
         }
     }
 
@@ -83,8 +87,11 @@ struct NowPlayingWidgetView: View {
         case .typewriter:
             Color(hex: "DED0B6").ignoresSafeArea()
         case .lyrics:
-            LyricsWidgetTheme.background(for: entry)
-                .ignoresSafeArea()
+            Color.white.ignoresSafeArea()
+        case .lyricsDark:
+            Color(hex: "181818").ignoresSafeArea()
+        case .lyricsCover:
+            Color.black.ignoresSafeArea()
         }
     }
 

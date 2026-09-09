@@ -336,6 +336,7 @@ struct MonoIcon: View {
     @AppStorage(AppConfig.StorageKeys.interfaceIconSet) private var iconSetRaw: String = AppInterfaceIconSet.hicon.rawValue
     @AppStorage(AppInterfaceIconSet.zappiconStyleKey) private var zappiconStyleRaw: String = ZappiconIconStyle.light.rawValue
     @AppStorage(AppInterfaceIconSet.solarStyleKey) private var solarStyleRaw: String = SolarIconStyle.line.rawValue
+    @AppStorage(AppInterfaceIconSet.monoGlyphStyleKey) private var monoGlyphStyleRaw: String = MonoGlyphIconStyle.classic.rawValue
     
     var body: some View {
         Group {
@@ -387,7 +388,8 @@ struct MonoIcon: View {
         case .monoGlyph:
             return icon.monoGlyphImage(
                 assetId: artworkId,
-                prefersLightOutline: usesLightAdaptiveOutline
+                prefersLightOutline: usesLightAdaptiveOutline,
+                style: MonoGlyphIconStyle(rawValue: monoGlyphStyleRaw) ?? .classic
             )
         }
     }
@@ -1211,23 +1213,29 @@ extension MonoIcon.IconType {
     }
 
     var monoGlyphImage: UIImage {
-        UIImage(monoGlyphIconId: bitmapIconId, userInterfaceStyle: .light) ?? hiconImage
+        monoGlyphImage(prefersLightOutline: false)
     }
 
     func monoGlyphImage(prefersLightOutline: Bool) -> UIImage {
-        monoGlyphImage(assetId: nil, prefersLightOutline: prefersLightOutline)
+        monoGlyphImage(
+            assetId: nil,
+            prefersLightOutline: prefersLightOutline,
+            style: AppInterfaceIconSet.selectedMonoGlyphStyle
+        )
     }
 
-    func monoGlyphImage(assetId: String?, prefersLightOutline: Bool) -> UIImage {
+    func monoGlyphImage(assetId: String?, prefersLightOutline: Bool, style: MonoGlyphIconStyle) -> UIImage {
         let resolvedAssetId = assetId ?? bitmapIconId
         let requestedStyle: UIUserInterfaceStyle = prefersLightOutline ? .dark : .light
 
         return UIImage(
             monoGlyphIconId: resolvedAssetId,
-            userInterfaceStyle: requestedStyle
+            userInterfaceStyle: requestedStyle,
+            style: style
         ) ?? UIImage(
             monoGlyphIconId: bitmapIconId,
-            userInterfaceStyle: requestedStyle
+            userInterfaceStyle: requestedStyle,
+            style: style
         ) ?? hiconImage
     }
 

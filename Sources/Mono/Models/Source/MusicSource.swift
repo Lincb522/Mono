@@ -3,7 +3,7 @@
 import Foundation
 
 /// 音乐平台来源
-enum MusicSource: String, Codable, CaseIterable {
+enum MusicSource: String, Codable, CaseIterable, Sendable {
     /// ncm（默认）
     case netease = "netease"
     /// qcm

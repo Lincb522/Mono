@@ -3,6 +3,35 @@ import SwiftUI
 extension SettingsView {
     // MARK: - aside 设置主页分组（编辑部信息架构）
 
+    /// 刊头：眉题行 + 大号标题，与「我的」「音乐库」同一套编辑部版式，随滚动收缩
+    var asideSettingsMasthead: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Capsule()
+                    .fill(Color.monoAccent)
+                    .frame(width: 18, height: 3)
+
+                Text("SETTINGS")
+                    .font(.system(size: 10.5, weight: .heavy, design: .rounded))
+                    .tracking(2.4)
+                    .foregroundColor(.monoTextSecondary.opacity(0.72))
+                    .fixedSize()
+
+                Rectangle()
+                    .fill(Color.monoSeparator.opacity(0.5))
+                    .frame(height: 0.5)
+            }
+            .padding(.bottom, 14)
+
+            Text(String(localized: "settings_title"))
+                .font(.system(size: 30, weight: .heavy, design: .rounded))
+                .foregroundColor(.monoTextPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 2)
+        .monoPageHeaderCollapse()
+    }
+
     /// 分组内行间发丝分隔线
     var asideRowDivider: some View {
         Rectangle()
@@ -66,6 +95,7 @@ extension SettingsView {
 
     @ViewBuilder
     var mangaSettingsContent: some View {
+        mangaSettingsMasthead
 
         settingsHeaderCard
 
@@ -75,6 +105,18 @@ extension SettingsView {
         if qqDevMode {
             otherSection
         }
+    }
+
+    /// 周刊印刷刊头:话数眉题 + 错版标题
+    var mangaSettingsMasthead: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            MangaLabel(text: "SETUP DESK", tint: MangaStyle.labelYellow, small: true)
+
+            MangaMisprintTitle(text: String(localized: "profile_settings"), size: 26)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 2)
+        .monoPageHeaderCollapse()
     }
 
     @ViewBuilder
@@ -101,6 +143,7 @@ extension SettingsView {
 
     @ViewBuilder
     var signalSettingsContent: some View {
+        signalSettingsMasthead
         settingsHeaderCard
         asidePersonalizationSection
         asidePlaybackSection
@@ -110,6 +153,30 @@ extension SettingsView {
         if qqDevMode {
             otherSection
         }
+    }
+
+    var signalSettingsMasthead: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                SignalBreathingIndicator(size: 6)
+
+                Text("SYSTEM")
+                    .font(SignalStyle.monoFont(9, weight: .semibold))
+                    .foregroundStyle(SignalStyle.inkMuted)
+                    .tracking(1.5)
+
+                Rectangle()
+                    .fill(SignalStyle.separator.opacity(0.72))
+                    .frame(height: 0.65)
+            }
+
+            Text(String(localized: "settings_title"))
+                .font(SignalStyle.titleFont(30, weight: .semibold))
+                .foregroundStyle(SignalStyle.ink)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 4)
+        .monoPageHeaderCollapse()
     }
 
     var signalSystemSection: some View {
@@ -182,12 +249,37 @@ extension SettingsView {
 
     @ViewBuilder
     var mujiSettingsContent: some View {
+        mujiSettingsMasthead
         settingsHeaderCard
         mujiSettingsNotebook
 
         if qqDevMode {
             otherSection
         }
+    }
+
+    /// Muji 设置刊头：圆点眉题 + 衬线大标题，替代导航栏内联标题
+    var mujiSettingsMasthead: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            HStack(alignment: .center, spacing: 8) {
+                MujiDotMark()
+
+                Text("SETTINGS INDEX")
+                    .font(MujiStyle.labelFont(10, weight: .semibold))
+                    .foregroundStyle(MujiStyle.clay)
+                    .tracking(2.2)
+                    .fixedSize()
+            }
+
+            Text(String(localized: "settings_title"))
+                .font(MujiStyle.titleFont(30, weight: .medium))
+                .foregroundStyle(MujiStyle.ink)
+                .tracking(0.3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 8)
+        .padding(.bottom, 2)
+        .monoPageHeaderCollapse()
     }
 
     var petWhiteSettingsModeBoard: some View {

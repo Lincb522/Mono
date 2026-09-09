@@ -135,14 +135,6 @@ final class PlaybackPersistence {
         )
     }
 
-    private func encodedState(_ state: PlayerManager.PlayerState) -> Data? {
-        try? JSONEncoder().encode(state)
-    }
-
-    private func saveStateSnapshotToUserDefaults(_ data: Data) {
-        UserDefaults.standard.set(data, forKey: AppConfig.StorageKeys.playerStateSnapshot)
-    }
-
     private func markPersistedPlaybackProgress(from state: PlayerManager.PlayerState) {
         lastPersistedProgressIdentity = state.currentSong.map {
             PlayerManager.playbackIdentityKey(for: $0)
@@ -197,22 +189,29 @@ final class PlaybackPersistence {
         reason: String,
         synchronously: Bool = false
     ) {
-        guard let compactData = encodedState(compactState) else { return }
-        saveStateSnapshotToUserDefaults(compactData)
-        OptimizedCacheManager.shared.setObject(
+        PreferenceDataArchive.shared.save(encoding: compactState, for: .playerStateSnapshot, synchronously: synchronously)
+        let cachedSongCount = compactState.history.count
+            + (compactState.podcastHistory?.count ?? 0)
+            + (compactState.context?.count ?? 0)
+            + (compactState.shuffledContext?.count ?? 0)
+            + (compactState.playbackBackStack?.count ?? 0)
+            + (compactState.playbackForwardStack?.count ?? 0)
+            + (compactState.savedMusicContext?.count ?? 0)
+            + (compactState.savedMusicShuffledContext?.count ?? 0)
+            + (compactState.savedPodcastContext?.count ?? 0)
+        OptimizedCacheManager.shared.setObjectInBackground(
             compactState,
-            forKey: AppConfig.StorageKeys.playerState
+            forKey: AppConfig.StorageKeys.playerState,
+            estimatedCost: max(4_096, cachedSongCount * 2_048)
         )
 
         if let progress = progressJournal(from: compactState) {
             PlaybackSessionArchive.shared.saveProgress(progress)
         }
 
-        if let archiveState,
-           let archiveData = encodedState(archiveState)
-        {
+        if let archiveState {
             PlaybackSessionArchive.shared.saveSnapshot(
-                archiveData,
+                encoding: archiveState,
                 reason: reason,
                 identity: archiveState.currentSong.map {
                     PlayerManager.playbackIdentityKey(for: $0)
@@ -224,11 +223,13 @@ final class PlaybackPersistence {
         markPersistedPlaybackProgress(from: compactState)
     }
 
-    private func restoreStateSnapshotFromUserDefaults() -> PlayerManager.PlayerState? {
-        guard let data = UserDefaults.standard.data(forKey: AppConfig.StorageKeys.playerStateSnapshot) else {
+    private func restoreCompactStateSnapshot() -> PlayerManager.PlayerState? {
+        do {
+            return try PreferenceDataArchive.shared.load(PlayerManager.PlayerState.self, for: .playerStateSnapshot)
+        } catch {
+            AppLogger.error("[PlaybackPersistence] Compact snapshot could not be restored; trying playback cache", step: "storage.playback-snapshot-restore-failed")
             return nil
         }
-        return try? JSONDecoder().decode(PlayerManager.PlayerState.self, from: data)
     }
 
     private func restoreStateSnapshotFromArchive() -> (
@@ -427,7 +428,7 @@ final class PlaybackPersistence {
         let advancedEnough = abs(safeTime - lastPersistedProgressTime) >= playbackProgressPersistenceInterval
         guard songChanged || advancedEnough else { return }
 
-        // 心跳只写百字节级位置日志。完整队列和 UserDefaults 快照只在
+        // 心跳只写百字节级位置日志。完整队列和精简快照只在
         // 队列/播放状态真正改变或进入后台时保存。
         persistCurrentProgressJournal()
     }
@@ -450,7 +451,7 @@ final class PlaybackPersistence {
             return
         }
 
-        if let snapshot = restoreStateSnapshotFromUserDefaults() {
+        if let snapshot = restoreCompactStateSnapshot() {
             applyRestoredState(snapshot)
             return
         }

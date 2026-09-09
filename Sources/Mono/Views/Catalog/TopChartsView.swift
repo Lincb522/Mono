@@ -60,6 +60,57 @@ struct TopChartsView: View {
             } else {
                 VStack(spacing: 0) {
                     ScrollView {
+                        if MangaStyle.isActive {
+                            MangaPageHeader(
+                                eyebrow: "RANKING",
+                                title: String(localized: "top_charts"),
+                                subtitle: ""
+                            ) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous)
+                                        .fill(MangaStyle.bubblePink)
+                                    MonoIcon(icon: .chart, size: 23, color: MangaStyle.ink, lineWidth: 2)
+                                }
+                                .frame(width: 48, height: 48)
+                                .overlay(RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous).stroke(MangaStyle.strokeInk, lineWidth: MangaStyle.strokeWidth))
+                                .background(RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous).fill(MangaStyle.strokeInk).offset(x: MangaStyle.shadowOffset, y: MangaStyle.shadowOffset))
+                            }
+                        } else if MinimalWhiteStyle.isActive {
+                            MinimalWhitePageHeader(eyebrow: "", title: String(localized: "top_charts"), icon: .chart)
+                        } else if MujiStyle.isActive {
+                            MujiPageHeader(
+                                eyebrow: String(localized: "lib_tab_charts"),
+                                title: String(localized: "top_charts"),
+                                subtitle: ""
+                            ) {
+                                MujiIconBadge(icon: .chart, tint: MujiStyle.indigo, size: 48)
+                            }
+                        } else if NeumorphicStyle.isActive {
+                            NeumorphicPageHeader(
+                                eyebrow: "RANKING",
+                                title: String(localized: "top_charts"),
+                                subtitle: ""
+                            ) {
+                                NeumorphicIconBadge(icon: .chart, tint: NeumorphicStyle.warm, size: 48)
+                            }
+                        } else if SequoiaStyle.isActive {
+                            SequoiaPageHeader(
+                                eyebrow: "RANKING",
+                                title: String(localized: "top_charts"),
+                                subtitle: ""
+                            ) {
+                                SequoiaIconBadge(icon: .chart, tint: SequoiaStyle.violet, size: 48)
+                            }
+                        } else if BentoStyle.isActive {
+                            BentoPageHeader(
+                                eyebrow: "BENTO RANK",
+                                title: String(localized: "top_charts"),
+                                subtitle: ""
+                            ) {
+                                BentoIconBadge(icon: .chart, foreground: BentoStyle.mustard, size: 48)
+                            }
+                        }
+
                         LazyVGrid(columns: columns, spacing: 20) {
                             ForEach(topLists) { list in
                                 chartCard(list)
@@ -74,10 +125,9 @@ struct TopChartsView: View {
                 }
             }
         }
-        .navigationTitle(ThemedPageStyle.isActive ? "" : "top_charts")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "top_charts"))
+        .monoNavigationBackButton()
         .onAppear {
             loadData()
         }

@@ -656,7 +656,7 @@ final class OptimizedCacheManager: ObservableObject {
         let cacheKey = "song_\(song.identityKey)" as NSString
         storeInMemory(song as AnyObject, forKey: cacheKey)
         
-        Task.detached { @MainActor in
+        Task { @MainActor in
             self.songRepo.save(song: song)
         }
     }
@@ -670,7 +670,7 @@ final class OptimizedCacheManager: ObservableObject {
         }
         
         // 异步批量写入数据库
-        Task.detached { @MainActor in
+        Task { @MainActor in
             self.songRepo.save(songs: songs)
         }
     }
@@ -841,6 +841,16 @@ final class OptimizedCacheManager: ObservableObject {
         diskCache.setObject(object, forKey: key, ttl: ttl)
     }
 
+    func setObjectInBackground<T: Codable & Sendable>(
+        _ object: T,
+        forKey key: String,
+        estimatedCost: Int
+    ) {
+        // Make reads immediately consistent without encoding just to count bytes.
+        storeInMemory(object as AnyObject, forKey: key as NSString, cost: estimatedCost)
+        diskCache.setObjectInBackground(object, forKey: key)
+    }
+
     func clearNCMAccountData() {
         let keys = [
             AppConfig.CacheKeys.dailySongs,
@@ -898,7 +908,7 @@ final class OptimizedCacheManager: ObservableObject {
         }
         
         // 异步写入数据库
-        Task.detached { @MainActor in
+        Task { @MainActor in
             self.songRepo.save(songs: upcoming)
         }
     }

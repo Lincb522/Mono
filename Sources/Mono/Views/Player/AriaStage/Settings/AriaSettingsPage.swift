@@ -99,7 +99,7 @@ struct AriaSettingsPage: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "沉浸模式设置"))
+        .monoNavigationBackButton(iconColor: .white)
         .onAppear {
             refreshCoverAccent()
             let resolvedEffect = AriaLyricEffect.resolveStored(lyricEffectRaw)

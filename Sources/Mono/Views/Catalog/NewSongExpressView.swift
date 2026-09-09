@@ -40,6 +40,79 @@ struct NewSongExpressView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 0) {
+                        if MangaStyle.isActive {
+                            MangaPageHeader(
+                                eyebrow: "NEW SONGS",
+                                title: String(localized: "new_song_express"),
+                                subtitle: ""
+                            ) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous)
+                                        .fill(MangaStyle.labelYellow)
+                                    MonoIcon(
+                                        icon: .musicNote,
+                                        size: 23,
+                                        color: ThemeColorCustomization.readableForegroundColor(on: MangaStyle.labelYellow, light: MangaStyle.strokeInk, dark: MangaStyle.onStrokeInk),
+                                        lineWidth: 2
+                                    )
+                                }
+                                .frame(width: 48, height: 48)
+                                .overlay(RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous).stroke(MangaStyle.strokeInk, lineWidth: MangaStyle.strokeWidth))
+                                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(MangaStyle.strokeInk).offset(x: 2.5, y: 2.5))
+                            }
+                        } else if MinimalWhiteStyle.isActive {
+                            MinimalWhitePageHeader(eyebrow: "", title: String(localized: "new_song_express"), icon: .musicNote)
+                        } else if NeumorphicStyle.isActive {
+                            NeumorphicPageHeader(
+                                eyebrow: "NEW SONGS",
+                                title: String(localized: "new_song_express"),
+                                subtitle: ""
+                            ) {
+                                NeumorphicIconBadge(icon: .musicNote, tint: NeumorphicStyle.warm, size: 48)
+                            }
+                        } else if MujiStyle.isActive {
+                            MujiPageHeader(
+                                eyebrow: String(localized: "new_song_express"),
+                                title: String(localized: "new_song_express"),
+                                subtitle: ""
+                            ) {
+                                MujiIconBadge(icon: .musicNote, tint: MujiStyle.clay, size: 48)
+                            }
+                        } else if SignalStyle.isActive {
+                            SignalPageHeader(
+                                eyebrow: "NEW SONGS",
+                                title: String(localized: "new_song_express"),
+                                subtitle: ""
+                            ) {
+                                SignalIconBadge(icon: .musicNote, tint: SignalStyle.olive, size: 48)
+                            }
+                        } else if CapsuleStyle.isActive {
+                            CapsulePageHeader(
+                                eyebrow: "NEW SONGS",
+                                title: String(localized: "new_song_express"),
+                                subtitle: "\(viewModel.songs.count) \(String(localized: "songs_unit"))"
+                            ) {
+                                CapsuleIconBadge(icon: .musicNote, tint: CapsuleStyle.amber, size: 48)
+                            }
+                        } else if SequoiaStyle.isActive {
+                            SequoiaPageHeader(
+                                eyebrow: "NEW SONGS",
+                                title: String(localized: "new_song_express"),
+                                subtitle: ""
+                            ) {
+                                SequoiaIconBadge(icon: .musicNote, tint: SequoiaStyle.green, size: 48)
+                            }
+                        } else if PetWhiteStyle.isActive {
+                            PetWhitePageHeader(
+                                eyebrow: "NEW SONGS",
+                                title: String(localized: "new_song_express"),
+                                subtitle: "\(viewModel.songs.count) \(String(localized: "songs_unit"))",
+                                icon: .musicNote
+                            ) {
+                                EmptyView()
+                            }
+                        }
+
                         typeSelector
                             .padding(.top, ThemedPageStyle.isActive ? 0 : 8)
 
@@ -64,10 +137,9 @@ struct NewSongExpressView: View {
                 .themeRenderScrollLayer()
             }
         }
-        .navigationTitle(ThemedPageStyle.isActive ? "" : String(localized: "new_song_express"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "new_song_express"))
+        .monoNavigationBackButton()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

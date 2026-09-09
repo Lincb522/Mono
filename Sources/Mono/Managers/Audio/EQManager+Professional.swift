@@ -117,6 +117,17 @@ extension EQManager {
         guard isEnabled else { return }
         isAuditioningReference.toggle()
         if isAuditioningReference {
+            let player = PlayerManager.shared
+            let effects = player.audioEffects
+            referenceEffectSnapshot = AudioEffectsState(
+                bassGain: effects.bassGain,
+                trebleGain: effects.trebleGain,
+                surroundLevel: effects.surroundLevel,
+                reverbLevel: effects.reverbLevel,
+                stereoWidth: effects.stereoWidth
+            )
+            let outputCompensation = player.audioRepair.outputGainDB
+                + player.audioRepair.perceptualMakeupDB
             let sourceGains = currentPreset?.id == "custom" || currentPreset == nil
                 ? customGains
                 : (currentPreset?.gains(in: graphicEQMode) ?? customGains)
@@ -130,7 +141,7 @@ extension EQManager {
             applyProfessionalConfiguration()
             applyMonoEffectTuning()
             PlayerManager.shared.equalizer.setPreampDB(
-                min(0, max(-18, preampDB + perceivedCurveGain))
+                min(0, max(-18, preampDB + outputCompensation + perceivedCurveGain))
             )
         } else {
             if let preset = currentPreset, preset.id != "custom" {
@@ -364,7 +375,28 @@ extension EQManager {
         let configuration = isAuditioningReference
             ? .neutral
             : effectiveMonoEffectTuningForCurrentOutput()
-        player.audioEffects.applyMonoTuning(configuration)
+        if isAuditioningReference {
+            player.audioEffects.applyMonoTuning(
+                configuration,
+                bassGain: 0,
+                trebleGain: 0,
+                surroundLevel: 0,
+                reverbLevel: 0,
+                stereoWidth: 1
+            )
+        } else if let snapshot = referenceEffectSnapshot {
+            player.audioEffects.applyMonoTuning(
+                configuration,
+                bassGain: snapshot.bassGain,
+                trebleGain: snapshot.trebleGain,
+                surroundLevel: snapshot.surroundLevel,
+                reverbLevel: snapshot.reverbLevel,
+                stereoWidth: snapshot.stereoWidth ?? 1
+            )
+            referenceEffectSnapshot = nil
+        } else {
+            player.audioEffects.applyMonoTuning(configuration)
+        }
         let preservesAILevel = isAIManagedPresetActive && !isAuditioningReference
         player.audioRepair.configureOutputSafety(
             limiterEnabled: isEnabled && configuration.finalLimiterEnabled,

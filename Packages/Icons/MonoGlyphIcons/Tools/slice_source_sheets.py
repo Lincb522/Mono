@@ -13,7 +13,7 @@ ACTIVE = 108
 PALETTE = {'light': (32, 32, 32), 'dark': (245, 245, 243)}
 
 
-def bands(projection, expected):
+def bands(projection, expected, max_internal_gap=40):
     active = projection >= 3
     i = 0
     while i < len(active):
@@ -23,7 +23,7 @@ def bands(projection, expected):
         end = i
         while end < len(active) and not active[end]:
             end += 1
-        if i > 0 and end < len(active) and end-i <= 40:
+        if i > 0 and end < len(active) and end-i <= max_internal_gap:
             active[i:end] = True
         i = end
     result = []
@@ -49,10 +49,10 @@ def windows(bands, length):
     return list(zip(boundaries, boundaries[1:]))
 
 
-def grid(image, rows):
+def grid(image, rows, max_internal_gap=40):
     foreground = np.min(np.asarray(image.convert('RGB')), axis=2) < 160
-    columns = bands(foreground.sum(axis=0), 5)
-    row_bands = bands(foreground.sum(axis=1), rows)
+    columns = bands(foreground.sum(axis=0), 5, max_internal_gap)
+    row_bands = bands(foreground.sum(axis=1), rows, max_internal_gap)
     return {'columnBands': columns, 'rowBands': row_bands,
             'columnWindows': windows(columns, image.width), 'rowWindows': windows(row_bands, image.height)}
 
@@ -159,21 +159,33 @@ def variant(alpha, appearance):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check-only', action='store_true', help='Validate all crops without replacing assets.')
+    parser.add_argument('--style', choices=('classic', 'expressiveOutline'), default='classic')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[4]
     design = root/'Design/IconSystems/MonoGlyph'
+    classic_catalog = root/'Packages/Icons/MonoGlyphIcons/Sources/MonoGlyphIcons/icons.xcassets'
+    if args.style == 'expressiveOutline':
+        design /= 'ExpressiveOutline'
+    export_root = design/'BitmapRedesign' if args.style == 'classic' else design
     manifest = json.loads((design/'manifest.json').read_text())
-    catalog = root/'Packages/Icons/MonoGlyphIcons/Sources/MonoGlyphIcons/icons.xcassets'
+    catalog = classic_catalog if args.style == 'classic' else classic_catalog.with_name('expressiveOutline.xcassets')
+    prefix = '' if args.style == 'classic' else 'expressiveOutline_'
     names = [s['semantic'] for s in manifest['slots']]
-    if len(names) != 233 or len(set(names)) != 233 or set(names) != {p.stem for p in catalog.glob('*.imageset')}:
+    if len(names) != 233 or len(set(names)) != 233 or set(names) != {p.stem for p in classic_catalog.glob('*.imageset')}:
         raise ValueError('Source manifest does not match the complete 233-icon catalog.')
+    expected_sets = {prefix+name for name in names}
+    if {p.stem for p in catalog.glob('*.imageset')} - expected_sets:
+        raise ValueError('Style catalog contains unknown image sets.')
     sources, grids = {}, {}
     for source in manifest['sources']:
         path = root/source['path']
         if hashlib.sha256(path.read_bytes()).hexdigest() != source['sha256']:
             raise ValueError(f'Source checksum changed: {path}')
         sources[source['sheet']] = Image.open(path).convert('RGB')
-        grids[source['sheet']] = grid(sources[source['sheet']], source['rows'])
+        try:
+            grids[source['sheet']] = grid(sources[source['sheet']], source['rows'], source.get('maxInternalGap', 40))
+        except ValueError as error:
+            raise ValueError(f"Sheet {source['sheet']}: {error}") from error
     prepared, records = [], []
     for slot in manifest['slots']:
         sheet, cell, name = slot['sheet'], slot['cell'], slot['semantic']
@@ -194,12 +206,21 @@ def main():
         print(f'Validated all {len(prepared)} centered variants without writing assets.')
         return
     # Publish only after all source cells and all outputs have passed validation.
+    for name in names:
+        image_set = catalog/(prefix+name+'.imageset')
+        image_set.mkdir(parents=True, exist_ok=True)
+        if prefix:
+            contents = json.loads((classic_catalog/(name+'.imageset')/'Contents.json').read_text())
+            for image in contents['images']:
+                if 'filename' in image:
+                    image['filename'] = prefix+image['filename']
+            (image_set/'Contents.json').write_text(json.dumps(contents, indent=2)+'\n')
     for path, output in prepared:
         temporary = path.with_suffix('.png.tmp')
         output.save(temporary, format='PNG', optimize=True)
         temporary.replace(path)
         appearance = 'dark' if path.stem.endswith('_dark') else 'light'
-        export = design/'BitmapRedesign'/'Assets'/appearance/(path.parent.stem+'.png')
+        export = export_root/'Assets'/appearance/(path.parent.stem.removeprefix(prefix)+'.png')
         export.parent.mkdir(parents=True, exist_ok=True)
         export.write_bytes(path.read_bytes())
     report = {'canvasSize': SIZE, 'targetActiveSize': ACTIVE, 'semanticCount': len(names),

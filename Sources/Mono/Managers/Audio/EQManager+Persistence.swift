@@ -268,7 +268,7 @@ extension EQManager {
     /// 保存音效旋钮状态（低音/高音/环绕/混响，独立于 EQ）
     func saveAudioEffectsState() {
         let effects = PlayerManager.shared.audioEffects
-        let state = AudioEffectsState(
+        let state = referenceEffectSnapshot ?? AudioEffectsState(
             bassGain: effects.bassGain,
             trebleGain: effects.trebleGain,
             surroundLevel: effects.surroundLevel,

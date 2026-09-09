@@ -237,6 +237,15 @@ struct ExternalPlaylistImportView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 22) {
+                        if SignalStyle.isActive {
+                            SignalNestedPageHeader(
+                                title: String(localized: "导入歌单"),
+                                eyebrow: "DATA IMPORT",
+                                icon: .download,
+                                module: .importData
+                            )
+                        }
+
                         switch model.phase {
                         case .input, .resolving:
                             inputSection
@@ -256,9 +265,8 @@ struct ExternalPlaylistImportView: View {
                 .scrollDismissesKeyboard(.interactively)
             }
         }
-        .navigationTitle(SignalStyle.isActive ? "" : "导入歌单")
         .navigationBarTitleDisplayMode(.inline)
-        .monoNavigationBackButton(title: String(localized: "导入歌单"))
+        .monoNavigationBackButton()
         .animation(.easeInOut(duration: 0.18), value: model.phase)
         .onDisappear {
             model.cancel()

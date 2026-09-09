@@ -14,7 +14,7 @@ final class SongRepository {
 
     /// 根据 ID 获取歌曲
     func getSong(id: Int, source: MusicSource = .netease) -> CachedSong? {
-        store.first(CachedSong.self) { $0.monoUniqueKey == "\(source.rawValue):\(id)" }
+        store.object(CachedSong.self, uniqueKey: "\(source.rawValue):\(id)")
     }
 
     /// 批量获取歌曲
@@ -73,26 +73,25 @@ final class SongRepository {
 
     func save(songs: [Song]) {
         guard !songs.isEmpty else { return }
-        let keys = Set(songs.map(\.identityKey))
-        var existing = Dictionary(uniqueKeysWithValues: store.fetch(CachedSong.self, where: {
-            keys.contains($0.monoUniqueKey)
-        }).map { ($0.monoUniqueKey, $0) })
+        var existing: [String: CachedSong] = [:]
         for song in songs {
-            if let cached = existing[song.identityKey] {
+            if let cached = existing[song.identityKey]
+                ?? store.object(CachedSong.self, uniqueKey: song.identityKey) {
                 cached.update(from: song)
+                existing[song.identityKey] = cached
             } else {
                 let cached = CachedSong(from: song)
                 store.insert(cached)
                 existing[song.identityKey] = cached
             }
         }
-        store.save()
+        store.save(Array(existing.values))
     }
 
     func recordPlay(song: Song) {
         if let cached = getSong(id: song.id, source: song.musicSource) {
             cached.recordPlay()
-            store.save()
+            store.save([cached])
         }
     }
 

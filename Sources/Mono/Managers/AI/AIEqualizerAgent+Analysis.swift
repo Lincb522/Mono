@@ -5,7 +5,7 @@ import UIKit
 
 extension AIEqualizerAgent {
     func scheduleAutomaticAnalysis() {
-        guard automaticConfigurationEnabled,
+        guard isAutomaticTuningActive,
               let scheduledSong = PlayerManager.shared.currentSong,
               !scheduledSong.isAppleMusic else { return }
         let scheduledIdentifier = songIdentifier(scheduledSong)
@@ -49,7 +49,7 @@ extension AIEqualizerAgent {
             var isPlaybackReady = false
             for _ in 0..<400 {
                 guard !Task.isCancelled,
-                      self.automaticConfigurationEnabled,
+                      self.isAutomaticTuningActive,
                       self.scheduledAutomaticRunID == scheduledRunID,
                       PlayerManager.shared.currentSong.map({ self.songIdentifier($0) }) == scheduledIdentifier else {
                     return
@@ -93,8 +93,13 @@ extension AIEqualizerAgent {
 
     func runAnalysis(
         trigger: AIEqualizerAnalysisTrigger = .manual,
-        forceRegeneration: Bool = false
+        forceRegeneration: Bool = false,
+        preferInstalledModel: Bool = false
     ) async {
+        guard tuningServiceStore.settings.isEnabled else {
+            if trigger == .manual { phase = .failed(String(localized: "ai_tuning_service_disabled")) }
+            return
+        }
         guard let song = PlayerManager.shared.currentSong else {
             phase = .failed(AIEqualizerError.noSong.localizedDescription)
             return
@@ -119,7 +124,10 @@ extension AIEqualizerAgent {
             }
         }
 
+        generationStage = .preparing
+        phase = .requesting
         let managedAgent = await AppAgentConfigurationStore.shared.agentConfiguration(.equalizer)
+        guard !Task.isCancelled, activeAnalysisRunID == analysisRunID, isCurrentSong(song) else { return }
         if let managedAgent, !managedAgent.enabled {
             phase = .failed(AIEqualizerError.modelUnavailable.localizedDescription)
             return
@@ -136,38 +144,56 @@ extension AIEqualizerAgent {
         )
         let outputIdentity = currentOutputIdentity()
         let onDeviceModelIdentity: String?
-        if AppConfig.DeveloperAccess.hasFullTools {
-            onDeviceModelIdentity = await AudioTrainingOnDeviceModelStore.shared.activeIdentity()
-        } else {
-            onDeviceModelIdentity = nil
-        }
-
+        let modelPreparationStartedAt = Date()
         let requestContext: AIProviderRequestContext
+        let selectedService = tuningServiceStore.settings.service
+        let usesTrainingPreview = preferInstalledModel && AppConfig.DeveloperAccess.hasFullTools
         do {
-            requestContext = try await resolvedProviderRequestContext()
-        } catch {
-            guard let onDeviceModelIdentity else {
-                if isCurrentSong(song) {
-                    phase = .failed(error.localizedDescription)
+            if usesTrainingPreview {
+                await AudioTrainingOnDeviceModelStore.shared.clearDistributedAuthorization()
+                guard let identity = await AudioTrainingOnDeviceModelStore.shared.activeIdentity() else {
+                    throw AIResonanceDistributionError.modelUnavailable
                 }
-                return
+                onDeviceModelIdentity = identity
+                requestContext = AIProviderRequestContext(
+                    configuration: AIProviderConfiguration(
+                        wireProtocol: .appleIntelligence, baseURL: "", model: identity,
+                        modelDiscoveryURL: "", timeout: 120, customHeadersJSON: "{}"
+                    ), apiKey: "", usageLimits: nil, persistsDiscoveredModel: false
+                )
+            } else if selectedService == .resonance {
+                generationStage = .preparingModel
+                onDeviceModelIdentity = try await AIResonanceUpdateStore.shared.prepareForTuning()
+                try Task.checkCancellation()
+                guard activeAnalysisRunID == analysisRunID, isCurrentSong(song) else { return }
+                guard let model = AIResonanceUpdateStore.shared.tuningModel else {
+                    throw AIResonanceDistributionError.modelUnavailable
+                }
+                requestContext = AIProviderRequestContext(
+                    configuration: AIProviderConfiguration(
+                        wireProtocol: .appleIntelligence, baseURL: "", model: onDeviceModelIdentity ?? "",
+                        modelDiscoveryURL: "", timeout: 120, customHeadersJSON: "{}"
+                    ), apiKey: "", usageLimits: nil, persistsDiscoveredModel: false,
+                    requiredDistributedModelIdentity: model.distributionIdentity
+                )
+            } else {
+                onDeviceModelIdentity = nil
+                await AudioTrainingOnDeviceModelStore.shared.clearDistributedAuthorization()
+                try Task.checkCancellation()
+                guard activeAnalysisRunID == analysisRunID, isCurrentSong(song) else { return }
+                requestContext = try await resolvedProviderRequestContext(service: selectedService)
             }
-            requestContext = AIProviderRequestContext(
-                configuration: AIProviderConfiguration(
-                    wireProtocol: .appleIntelligence,
-                    baseURL: "",
-                    model: onDeviceModelIdentity,
-                    modelDiscoveryURL: "",
-                    timeout: 120,
-                    customHeadersJSON: "{}"
-                ),
-                apiKey: "",
-                usageLimits: nil,
-                persistsDiscoveredModel: false
-            )
+        } catch is CancellationError {
+            return
+        } catch {
+            if activeAnalysisRunID == analysisRunID, isCurrentSong(song) {
+                phase = .failed(error.localizedDescription)
+            }
+            return
         }
+        let modelPreparationElapsed = Date().timeIntervalSince(modelPreparationStartedAt)
         let configuration = requestContext.configuration
-        guard isCurrentSong(song) else { return }
+        guard !Task.isCancelled, activeAnalysisRunID == analysisRunID, isCurrentSong(song) else { return }
         let runStartedAt = Date()
         tuningStartedAt = runStartedAt
         let samplingDuration = resolvedSamplingDuration(for: song)
@@ -201,6 +227,24 @@ extension AIEqualizerAgent {
             provider: configuration.wireProtocol.rawValue,
             model: configuration.resolvedModel
         )
+        if let identity = onDeviceModelIdentity {
+            AIAgentTraceStore.shared.append(
+                traceID,
+                category: .conversation,
+                stage: .configuration,
+                title: "共鸣 · 模型准备",
+                detail: "模型配置与本地安装已准备完成，可开始推理。\n模型标识 = \(identity)",
+                durationSeconds: modelPreparationElapsed,
+                metadata: [
+                    "recordType": "local-coreml-preparation",
+                    "modelSource": "on-device-coreml",
+                    "provider": "Core ML",
+                    "model": String(identity.split(separator: ":").first ?? ""),
+                    "selection": usesTrainingPreview ? "training-preview" : selectedService.rawValue,
+                    "preparationMilliseconds": String(format: "%.3f", modelPreparationElapsed * 1_000)
+                ]
+            )
+        }
         AIAgentTraceStore.shared.append(
             traceID,
             category: .reasoning,
@@ -260,7 +304,7 @@ extension AIEqualizerAgent {
             ]
         )
         let toolPolicyRevision = skillExecution.policy.revision ?? "bundled-v1"
-        let cacheKey = "\(currentAgentVersion)|\(MonoAudioTuningTool.version)|mono-agent-v6|learning:\(learningRevision)|learningStrength:\(learningStrength.rawValue)|skillFingerprint:\(skillExecution.fingerprint)|skillRevision:\(skillExecution.runtime.revision)|toolPolicy:\(toolPolicyRevision)|trainedCoreML:\(onDeviceModelIdentity ?? "none")|\(graphicEQMode.rawValue)|\(song.musicSource.rawValue)|\(song.id)|\(audioVariant)|\(configuration.wireProtocol.rawValue)|\(configuration.resolvedModel)|\(outputIdentity)|\(deviceTuningIdentity)|\(samplingMode.rawValue)|\(Int(samplingDuration.rounded()))|\(requestedIntensity.rawValue)|\(requestedProfile.rawValue)"
+        let cacheKey = "\(currentAgentVersion)|\(MonoAudioTuningTool.version)|mono-agent-v6|service:\(usesTrainingPreview ? "trainingPreview" : selectedService.rawValue)|provider:\(requestContext.cacheIdentity)|learning:\(learningRevision)|learningStrength:\(learningStrength.rawValue)|skillFingerprint:\(skillExecution.fingerprint)|skillRevision:\(skillExecution.runtime.revision)|toolPolicy:\(toolPolicyRevision)|trainedCoreML:\(onDeviceModelIdentity ?? "none")|\(graphicEQMode.rawValue)|\(song.musicSource.rawValue)|\(song.id)|\(audioVariant)|\(configuration.wireProtocol.rawValue)|\(configuration.resolvedModel)|\(outputIdentity)|\(deviceTuningIdentity)|\(samplingMode.rawValue)|\(Int(samplingDuration.rounded()))|\(requestedIntensity.rawValue)|\(requestedProfile.rawValue)"
         if !forceRegeneration,
            let cached = proposalCache.value(
                for: cacheKey,
@@ -436,6 +480,10 @@ extension AIEqualizerAgent {
                 onDeviceModelIdentity: onDeviceModelIdentity,
                 traceID: traceID
             )
+            try Task.checkCancellation()
+            guard activeAnalysisRunID == analysisRunID, isCurrentSong(song) else {
+                throw CancellationError()
+            }
             let output = generation.output
             let generationElapsed = generation.elapsed
             let compilationStartedAt = Date()
@@ -695,7 +743,8 @@ extension AIEqualizerAgent {
         error: Error,
         trigger: AIEqualizerAnalysisTrigger
     ) {
-        if trigger == .automatic, !automaticConfigurationEnabled { return }
+        guard tuningServiceStore.settings.isEnabled else { return }
+        if trigger == .automatic, !isAutomaticTuningActive { return }
         guard let aiError = error as? AIEqualizerError else { return }
         switch aiError {
         case .sampleUnavailable, .playbackRequired:
@@ -734,7 +783,7 @@ extension AIEqualizerAgent {
                   PlayerManager.shared.currentSong.map({ self.songIdentifier($0) }) == identifier else {
                 return
             }
-            if trigger == .automatic, !self.automaticConfigurationEnabled { return }
+            if trigger == .automatic, !self.isAutomaticTuningActive { return }
 
             // Sampling must never force playback. Wait for the existing player to
             // become usable so a transient audio-route or decoder interruption can
@@ -818,8 +867,12 @@ extension AIEqualizerAgent {
             deviceTuningTarget: deviceTuningTarget,
             skillRuntime: skillRuntime
         )
-        if onDeviceModelIdentity != nil, AppConfig.DeveloperAccess.hasFullTools {
+        if onDeviceModelIdentity != nil {
             do {
+                if let expected = requestContext.requiredDistributedModelIdentity,
+                   AIResonanceUpdateStore.shared.tuningModel?.distributionIdentity != expected {
+                    throw AIResonanceDistributionError.modelUnavailable
+                }
                 generationStage = .generating
                 phase = .requesting
                 let prediction = try await AudioTrainingOnDeviceModelStore.shared.predict(
@@ -828,9 +881,14 @@ extension AIEqualizerAgent {
                     tuningIntensity: requestedIntensity,
                     tuningProfile: requestedProfile,
                     learningContext: learningContext,
-                    deviceTrainingContext: deviceTrainingContext
+                    deviceTrainingContext: deviceTrainingContext,
+                    expectedModelIdentity: onDeviceModelIdentity
                 )
                 try Task.checkCancellation()
+                if let expected = requestContext.requiredDistributedModelIdentity,
+                   AIResonanceUpdateStore.shared.tuningModel?.distributionIdentity != expected {
+                    throw AIResonanceDistributionError.modelUnavailable
+                }
                 guard isCurrentSong(song), EQManager.shared.graphicEQMode == graphicEQMode else {
                     throw AIEqualizerError.noSong
                 }
@@ -845,7 +903,7 @@ extension AIEqualizerAgent {
                     category: .conversation,
                     level: review.isAccepted ? .success : .error,
                     stage: .model,
-                    title: "本地 Core ML 模型详细记录",
+                    title: "\(prediction.modelVersion.hasPrefix("mono-resonance-s2-") ? "共鸣 S2" : "共鸣 S1") · 本地推理",
                     detail: localModelTrace(
                         prediction: prediction,
                         review: review
@@ -854,7 +912,13 @@ extension AIEqualizerAgent {
                     metadata: [
                         "recordType": "local-coreml-inference",
                         "modelSource": "on-device-coreml",
+                        "provider": "Core ML",
                         "model": prediction.modelVersion,
+                        "modelID": prediction.modelID,
+                        "modelSHA256": prediction.modelSHA256,
+                        "tuningProfile": requestedProfile.rawValue,
+                        "confidence": prediction.output.confidenceCalibration?.displayText
+                            ?? String(localized: "audio_training_confidence_uncalibrated"),
                         "featureSchemaVersion": String(prediction.featureSchemaVersion),
                         "targetSchemaVersion": String(prediction.targetSchemaVersion),
                         "eqMode": prediction.graphicEQMode.rawValue,
@@ -867,6 +931,22 @@ extension AIEqualizerAgent {
                         "trackCorrectionStrength": String(format: "%.2f", prediction.trackCorrectionStrength),
                         "fallbackOutputCount": String(prediction.fallbackOutputCount),
                         "validationAccepted": review.isAccepted ? "true" : "false"
+                    ]
+                )
+                AIAgentTraceStore.shared.append(
+                    traceID,
+                    category: .conversation,
+                    level: prediction.output.confidenceCalibration == nil ? .warning : .success,
+                    stage: .validation,
+                    title: "共鸣 · 置信度校准",
+                    detail: localModelCalibrationTrace(prediction: prediction),
+                    metadata: [
+                        "recordType": "local-coreml-confidence-calibration",
+                        "modelSource": "on-device-coreml",
+                        "provider": "Core ML",
+                        "model": prediction.modelVersion,
+                        "confidenceCalibrated": prediction.output.confidenceCalibration == nil ? "false" : "true",
+                        "calibrationBranch": "\(graphicEQMode.rawValue):\(requestedProfile.rawValue)"
                     ]
                 )
                 guard review.isAccepted else {
@@ -902,6 +982,7 @@ extension AIEqualizerAgent {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
+                if requestContext.requiresTrainedModel { throw error }
                 AIAgentTraceStore.shared.append(
                     traceID,
                     category: .reasoning,
@@ -1267,6 +1348,9 @@ extension AIEqualizerAgent {
         var sections = [
             "模型来源 = 手机端 Core ML",
             "模型版本 = \(prediction.modelVersion)",
+            "模型 ID = \(prediction.modelID)",
+            "模型 SHA-256 = \(prediction.modelSHA256)",
+            "参数回退数量 = \(prediction.fallbackOutputCount)",
             "特征 schema = \(prediction.featureSchemaVersion)",
             "目标 schema = \(prediction.targetSchemaVersion)",
             "均衡器模式 = \(prediction.graphicEQMode.rawValue)",
@@ -1283,7 +1367,7 @@ extension AIEqualizerAgent {
             tensorTrace(title: "群体先验输入", values: prediction.inference.priorInput),
             tensorTrace(title: "群体先验原始输出", values: prediction.inference.priorOutput),
             tensorTrace(title: "混合后输出", values: prediction.inference.blendedOutput),
-            "预测置信度 = 未校准",
+            localModelCalibrationTrace(prediction: prediction),
             "",
             "模型解码输出",
             traceJSON(prediction.output)
@@ -1310,6 +1394,32 @@ extension AIEqualizerAgent {
             "校验摘要 = \(review.summary)",
             "校验问题 = \(review.issues.isEmpty ? "无" : review.issues.map { "\($0.code)：\($0.detail)" }.joined(separator: "；"))"
         ])
+        return sections.joined(separator: "\n")
+    }
+
+    private func localModelCalibrationTrace(prediction: AudioTrainingOnDevicePrediction) -> String {
+        var sections = [
+            "校准范围 = 模型预测的图示 EQ，与独立歌曲的参考参数比较；不含后续设备补偿、个人修正和其他 DSP 参数。",
+            "统计单位 = 独立歌曲；同歌的频段与成对上下文取最大误差。",
+            "适用条件 = 新歌曲与校准歌曲在同一分支内可交换；置信水平不是主观音质的成功概率。"
+        ]
+        if let evidence = prediction.output.confidenceCalibration {
+            sections.append(contentsOf: [
+                "校准结果 = \(evidence.displayText)",
+                "分支 = \(evidence.branch)",
+                "独立校准歌曲 = \(evidence.tracks)",
+                "分位次序 = \(evidence.quantileRank)",
+                "方法 = \(evidence.method)"
+            ])
+        } else {
+            sections.append("校准结果 = 不可用；模型缺少有效独立校准结果，或当前分支与校准时的混合系数不一致。")
+        }
+        if let calibration = prediction.confidenceCalibration {
+            sections.append("模型携带的完整校准记录")
+            sections.append(traceJSON(calibration))
+        } else {
+            sections.append("模型文件没有携带置信度校准记录，需要使用新校准流程重新训练。")
+        }
         return sections.joined(separator: "\n")
     }
 

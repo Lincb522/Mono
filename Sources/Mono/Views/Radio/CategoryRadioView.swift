@@ -48,6 +48,15 @@ struct CategoryRadioView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: ThemedPageStyle.listSpacing) {
+                        if SignalStyle.isActive {
+                            SignalNestedPageHeader(
+                                title: category.name,
+                                eyebrow: "RADIO DIRECTORY",
+                                icon: .radio,
+                                module: .radio
+                            )
+                        }
+
                         ForEach(Array(viewModel.radios.enumerated()), id: \.element.id) { index, radio in
                             NavigationLink(value: PodcastView.PodcastDestination.radioDetail(radio.id)) {
                                 radioRow(radio: radio, index: index + 1)
@@ -85,7 +94,7 @@ struct CategoryRadioView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: category.name)
+        .monoNavigationBackButton()
         .onAppear {
             if viewModel.radios.isEmpty {
                 viewModel.fetchRadios()

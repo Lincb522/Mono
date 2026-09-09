@@ -26,7 +26,9 @@ extension WidgetTheme: AppEnum {
         .dashboard: "仪表盘",
         .soundwave: "声波",
         .typewriter: "打字机",
-        .lyrics: "歌词",
+        .lyrics: "歌词排版",
+        .lyricsDark: "歌词排版（深色）",
+        .lyricsCover: "专辑封面",
     ]
 }
 

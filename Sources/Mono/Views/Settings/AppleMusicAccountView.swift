@@ -10,6 +10,18 @@ struct AppleMusicAccountView: View {
 
     var body: some View {
         List {
+            if SignalStyle.isActive {
+                SignalNestedPageHeader(
+                    title: "Apple Music",
+                    eyebrow: "MEDIA ACCESS",
+                    icon: .personCircle,
+                    module: .accounts
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
             Section("授权") {
                 HStack(spacing: 12) {
                     PlatformBadgeLabel(
@@ -52,9 +64,8 @@ struct AppleMusicAccountView: View {
         .scrollContentBackground(.hidden)
         .claritySettingsListStyle()
         .background(ThemedPageBackground())
-        .navigationTitle(SignalStyle.isActive ? "" : "Apple Music")
         .navigationBarTitleDisplayMode(.inline)
-        .monoNavigationBackButton(title: "Apple Music")
+        .monoNavigationBackButton()
         .onAppear {
             service.refreshAuthorizationStatus()
         }

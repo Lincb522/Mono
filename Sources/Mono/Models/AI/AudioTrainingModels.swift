@@ -92,6 +92,11 @@ struct AudioTrainingJobStatus: Codable, Equatable, Sendable {
 }
 
 struct AudioTrainingModelStatus: Codable, Equatable, Sendable {
+    struct ReleasePreview: Codable, Equatable, Sendable {
+        var summary: String
+        var notes: String
+    }
+
     struct Metrics: Codable, Equatable, Sendable {
         struct BranchValidation: Codable, Equatable, Sendable {
             var samples: Int
@@ -102,6 +107,7 @@ struct AudioTrainingModelStatus: Codable, Equatable, Sendable {
             var trackEQMAEP90DB: Double?
             var targetFamilyMSE: [String: Double]?
         }
+        var confidenceCalibration: AudioTrainingConfidenceCalibration?
         var branchValidation: [String: BranchValidation]?
         var conditionValidation: [String: BranchValidation]?
         var architecture: String?
@@ -186,6 +192,11 @@ struct AudioTrainingModelStatus: Codable, Equatable, Sendable {
     var createdBy: String?
     var createdAt: String
     var coreMLArtifact: AudioTrainingCoreMLArtifactStatus?
+    var fileName: String? = nil
+    var release: AudioTrainingModelRelease? = nil
+    var releasePreview: ReleasePreview? = nil
+
+    var displayName: String { AudioTrainingModelPresentation.name(version: version, createdAt: createdAt) }
 }
 
 struct AudioTrainingCoreMLArtifactStatus: Codable, Equatable, Sendable {
@@ -242,22 +253,6 @@ struct AudioTrainingInstalledModelStatus: Codable, Equatable, Sendable {
     }
 }
 
-struct AudioTrainingModelInstallDescriptor: Sendable {
-    var id: String
-    var version: String
-    var sha256: String
-    var byteCount: Int
-    var featureSchemaVersion: Int
-    var targetSchemaVersion: Int
-    var completeSampleCount: Int
-    var legacySampleCount: Int
-    var learningConditionedSampleCount: Int
-    var deviceConditionedSampleCount: Int
-    var completeAccountCount: Int = 0
-    var completeBranchSampleCounts: [String: Int] = [:]
-    var completeBranchAccountCounts: [String: Int] = [:]
-    var qualityWarnings: [String] = []
-}
 
 enum AudioTrainingComputeMode: String, CaseIterable, Codable, Identifiable, Sendable {
     case all
@@ -370,6 +365,7 @@ struct AudioTrainingStatusResponse: Decodable, Sendable {
     var dataset: AudioTrainingDatasetStatus
     var currentJob: AudioTrainingJobStatus?
     var currentModel: AudioTrainingModelStatus?
+    var publishedModel: AudioTrainingModelStatus? = nil
 }
 
 struct AudioTrainingSettingsResponse: Decodable, Sendable {

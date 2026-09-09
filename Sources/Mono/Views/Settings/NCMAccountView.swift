@@ -12,6 +12,18 @@ struct NCMAccountView: View {
 
     var body: some View {
         List {
+            if SignalStyle.isActive {
+                SignalNestedPageHeader(
+                    title: "NCM 账号",
+                    eyebrow: "ACCOUNT NODE",
+                    icon: .personCircle,
+                    module: .accounts
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
             Section("账号") {
                 accountRow
             }
@@ -40,9 +52,8 @@ struct NCMAccountView: View {
         .scrollContentBackground(.hidden)
         .claritySettingsListStyle()
         .background(ThemedPageBackground())
-        .navigationTitle(SignalStyle.isActive ? "" : "NCM 账号")
         .navigationBarTitleDisplayMode(.inline)
-        .monoNavigationBackButton(title: "NCM 账号")
+        .monoNavigationBackButton()
         .onReceive(HomeViewModel.shared.$userProfile.removeDuplicates()) {
             userProfile = $0
         }

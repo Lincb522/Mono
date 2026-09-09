@@ -303,3 +303,12 @@ DesignAssets/AsideIconSystem/aside-design-dna.md
 !/Packages/Icons/MonoGlyphIcons/Tools/slice_source_sheets.py
 !/Design/IconSystems/MonoGlyph/slicing-report.json
 !/Design/IconSystems/MonoGlyph/validation-report.json
+
+# Optional MONO Glyph expressive outline bitmap sources and crop evidence.
+!/Design/IconSystems/MonoGlyph/ExpressiveOutline/*.png
+!/Design/IconSystems/MonoGlyph/ExpressiveOutline/*.json
+/Design/Themes/
+
+# Resonance S2 distribution regressions.
+!/Scripts/Tests/resonance_distribution_regressions.py
+!/Scripts/Tests/resonance_distribution_fixture.swift

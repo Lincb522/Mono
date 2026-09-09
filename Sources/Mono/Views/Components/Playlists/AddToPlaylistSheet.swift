@@ -95,7 +95,8 @@ struct AddToPlaylistSheet: View {
                     ThemedPageBackground()
                 }
             }
-            .themedNavigationChrome(title: String(localized: "add_to_playlist_title"), eyebrow: "PLAYLIST", icon: .addToQueue)
+            .navigationTitle("")
+            .toolbar(.visible, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {

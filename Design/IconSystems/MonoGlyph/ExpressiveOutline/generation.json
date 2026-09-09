@@ -1,0 +1,1803 @@
+{
+  "family": "MONO Glyph",
+  "style": "expressiveOutline",
+  "sheets": [
+    {
+      "id": "00",
+      "file": "sheet-00.png",
+      "source": "reference.png",
+      "icons": [
+        {
+          "name": "play",
+          "label": "播放",
+          "group": "播放",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "pause",
+          "label": "暂停",
+          "group": "播放",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "next",
+          "label": "下一首",
+          "group": "播放",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "previous",
+          "label": "上一首",
+          "group": "播放",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "like",
+          "label": "喜欢",
+          "group": "播放",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "list",
+          "label": "列表",
+          "group": "操作",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "album",
+          "label": "专辑",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "headphones",
+          "label": "耳机",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "microphone",
+          "label": "麦克风",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "download",
+          "label": "下载",
+          "group": "操作",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "settings",
+          "label": "设置",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "equalizer",
+          "label": "均衡器",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "soundQuality",
+          "label": "音质",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "cloud",
+          "label": "云端",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "clock",
+          "label": "时钟",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "magnifyingGlass",
+          "label": "搜索",
+          "group": "操作",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "trash",
+          "label": "删除",
+          "group": "操作",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "share",
+          "label": "分享",
+          "group": "操作",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "comment",
+          "label": "评论",
+          "group": "媒体与内容",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "audioAgent",
+          "label": "音频助手",
+          "group": "AI 调音",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "参考图基础图标",
+      "prompt": null,
+      "correctionPrompt": null,
+      "generatedPath": "/var/folders/jm/tvw7g6bj62nc3167sp_wrbmm0000gn/T/codex-clipboard-9f5892ec-69fb-4c9e-ac1b-bd398afe17a6.png"
+    },
+    {
+      "id": "01",
+      "file": "sheet-01.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: home [首页] — rounded house with a small curved smile; podcast [播客] — round podcast bubble with two short expressive eyes; library [音乐库] — rounded little suitcase with a small curved smile; search [搜索] — round magnifying glass with a small smile; profile [我的] — soft droplet face with two short eyes.\nRow 2: homeFilled [首页 · 选中] — SELECTED filled state; podcastFilled [播客 · 选中] — SELECTED filled state; libraryFilled [音乐库 · 选中] — SELECTED filled state; profileFilled [我的 · 选中] — SELECTED filled state; stop [停止].\nRow 3: liked [已喜欢] — SELECTED filled state; repeatMode [列表循环]; repeatOne [单曲循环]; shuffle [随机播放]; refresh [刷新].\nRow 4: playCircle [圆形播放]; playCircleFill [圆形播放 · 实心] — SELECTED filled state; playNext [下一首播放]; addToQueue [加入播放队列]; rewind15 [后退 15 秒].\nTreat names beginning with cat as CONTENT CATEGORIES, not cats. Never print the identifiers or Chinese labels. Use 2048 x 2048 if available.",
+      "icons": [
+        {
+          "name": "home",
+          "label": "首页",
+          "group": "导航",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "podcast",
+          "label": "播客",
+          "group": "导航",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "library",
+          "label": "音乐库",
+          "group": "导航",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "search",
+          "label": "搜索",
+          "group": "导航",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "profile",
+          "label": "我的",
+          "group": "导航",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "homeFilled",
+          "label": "首页 · 选中",
+          "group": "导航",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "podcastFilled",
+          "label": "播客 · 选中",
+          "group": "导航",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "libraryFilled",
+          "label": "音乐库 · 选中",
+          "group": "导航",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "profileFilled",
+          "label": "我的 · 选中",
+          "group": "导航",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "stop",
+          "label": "停止",
+          "group": "播放",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "liked",
+          "label": "已喜欢",
+          "group": "播放",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "repeatMode",
+          "label": "列表循环",
+          "group": "播放",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "repeatOne",
+          "label": "单曲循环",
+          "group": "播放",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "shuffle",
+          "label": "随机播放",
+          "group": "播放",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "refresh",
+          "label": "刷新",
+          "group": "播放",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "playCircle",
+          "label": "圆形播放",
+          "group": "播放",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "playCircleFill",
+          "label": "圆形播放 · 实心",
+          "group": "播放",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "playNext",
+          "label": "下一首播放",
+          "group": "播放",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "addToQueue",
+          "label": "加入播放队列",
+          "group": "播放",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "rewind15",
+          "label": "后退 15 秒",
+          "group": "播放",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "导航 · 播放",
+      "correctionPrompt": "Edit this PNG icon sheet. Preserve the pure white background, thick black round outline style, icon scale, and the strict five-column four-row grid. Replace ONLY row 4 column 5, the bottom-right icon, with a COUNTERCLOCKWISE circular rewind arrow enclosing the clearly legible number 15. Keep the circular arrow as a thick round monoline. Arrowhead on upper left pointing to the left. Numeral 15 instead of the smile in this one icon; no play triangle. Preserve the other 19 icons and their exact positions.",
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-eb4ab4df-f0a3-4c65-8c18-f50fc390508e.png",
+      "sha256": "03d7358e08f4097b7fd3a228d259b1a267d8759541133c7e7f6b33b493acf680",
+      "podcastReplacement": {
+        "method": "built-in image generation; raster extraction and compositing only",
+        "source": "Design/IconSystems/MonoGlyph/BitmapRedesign/podcast-voice-bubble-source.png",
+        "sourceSHA256": "b247a654a63eefd38c33e0c162cca96eec67b21bf14620d92b7e6f23dc4fcf73",
+        "prompt": "Use case: logo-brand. Design a minimal MONO music-app PODCAST icon as a soft SOUND BUBBLE, using the attached original reference for its restrained geometric personality, confident round black contours, and tiny expressive incisions. Exactly four matched icon variants on a pure white 1254 square PNG sheet, evenly centered in a 2x2 grid with generous whitespace. This must be as visually simple as the five reference icons: one outer contour plus only TWO SHORT interior marks. Shape: a softly asymmetric oval speech bubble, subtly wider than tall, with one very short integrated tail at lower LEFT (subtle soft corner, not a separate triangle), top gently convex, no bottom stalk. Inside only two vertical rounded voice slots, the left slightly shorter than the right, subtly tilted together. No third mark, no smile, no lines surrounding the shape. Top row classic family: left regular thick outline black on white with two black voice slots, right same exact silhouette filled black and two white slots. Bottom row expressive family: same simple voice-bubble concept with a softer plumper contour and slightly jauntier slots, left outline, right solid; matching normal/selected pairs must have identical geometry. Keep the thick outline 7-8 percent of icon width, interior slots chunky but SHORT, like the eyes on the rightmost reference icon. Each icon approx 270 pixels wide, optically balanced, flat crisp monochrome black with clean white cutouts, no texture or shading. Premium compact rounded geometric mark, not a literal equipment illustration. Absolutely NO microphones, headphones, headsets, radio, antennas, soundwave rings, people, central stem, mouths, gradients, shadows, text, labels, extra decorative elements. The two rows should feel like siblings in the same MONO family, not four different concepts.",
+        "cells": [
+          {
+            "semantic": "podcast",
+            "variantCell": 3,
+            "targetWindow": [
+              275,
+              0,
+              511,
+              404
+            ],
+            "targetArtworkPosition": [
+              47,
+              226
+            ],
+            "targetArtworkSize": [
+              143,
+              117
+            ]
+          },
+          {
+            "semantic": "podcastFilled",
+            "variantCell": 4,
+            "targetWindow": [
+              275,
+              404,
+              511,
+              640
+            ],
+            "targetArtworkPosition": [
+              45,
+              61
+            ],
+            "targetArtworkSize": [
+              145,
+              116
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "02",
+      "file": "sheet-02.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: forward15 [前进 15 秒]; skipBack [快退]; skipForward [快进]; add [添加]; close [关闭].\nRow 2: xmark [关闭]; checkmark [完成]; more [更多]; back [返回]; chevronRight [向右].\nRow 3: chevronLeft [向左]; chevronDown [展开]; chevronUp [收起]; playerDownload [下载歌曲]; arrowDownToLine [保存到本地].\nRow 4: arrowDownCircle [下载 · 圆形]; send [发送]; copy [复制]; rename [重命名]; link [链接].\nTreat names beginning with cat as CONTENT CATEGORIES, not cats. Never print the identifiers or Chinese labels. Use 2048 x 2048 if available.",
+      "icons": [
+        {
+          "name": "forward15",
+          "label": "前进 15 秒",
+          "group": "播放",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "skipBack",
+          "label": "快退",
+          "group": "播放",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "skipForward",
+          "label": "快进",
+          "group": "播放",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "add",
+          "label": "添加",
+          "group": "操作",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "close",
+          "label": "关闭",
+          "group": "操作",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "xmark",
+          "label": "关闭",
+          "group": "操作",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "checkmark",
+          "label": "完成",
+          "group": "操作",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "more",
+          "label": "更多",
+          "group": "操作",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "back",
+          "label": "返回",
+          "group": "操作",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "chevronRight",
+          "label": "向右",
+          "group": "操作",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "chevronLeft",
+          "label": "向左",
+          "group": "操作",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "chevronDown",
+          "label": "展开",
+          "group": "操作",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "chevronUp",
+          "label": "收起",
+          "group": "操作",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "playerDownload",
+          "label": "下载歌曲",
+          "group": "操作",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "arrowDownToLine",
+          "label": "保存到本地",
+          "group": "操作",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "arrowDownCircle",
+          "label": "下载 · 圆形",
+          "group": "操作",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "send",
+          "label": "发送",
+          "group": "操作",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "copy",
+          "label": "复制",
+          "group": "操作",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "rename",
+          "label": "重命名",
+          "group": "操作",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "link",
+          "label": "链接",
+          "group": "操作",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "播放 · 操作",
+      "correctionPrompt": "Edit this PNG icon sheet. Preserve the pure white background, thick black round outline style, icon scale, and the strict five-column four-row grid. Replace ONLY row 1 column 1, the top-left icon, with a CLOCKWISE circular forward arrow enclosing the clearly legible number 15. Arrowhead on upper right points to the right. Number 15 inside the circular arrow; no play triangle and no smile in this one icon. Preserve the other 19 icons and their exact positions.",
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-3b6f9c63-b7a1-4e30-acd1-3a9617852c72.png"
+    },
+    {
+      "id": "03",
+      "file": "sheet-03.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: filter [筛选]; fullscreen [全屏]; expandScreen [展开屏幕]; shrinkScreen [收拢屏幕]; xmarkCircle [关闭 · 圆形].\nRow 2: selectionCircle [未选择]; heartSlash [取消喜欢]; musicNote [音乐]; musicNoteList [歌曲列表]; micSlash [关闭麦克风].\nRow 3: karaoke [逐字歌词]; translate [翻译]; quote [引用]; hitokoto [一言]; radio [电台].\nRow 4: fm [私人 FM]; fmMode [FM 模式]; waveform [波形]; audioWave [音频]; mv [MV].\nTreat names beginning with cat as CONTENT CATEGORIES, not cats. Never print the identifiers or Chinese labels. Use 2048 x 2048 if available.",
+      "icons": [
+        {
+          "name": "filter",
+          "label": "筛选",
+          "group": "操作",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "fullscreen",
+          "label": "全屏",
+          "group": "操作",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "expandScreen",
+          "label": "展开屏幕",
+          "group": "操作",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "shrinkScreen",
+          "label": "收拢屏幕",
+          "group": "操作",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "xmarkCircle",
+          "label": "关闭 · 圆形",
+          "group": "操作",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "selectionCircle",
+          "label": "未选择",
+          "group": "操作",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "heartSlash",
+          "label": "取消喜欢",
+          "group": "操作",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "musicNote",
+          "label": "音乐",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "musicNoteList",
+          "label": "歌曲列表",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "micSlash",
+          "label": "关闭麦克风",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "karaoke",
+          "label": "逐字歌词",
+          "group": "媒体与内容",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "translate",
+          "label": "翻译",
+          "group": "媒体与内容",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "quote",
+          "label": "引用",
+          "group": "媒体与内容",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "hitokoto",
+          "label": "一言",
+          "group": "媒体与内容",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "radio",
+          "label": "电台",
+          "group": "媒体与内容",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "fm",
+          "label": "私人 FM",
+          "group": "媒体与内容",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "fmMode",
+          "label": "FM 模式",
+          "group": "媒体与内容",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "waveform",
+          "label": "波形",
+          "group": "媒体与内容",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "audioWave",
+          "label": "音频",
+          "group": "媒体与内容",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "mv",
+          "label": "MV",
+          "group": "媒体与内容",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "操作 · 媒体与内容",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-bdef8a49-d647-4887-b76c-1111905748b0.png"
+    },
+    {
+      "id": "04",
+      "file": "sheet-04.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: immersive [沉浸模式]; instrumentalLyrics [纯音乐]; chart [排行榜]; emoji [表情]; personEmpty [用户].\nRow 2: personCircle [用户 · 圆形]; storage [存储空间]; save [保存]; history [历史记录]; bell [通知].\nRow 3: info [信息]; infoCircle [信息 · 圆形]; warning [警告]; lock [锁定]; unlock [解锁].\nRow 4: phone [手机]; qr [二维码]; haptic [触感反馈]; sparkle [智能]; sun [浅色外观].\nTreat names beginning with cat as CONTENT CATEGORIES, not cats. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Use 2048 x 2048 if available.",
+      "icons": [
+        {
+          "name": "immersive",
+          "label": "沉浸模式",
+          "group": "媒体与内容",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "instrumentalLyrics",
+          "label": "纯音乐",
+          "group": "媒体与内容",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "chart",
+          "label": "排行榜",
+          "group": "媒体与内容",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "emoji",
+          "label": "表情",
+          "group": "媒体与内容",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "personEmpty",
+          "label": "用户",
+          "group": "媒体与内容",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "personCircle",
+          "label": "用户 · 圆形",
+          "group": "媒体与内容",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "storage",
+          "label": "存储空间",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "save",
+          "label": "保存",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "history",
+          "label": "历史记录",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "bell",
+          "label": "通知",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "info",
+          "label": "信息",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "infoCircle",
+          "label": "信息 · 圆形",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "warning",
+          "label": "警告",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "lock",
+          "label": "锁定",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "unlock",
+          "label": "解锁",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "phone",
+          "label": "手机",
+          "group": "设置与状态",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "qr",
+          "label": "二维码",
+          "group": "设置与状态",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "haptic",
+          "label": "触感反馈",
+          "group": "设置与状态",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "sparkle",
+          "label": "智能",
+          "group": "设置与状态",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "sun",
+          "label": "浅色外观",
+          "group": "设置与状态",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "媒体与内容 · 设置与状态",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-7b53012f-5514-486a-a916-124d31b9a270.png"
+    },
+    {
+      "id": "05",
+      "file": "sheet-05.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: moon [深色外观]; halfCircle [跟随系统]; gift [礼物]; maintenance [维护]; policyDocument [政策文档].\nRow 2: trendUp [上升趋势]; trendDown [下降趋势]; logInfo [信息日志]; logDebug [调试日志]; logError [错误日志].\nRow 3: logNetwork [网络日志]; logSuccess [成功日志]; gestureTap [点按手势]; gestureSwipeHorizontal [横滑手势]; gridSquare [网格].\nRow 4: layers [图层]; playerTheme [播放器主题]; tabBar [底部导航]; systemTabBar [系统导航栏]; minimalBar [极简播放条].\nTreat names beginning with cat as CONTENT CATEGORIES, not cats. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Use 2048 x 2048 if available.",
+      "icons": [
+        {
+          "name": "moon",
+          "label": "深色外观",
+          "group": "设置与状态",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "halfCircle",
+          "label": "跟随系统",
+          "group": "设置与状态",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "gift",
+          "label": "礼物",
+          "group": "设置与状态",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "maintenance",
+          "label": "维护",
+          "group": "设置与状态",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "policyDocument",
+          "label": "政策文档",
+          "group": "设置与状态",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "trendUp",
+          "label": "上升趋势",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "trendDown",
+          "label": "下降趋势",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "logInfo",
+          "label": "信息日志",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "logDebug",
+          "label": "调试日志",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "logError",
+          "label": "错误日志",
+          "group": "设置与状态",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "logNetwork",
+          "label": "网络日志",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "logSuccess",
+          "label": "成功日志",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "gestureTap",
+          "label": "点按手势",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "gestureSwipeHorizontal",
+          "label": "横滑手势",
+          "group": "设置与状态",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "gridSquare",
+          "label": "网格",
+          "group": "界面与外观",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "layers",
+          "label": "图层",
+          "group": "界面与外观",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "playerTheme",
+          "label": "播放器主题",
+          "group": "界面与外观",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "tabBar",
+          "label": "底部导航",
+          "group": "界面与外观",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "systemTabBar",
+          "label": "系统导航栏",
+          "group": "界面与外观",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "minimalBar",
+          "label": "极简播放条",
+          "group": "界面与外观",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "设置与状态 · 界面与外观",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-5f6e3a94-e6fc-4cec-ad63-c80257546404.png"
+    },
+    {
+      "id": "06",
+      "file": "sheet-06.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: floatingBall [悬浮球]; floatingBarStyle [悬浮条样式]; interfaceIconSet [界面图标]; themeStyle [主题]; appearanceMode [外观模式].\nRow 2: colorEngine [配色]; gradientStyle [渐变]; backgroundImage [背景图片]; backgroundGlobal [全局背景]; backgroundPlayer [播放器背景].\nRow 3: backgroundPlaylist [歌单背景]; fluidBackground [流动背景]; liquidGlass [液态玻璃]; appBrand [MONO 标识]; catMusic [音乐].\nRow 4: catLife [生活]; catEmotion [情感]; catCreate [创作]; catAcg [动漫]; catEntertain [娱乐].\nTreat names beginning with cat as CONTENT CATEGORIES, not cats. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Use 2048 x 2048 if available.",
+      "icons": [
+        {
+          "name": "floatingBall",
+          "label": "悬浮球",
+          "group": "界面与外观",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "floatingBarStyle",
+          "label": "悬浮条样式",
+          "group": "界面与外观",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "interfaceIconSet",
+          "label": "界面图标",
+          "group": "界面与外观",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "themeStyle",
+          "label": "主题",
+          "group": "界面与外观",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "appearanceMode",
+          "label": "外观模式",
+          "group": "界面与外观",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "colorEngine",
+          "label": "配色",
+          "group": "界面与外观",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "gradientStyle",
+          "label": "渐变",
+          "group": "界面与外观",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "backgroundImage",
+          "label": "背景图片",
+          "group": "界面与外观",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "backgroundGlobal",
+          "label": "全局背景",
+          "group": "界面与外观",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "backgroundPlayer",
+          "label": "播放器背景",
+          "group": "界面与外观",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "backgroundPlaylist",
+          "label": "歌单背景",
+          "group": "界面与外观",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "fluidBackground",
+          "label": "流动背景",
+          "group": "界面与外观",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "liquidGlass",
+          "label": "液态玻璃",
+          "group": "界面与外观",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "appBrand",
+          "label": "MONO 标识",
+          "group": "界面与外观",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "catMusic",
+          "label": "音乐",
+          "group": "电台分类",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "catLife",
+          "label": "生活",
+          "group": "电台分类",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "catEmotion",
+          "label": "情感",
+          "group": "电台分类",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "catCreate",
+          "label": "创作",
+          "group": "电台分类",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "catAcg",
+          "label": "动漫",
+          "group": "电台分类",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "catEntertain",
+          "label": "娱乐",
+          "group": "电台分类",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "界面与外观 · 电台分类",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-a58bf976-7e61-4356-8cb4-21a544ddde2c.png"
+    },
+    {
+      "id": "07",
+      "file": "sheet-07.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: catTalkshow [脱口秀]; catBook [有声书]; catKnowledge [知识]; catBusiness [商业]; catHistory [历史].\nRow 2: catNews [新闻]; catParenting [亲子]; catTravel [旅行]; catCrosstalk [相声]; catFood [美食].\nRow 3: catTech [科技]; catDefault [综合]; catPodcast [播客节目]; catElectronic [电子音乐]; catStar [明星].\nRow 4: catDrama [广播剧]; catStory [故事]; catOther [其他分类]; catPublish [出版]; volumeMute [静音]. Treat names beginning with cat as CONTENT CATEGORIES, not cats. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Volume mute must have an X and no arcs; volumeLow exactly one arc, volumeMedium exactly two arcs, volumeHigh exactly three arcs. Use 2048x2048 if available.",
+      "icons": [
+        {
+          "name": "catTalkshow",
+          "label": "脱口秀",
+          "group": "电台分类",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "catBook",
+          "label": "有声书",
+          "group": "电台分类",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "catKnowledge",
+          "label": "知识",
+          "group": "电台分类",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "catBusiness",
+          "label": "商业",
+          "group": "电台分类",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "catHistory",
+          "label": "历史",
+          "group": "电台分类",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "catNews",
+          "label": "新闻",
+          "group": "电台分类",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "catParenting",
+          "label": "亲子",
+          "group": "电台分类",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "catTravel",
+          "label": "旅行",
+          "group": "电台分类",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "catCrosstalk",
+          "label": "相声",
+          "group": "电台分类",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "catFood",
+          "label": "美食",
+          "group": "电台分类",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "catTech",
+          "label": "科技",
+          "group": "电台分类",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "catDefault",
+          "label": "综合",
+          "group": "电台分类",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "catPodcast",
+          "label": "播客节目",
+          "group": "电台分类",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "catElectronic",
+          "label": "电子音乐",
+          "group": "电台分类",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "catStar",
+          "label": "明星",
+          "group": "电台分类",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "catDrama",
+          "label": "广播剧",
+          "group": "电台分类",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "catStory",
+          "label": "故事",
+          "group": "电台分类",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "catOther",
+          "label": "其他分类",
+          "group": "电台分类",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "catPublish",
+          "label": "出版",
+          "group": "电台分类",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "volumeMute",
+          "label": "静音",
+          "group": "音效与设备",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "电台分类 · 音效与设备",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-212b43db-250e-4d58-ac2a-fcfe269ad58e.png"
+    },
+    {
+      "id": "08",
+      "file": "sheet-08.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: volumeLow [低音量]; volumeMedium [中音量]; volumeHigh [高音量]; soundCenter [音效中心]; soundWorkspaceAI [智能调音].\nRow 2: soundWorkspaceCustomEQ [自定义均衡器]; soundWorkspaceEnhancement [声音增强]; soundWorkspaceOutput [输出设备]; gameMode [游戏模式]; gameModePower [游戏电源].\nRow 3: gamePresetFPS [射击游戏]; gamePresetRPG [角色扮演]; gamePresetRhythm [节奏游戏]; gameVoicePriority [语音优先]; gameLowerQuality [降低音质].\nRow 4: gameAutoExit [自动退出]; gameSilentNowPlaying [静默播放状态]; gameMinimalNowPlaying [精简播放状态]; gamePreferredQuality [优选音质]; gameAutoPlaylist [自动歌单]. Treat names beginning with cat as CONTENT CATEGORIES, not cats. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Volume mute must have an X and no arcs; volumeLow exactly one arc, volumeMedium exactly two arcs, volumeHigh exactly three arcs. Use 2048x2048 if available.",
+      "icons": [
+        {
+          "name": "volumeLow",
+          "label": "低音量",
+          "group": "音效与设备",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "volumeMedium",
+          "label": "中音量",
+          "group": "音效与设备",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "volumeHigh",
+          "label": "高音量",
+          "group": "音效与设备",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "soundCenter",
+          "label": "音效中心",
+          "group": "音效与设备",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "soundWorkspaceAI",
+          "label": "智能调音",
+          "group": "音效与设备",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "soundWorkspaceCustomEQ",
+          "label": "自定义均衡器",
+          "group": "音效与设备",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "soundWorkspaceEnhancement",
+          "label": "声音增强",
+          "group": "音效与设备",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "soundWorkspaceOutput",
+          "label": "输出设备",
+          "group": "音效与设备",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "gameMode",
+          "label": "游戏模式",
+          "group": "游戏模式",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "gameModePower",
+          "label": "游戏电源",
+          "group": "游戏模式",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "gamePresetFPS",
+          "label": "射击游戏",
+          "group": "游戏模式",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "gamePresetRPG",
+          "label": "角色扮演",
+          "group": "游戏模式",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "gamePresetRhythm",
+          "label": "节奏游戏",
+          "group": "游戏模式",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "gameVoicePriority",
+          "label": "语音优先",
+          "group": "游戏模式",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "gameLowerQuality",
+          "label": "降低音质",
+          "group": "游戏模式",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "gameAutoExit",
+          "label": "自动退出",
+          "group": "游戏模式",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "gameSilentNowPlaying",
+          "label": "静默播放状态",
+          "group": "游戏模式",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "gameMinimalNowPlaying",
+          "label": "精简播放状态",
+          "group": "游戏模式",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "gamePreferredQuality",
+          "label": "优选音质",
+          "group": "游戏模式",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "gameAutoPlaylist",
+          "label": "自动歌单",
+          "group": "游戏模式",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "音效与设备 · 游戏模式",
+      "correctionPrompt": "Edit this PNG icon sheet. Preserve the pure white background, thick black round outline style, icon scale, and the strict five-column four-row grid. Replace ONLY the TOP ROW with exactly FIVE icons, left to right: (1) speaker with ONE sound arc and small smile (low volume); (2) speaker with exactly TWO sound arcs and small smile (medium volume); (3) speaker with exactly THREE sound arcs and small smile (high volume); (4) a round sound center with smile and four surrounding rounded arcs; (5) friendly rounded brain with a small sparkle representing AI sound tuning. NO MUTE SPEAKER in this sheet. Preserve rows 2,3,4 unchanged: sliders, enhancement sparkle, headphones, controller, controller power; target, sword, music note, voice microphone, descending quality bars; exit, silent note, mini player, quality badge, automatic music list.",
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-71c9f1c1-3cca-449c-a7e9-3afefaa0926b.png"
+    },
+    {
+      "id": "09",
+      "file": "sheet-09.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: agentAutoTuning [自动调音]; agentAdaptiveLearning [自适应学习]; agentPlayerStatus [播放状态]; agentSkillMeasurement [声学测量]; agentSkillDeviceCoordination [设备协同].\nRow 2: agentSkillHeadroomGuard [余量保护]; agentSkillPhaseGuard [相位保护]; agentSkillOutputValidation [输出校验]; agentSkillArtistReference [歌手参考]; agentSkillVocalReference [人声参考].\nRow 3: agentCustomSkill [自定义技能]; agentManagedSkill [托管技能]; agentAddCustomSkill [添加技能]; agentEditCustomSkill [编辑技能]; aiTuningWorkspace [调音工作区].\nRow 4: aiMeasurementWorkspace [测量工作区]; aiResultWorkspace [调音结果]; aiHistoryWorkspace [调音历史]; agentAnalyze [开始分析]; agentStopAnalysis [停止分析]. Treat names beginning with cat as CONTENT CATEGORIES, not cats. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Volume mute must have an X and no arcs; volumeLow exactly one arc, volumeMedium exactly two arcs, volumeHigh exactly three arcs. Use 2048x2048 if available.",
+      "icons": [
+        {
+          "name": "agentAutoTuning",
+          "label": "自动调音",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "agentAdaptiveLearning",
+          "label": "自适应学习",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "agentPlayerStatus",
+          "label": "播放状态",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "agentSkillMeasurement",
+          "label": "声学测量",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "agentSkillDeviceCoordination",
+          "label": "设备协同",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "agentSkillHeadroomGuard",
+          "label": "余量保护",
+          "group": "AI 调音",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "agentSkillPhaseGuard",
+          "label": "相位保护",
+          "group": "AI 调音",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "agentSkillOutputValidation",
+          "label": "输出校验",
+          "group": "AI 调音",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "agentSkillArtistReference",
+          "label": "歌手参考",
+          "group": "AI 调音",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "agentSkillVocalReference",
+          "label": "人声参考",
+          "group": "AI 调音",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "agentCustomSkill",
+          "label": "自定义技能",
+          "group": "AI 调音",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "agentManagedSkill",
+          "label": "托管技能",
+          "group": "AI 调音",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "agentAddCustomSkill",
+          "label": "添加技能",
+          "group": "AI 调音",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "agentEditCustomSkill",
+          "label": "编辑技能",
+          "group": "AI 调音",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "aiTuningWorkspace",
+          "label": "调音工作区",
+          "group": "AI 调音",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "aiMeasurementWorkspace",
+          "label": "测量工作区",
+          "group": "AI 调音",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "aiResultWorkspace",
+          "label": "调音结果",
+          "group": "AI 调音",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "aiHistoryWorkspace",
+          "label": "调音历史",
+          "group": "AI 调音",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "agentAnalyze",
+          "label": "开始分析",
+          "group": "AI 调音",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "agentStopAnalysis",
+          "label": "停止分析",
+          "group": "AI 调音",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "AI 调音",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-c669ec1e-f547-4ce9-96a0-65bd3cbb7a01.png"
+    },
+    {
+      "id": "10",
+      "file": "sheet-10.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 20 icons, 4 rows. Row 1: agentReanalyze [重新分析]; agentApplySavedProposal [应用已存方案]; learningEnabled [开启学习]; learningStrength [学习强度]; learningRetention [保留偏好].\nRow 2: learningSourceFeedback [反馈来源]; learningSourceListening [聆听来源]; learningSourceAdjustments [调节来源]; learningLocalStorage [本地学习数据]; learningFeedbackPositive [喜欢此调音].\nRow 3: learningFeedbackNegative [不喜欢此调音]; learningFeedbackRetained [保留调音]; learningFeedbackReset [重置学习]; learningFeedbackRegenerated [重新生成]; learningFeedbackManualEQ [手动均衡反馈].\nRow 4: agentTraceRoot [执行记录]; agentTraceOverview [记录概览]; agentExecutionChain [执行链]; agentCurrentSkills [当前技能]; agentToolContract [工具契约]. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Use 2048x2048 if available.",
+      "icons": [
+        {
+          "name": "agentReanalyze",
+          "label": "重新分析",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "agentApplySavedProposal",
+          "label": "应用已存方案",
+          "group": "AI 调音",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "learningEnabled",
+          "label": "开启学习",
+          "group": "偏好学习",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "learningStrength",
+          "label": "学习强度",
+          "group": "偏好学习",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "learningRetention",
+          "label": "保留偏好",
+          "group": "偏好学习",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "learningSourceFeedback",
+          "label": "反馈来源",
+          "group": "偏好学习",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "learningSourceListening",
+          "label": "聆听来源",
+          "group": "偏好学习",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "learningSourceAdjustments",
+          "label": "调节来源",
+          "group": "偏好学习",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "learningLocalStorage",
+          "label": "本地学习数据",
+          "group": "偏好学习",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "learningFeedbackPositive",
+          "label": "喜欢此调音",
+          "group": "偏好学习",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "learningFeedbackNegative",
+          "label": "不喜欢此调音",
+          "group": "偏好学习",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "learningFeedbackRetained",
+          "label": "保留调音",
+          "group": "偏好学习",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "learningFeedbackReset",
+          "label": "重置学习",
+          "group": "偏好学习",
+          "row": 3,
+          "column": 3
+        },
+        {
+          "name": "learningFeedbackRegenerated",
+          "label": "重新生成",
+          "group": "偏好学习",
+          "row": 3,
+          "column": 4
+        },
+        {
+          "name": "learningFeedbackManualEQ",
+          "label": "手动均衡反馈",
+          "group": "偏好学习",
+          "row": 3,
+          "column": 5
+        },
+        {
+          "name": "agentTraceRoot",
+          "label": "执行记录",
+          "group": "执行记录",
+          "row": 4,
+          "column": 1
+        },
+        {
+          "name": "agentTraceOverview",
+          "label": "记录概览",
+          "group": "执行记录",
+          "row": 4,
+          "column": 2
+        },
+        {
+          "name": "agentExecutionChain",
+          "label": "执行链",
+          "group": "执行记录",
+          "row": 4,
+          "column": 3
+        },
+        {
+          "name": "agentCurrentSkills",
+          "label": "当前技能",
+          "group": "执行记录",
+          "row": 4,
+          "column": 4
+        },
+        {
+          "name": "agentToolContract",
+          "label": "工具契约",
+          "group": "执行记录",
+          "row": 4,
+          "column": 5
+        }
+      ],
+      "title": "AI 调音 · 偏好学习 · 执行记录",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-fe9b293d-9108-4b75-998b-c360c4da10ff.png"
+    },
+    {
+      "id": "11",
+      "file": "sheet-11.png",
+      "prompt": "Create a crisp high-resolution PNG icon sheet for MONO Glyph, the EXPRESSION OUTLINE variant. The attached image is the authoritative style reference: match its exact visual family, line weight relative to icon size, gently irregular rounded geometry, and sparse expressive faces. Black ink on pure white. Friendly enclosed outlined objects with transparent-looking white interiors, thick smooth monoline contours with round caps, small curved smiles or two short vertical eyes. Flat 2D icon artwork only. Keep marks sparse and readable; functional recognition comes first. Every suitable enclosed icon should have a small expression as in the reference; open arrows and mathematical symbols can stay pure rounded strokes when a face would obscure their meaning. DO NOT use generic thin system icons, solid blob silhouettes for unselected icons, gradients, shadows, textures, 3D, labels, numerals outside the artwork, captions or decorative borders. For explicitly SELECTED states, keep the same outline silhouette but fill the main body charcoal with tiny white facial marks, so selection stays visible. Consistent optical size, ample whitespace. Strict 5-column grid, icon positions reading left to right, top to bottom. Exactly 13 icons, 3 rows. On the last row put the last three icons in columns 1–3, leave columns 4–5 blank. Row 1: agentRuntimeResult [运行结果]; agentRuntimeIdentity [运行身份]; agentRawRecords [原始记录]; agentTraceStageConfiguration [配置阶段]; agentTraceStageSkills [技能阶段].\nRow 2: agentTraceStageMeasurement [测量阶段]; agentTraceStageModel [模型阶段]; agentTraceStageTool [工具阶段]; agentTraceStageValidation [校验阶段]; agentTraceStageApplication [应用阶段].\nRow 3: agentTraceStageCompilation [编译阶段]; agentTraceStageFallback [回退阶段]; agentTraceStageCompletion [完成阶段]. Never print identifiers or labels outside icons. Draw recognizably different symbols for the requested functions. Use 2048x2048 if available.",
+      "icons": [
+        {
+          "name": "agentRuntimeResult",
+          "label": "运行结果",
+          "group": "执行记录",
+          "row": 1,
+          "column": 1
+        },
+        {
+          "name": "agentRuntimeIdentity",
+          "label": "运行身份",
+          "group": "执行记录",
+          "row": 1,
+          "column": 2
+        },
+        {
+          "name": "agentRawRecords",
+          "label": "原始记录",
+          "group": "执行记录",
+          "row": 1,
+          "column": 3
+        },
+        {
+          "name": "agentTraceStageConfiguration",
+          "label": "配置阶段",
+          "group": "执行记录",
+          "row": 1,
+          "column": 4
+        },
+        {
+          "name": "agentTraceStageSkills",
+          "label": "技能阶段",
+          "group": "执行记录",
+          "row": 1,
+          "column": 5
+        },
+        {
+          "name": "agentTraceStageMeasurement",
+          "label": "测量阶段",
+          "group": "执行记录",
+          "row": 2,
+          "column": 1
+        },
+        {
+          "name": "agentTraceStageModel",
+          "label": "模型阶段",
+          "group": "执行记录",
+          "row": 2,
+          "column": 2
+        },
+        {
+          "name": "agentTraceStageTool",
+          "label": "工具阶段",
+          "group": "执行记录",
+          "row": 2,
+          "column": 3
+        },
+        {
+          "name": "agentTraceStageValidation",
+          "label": "校验阶段",
+          "group": "执行记录",
+          "row": 2,
+          "column": 4
+        },
+        {
+          "name": "agentTraceStageApplication",
+          "label": "应用阶段",
+          "group": "执行记录",
+          "row": 2,
+          "column": 5
+        },
+        {
+          "name": "agentTraceStageCompilation",
+          "label": "编译阶段",
+          "group": "执行记录",
+          "row": 3,
+          "column": 1
+        },
+        {
+          "name": "agentTraceStageFallback",
+          "label": "回退阶段",
+          "group": "执行记录",
+          "row": 3,
+          "column": 2
+        },
+        {
+          "name": "agentTraceStageCompletion",
+          "label": "完成阶段",
+          "group": "执行记录",
+          "row": 3,
+          "column": 3
+        }
+      ],
+      "title": "执行记录",
+      "correctionPrompt": null,
+      "generatedPath": "/Users/linchengbo/.codex/generated_images/01a07316-b4ac-7f01-96c9-713c6de9ea28/exec-8cab9b48-4f29-4977-a591-cf1e00674ec9.png"
+    }
+  ]
+}

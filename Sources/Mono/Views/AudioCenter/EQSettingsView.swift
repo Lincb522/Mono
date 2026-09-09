@@ -1484,7 +1484,7 @@ private struct EQProfessionalSettingsView: View {
         .environment(\.colorScheme, .dark)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "eq_professional_mode"))
+        .monoNavigationBackButton(iconColor: .white)
         .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
             manager.handleAudioRouteChanged()

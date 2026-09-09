@@ -23,6 +23,13 @@ struct CloudSyncSettingsView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "settings_navigation_cloud_sync_title"),
+                        eyebrow: String(localized: "settings_eyebrow_cloud"),
+                        icon: .cloud,
+                        signalModule: .cloud
+                    )
+
                     VStack(alignment: .leading, spacing: 16) {
                         statusPanel
                         cloudContentSection
@@ -38,7 +45,7 @@ struct CloudSyncSettingsView: View {
             .coordinateSpace(name: SettingsPageLayout.scrollCoordinateSpace)
             .themeRenderScrollLayer()
         }
-        .asideSettingsDetailChrome(String(localized: "settings_navigation_cloud_sync_title"))
+        .asideSettingsDetailChrome()
         .onChange(of: settings.playlistSyncAutoEnabled) { _, enabled in
             guard enabled else { return }
             playlistCloudSync.resumeAutomaticSync()

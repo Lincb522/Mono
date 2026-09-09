@@ -6,6 +6,58 @@
 
 import Foundation
 
+/// Shared by graph construction and headroom accounting on the control side.
+struct MonoSpatialFilterParameters {
+    let effectiveStereoWidth: Float
+    let echoInputGain: Float
+    let echoDelays: [Int]
+    let echoDecays: [Float]
+
+    init(stereoWidth: Float, surroundLevel: Float, reverbLevel: Float) {
+        let width = min(2, max(0, stereoWidth.isFinite ? stereoWidth : 1))
+        let surround = min(1, max(0, surroundLevel.isFinite ? surroundLevel : 0))
+        let reverb = min(1, max(0, reverbLevel.isFinite ? reverbLevel : 0))
+        effectiveStereoWidth = Self.roundedCoefficient(min(1.85, max(0.65, width * (1 + surround * 0.55))))
+        guard reverb > 0 else {
+            echoInputGain = 1
+            echoDelays = []
+            echoDecays = []
+            return
+        }
+        echoInputGain = Self.roundedCoefficient(1 - reverb * 0.18)
+        let firstReflection = 0.02 + reverb * 0.62
+        let tail = max(0, reverb - 0.18) * 0.55
+        var decays = [firstReflection, firstReflection * 0.72, firstReflection * 0.50, firstReflection * 0.34]
+        if tail > 0.005 {
+            echoDelays = [29, 53, 89, 137, 191, 251]
+            decays += [tail, tail * 0.62]
+        } else {
+            echoDelays = [29, 53, 89, 137]
+        }
+        echoDecays = decays.map(Self.roundedCoefficient)
+    }
+
+    var peakGain: Float {
+        // M/S widening has row-sum norm max(1, width). aecho applies in_gain
+        // only to the dry sample, so the reflection gains are added separately.
+        max(1, effectiveStereoWidth) * (echoInputGain + echoDecays.reduce(0, +))
+    }
+
+    var peakBoostDB: Float { max(0, 20 * log10f(peakGain)) }
+
+    func echoWorkingGain(upstreamBoostDB: Float) -> Float {
+        // aecho clips even floating-point samples internally. Work below that
+        // boundary, then undo this scale in a double-precision volume filter.
+        // The extra factor of four reserves 12 dB for filter transients; it
+        // cancels after aecho and does not change the requested effect level.
+        1 / (4 * max(1, peakGain) * powf(10, max(0, upstreamBoostDB) / 20))
+    }
+
+    private static func roundedCoefficient(_ value: Float) -> Float {
+        (value * 1_000).rounded() / 1_000
+    }
+}
+
 /// Parameters that Mono can commit to the FFmpeg effect graph in one rebuild.
 /// Final output limiting is applied separately by AudioRepairEngine after EQ.
 public struct MonoEffectTuningConfiguration: Codable, Equatable, Sendable {
@@ -482,6 +534,16 @@ public final class AudioEffects {
     /// 当前立体声宽度
     public var stereoWidth: Float {
         filterGraph.stereoWidth
+    }
+
+    /// Peak bound of the width/early-reflection cascade, including the same
+    /// rounded coefficients used by the FFmpeg graph. Does not estimate loudness.
+    public var estimatedSpatialPeakBoostDB: Float {
+        MonoSpatialFilterParameters(
+            stereoWidth: stereoWidth,
+            surroundLevel: surroundLevel,
+            reverbLevel: reverbLevel
+        ).peakBoostDB
     }
 
     /// 设置声道平衡。

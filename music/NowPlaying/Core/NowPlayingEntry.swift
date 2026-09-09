@@ -198,7 +198,7 @@ struct NowPlayingEntry: TimelineEntry {
                 tempoIsAnalyzing: false,
                 lyricText: "PRINTING..."
             )
-        case .lyrics:
+        case .lyrics, .lyricsDark, .lyricsCover:
             return NowPlayingEntry(
                 date: .now,
                 songName: "海阔天空",

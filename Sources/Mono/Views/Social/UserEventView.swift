@@ -99,7 +99,7 @@ struct UserEventView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "event_title"))
+        .monoNavigationBackButton()
         .onAppear { viewModel.fetchEvents() }
     }
 }

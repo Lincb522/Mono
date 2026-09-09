@@ -68,6 +68,13 @@ struct AboutView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "关于"),
+                        eyebrow: "MONO",
+                        icon: .infoCircle,
+                        signalModule: .about
+                    )
+
                     VStack(alignment: .leading, spacing: 0) {
                         masthead
                             .opacity(mastheadVisible ? 1 : 0)
@@ -132,7 +139,7 @@ struct AboutView: View {
             .coordinateSpace(name: SettingsPageLayout.scrollCoordinateSpace)
             .themeRenderScrollLayer()
         }
-        .asideSettingsDetailChrome(String(localized: "关于"))
+        .asideSettingsDetailChrome()
         // 版权页排版依赖衬线/等宽对比，关掉全局 .rounded 覆盖
         .compatFontDesign(nil)
         .onAppear {
@@ -273,7 +280,7 @@ struct AboutView: View {
 
             Spacer(minLength: 8)
 
-            Toggle("", isOn: $changelogAutoPresent)
+            Toggle(String(localized: "新版本更新提醒"), isOn: $changelogAutoPresent)
                 .labelsHidden()
                 .toggleStyle(SettingsSwitchToggleStyle())
         }
@@ -352,6 +359,17 @@ struct AboutView: View {
                     .foregroundColor(inkMuted)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
+
+                Text(verbatim: "共鸣 · Resonance")
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .foregroundColor(ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+
+                Text(String(localized: "自研调音模型"))
+                    .font(.system(size: 11, weight: .regular, design: .rounded))
+                    .foregroundColor(inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(String(localized: "AI 服务由 DengDeng 提供"))
                     .font(.system(size: 11, weight: .regular, design: .rounded))

@@ -33,7 +33,9 @@ const examples = Array.from({length: 12}, (_, i) => ({
   y: t.targetNames.map((_, j) => Math.cos(i + j) * .3),
   targetMask: t.targetNames.map(() => 1), sampleWeight: 1
 }));
-const artifact = t.trainTinyModelSync({training: examples, validation: [],
+const calibration = Array.from({length: 160}, (_, i) => ({...examples[i % examples.length],
+  id: `held-${i}`, trackGroup: `held-${i}`}));
+const artifact = t.trainTinyModelSync({training: examples, validation: [], calibration,
   settings: t.normalizeSettings({epochs: 2, hiddenUnits: 4, intentUnits: INTENT, earlyStoppingPatience: 0})});
 Object.assign(artifact, {featureNames: t.featureNames, targetNames: t.targetNames,
   hiddenActivation: 'tanh', modelName: t.MODEL_NAME, modelFamily: t.MODEL_FAMILY,
@@ -58,10 +60,18 @@ console.log(JSON.stringify({source: {artifact, version: t.MODEL_VERSION_PREFIX +
                 self.exporter.export_model(source, output)
                 cases = root / "cases.json"
                 cases.write_text(json.dumps(data["cases"]), encoding="utf-8")
+                from coremltools.models.utils import load_spec
+                metadata = load_spec(str(output)).description.metadata.userDefined
+                calibration = json.loads(metadata["mono.confidence_calibration"])
+                self.assertEqual(calibration, data["source"]["artifact"]["confidenceCalibration"])
+                self.assertEqual(calibration["branches"]["thirtyTwoBand:standard"]["status"], "calibrated")
+                self.assertEqual(calibration["branches"]["tenBand:monoSpatialEnhancement"]["radiusDB"], None)
                 self.assertGreater(output.stat().st_size, 256)
                 self.assertLess(output.stat().st_size, 500_000, "normalization must not store a quadratic diagonal matrix")
                 if sys.platform != "darwin":
                     self.skipTest("Native Core ML prediction requires macOS")
+                calibration_file = root / "calibration.json"
+                calibration_file.write_text(json.dumps(calibration), encoding="utf-8")
                 outputs = [output]
                 if public_repository := os.environ.get("MONO_RESONANCE_REPOSITORY"):
                     public = Path(public_repository)
@@ -84,7 +94,7 @@ console.log(JSON.stringify({source: {artifact, version: t.MODEL_VERSION_PREFIX +
                     outputs.append(public_output)
                 for model in outputs:
                     result = subprocess.run(["swift", str(SCRIPTS / "verify-audio-training-coreml.swift"),
-                                             str(model), str(cases)], capture_output=True,
+                                             str(model), str(cases), *([str(calibration_file)] if model == output else [])], capture_output=True,
                                             text=True, timeout=120)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     print(model.name + ": " + result.stdout.strip())

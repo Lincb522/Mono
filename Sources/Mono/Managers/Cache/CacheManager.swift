@@ -183,6 +183,23 @@ class CacheManager: @unchecked Sendable {
             }
         }
     }
+
+    /// Large value snapshots must not be serialized on the UI thread.
+    func setObjectInBackground<T: Encodable & Sendable>(
+        _ object: T,
+        forKey key: String,
+        ttl: TimeInterval? = nil
+    ) {
+        diskQueue.async {
+            do {
+                let encoded = try JSONEncoder().encode(object)
+                self.setMemoryData(encoded, forKey: key)
+                self.saveToDisk(data: encoded, key: key, ttl: ttl)
+            } catch {
+                AppLogger.error("[CacheManager] Snapshot encoding failed; cached data retained", step: "storage.cache-encode-failed")
+            }
+        }
+    }
     
     func getObject<T: Codable>(forKey key: String, type: T.Type) -> T? {
         if let data = memoryData(forKey: key) {
@@ -287,15 +304,16 @@ class CacheManager: @unchecked Sendable {
     }
     
     func removeObject(forKey key: String) {
-        removeMemoryObject(forKey: key)
         performDiskSync {
+            removeMemoryObject(forKey: key)
             removeFromDiskOnDiskQueue(key: key)
         }
     }
     
     func clearAll() {
-        _ = clearMemoryCache()
         performDiskSync {
+            // Pending encoders may repopulate memory; clear after they finish.
+            _ = clearMemoryCache()
             let url = diskCacheURL
             try? FileManager.default.removeItem(at: url)
             try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

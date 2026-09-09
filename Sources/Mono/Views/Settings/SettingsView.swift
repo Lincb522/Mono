@@ -79,6 +79,7 @@ enum SettingsNavigationDestination: Hashable {
     case playback
     case cloudSync
     case aiConfiguration
+    case tuningService
     case storage
     case download
     case about
@@ -104,6 +105,8 @@ enum SettingsNavigationDestination: Hashable {
             CloudSyncSettingsView()
         case .aiConfiguration:
             AIProviderSettingsView()
+        case .tuningService:
+            AITuningServiceSettingsView()
         case .storage:
             StorageManageView()
         case .download:
@@ -189,11 +192,9 @@ enum SettingsPageLayout {
 }
 
 struct AsideSettingsDetailChromeModifier: ViewModifier {
-    let title: String
-
     func body(content: Content) -> some View {
         content
-            .monoNavigationBackButton(title: title)
+            .monoNavigationBackButton()
             .toolbarBackground(.hidden, for: .navigationBar)
             .tint(SignalStyle.isActive ? SignalStyle.accent : nil)
             .preferredColorScheme(SignalStyle.isActive ? .dark : nil)
@@ -201,8 +202,8 @@ struct AsideSettingsDetailChromeModifier: ViewModifier {
 }
 
 extension View {
-    func asideSettingsDetailChrome(_ title: String) -> some View {
-        modifier(AsideSettingsDetailChromeModifier(title: title))
+    func asideSettingsDetailChrome() -> some View {
+        modifier(AsideSettingsDetailChromeModifier())
     }
 }
 
@@ -235,7 +236,7 @@ struct SettingsView: View {
                 ScrollView {
                     LazyVStack(spacing: themedSettingsSpacing) {
                         settingsContent
-                        AIProviderSettingsEntry()
+                        AITuningServiceSettingsEntry()
                         FloatingBarBottomSpacer()
                     }
                     .padding(.horizontal, settingsOuterHorizontalPadding)
@@ -244,7 +245,7 @@ struct SettingsView: View {
                 .scrollIndicators(.hidden)
                 .themeRenderScrollLayer()
             }
-            .monoNavigationBackButton(title: String(localized: "settings_title"))
+            .monoNavigationBackButton()
             .toolbarBackground(.hidden, for: .navigationBar)
             .monoSheet(isPresented: $isShowingTokenAgreement, onDismiss: {
                 onlineAccess.declinePendingTokenAuthorization()
@@ -318,6 +319,7 @@ struct SettingsView: View {
 
     @ViewBuilder
     var defaultSettingsContent: some View {
+        asideSettingsMasthead
         settingsHeaderCard
         asidePersonalizationSection
         asidePlaybackSection

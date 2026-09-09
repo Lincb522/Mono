@@ -1,4 +1,3 @@
-import HiconIcons
 import Darwin
 import SwiftUI
 import UIKit
@@ -54,6 +53,9 @@ public struct ContentView: View {
                 // 版本更新后的更新日志弹窗（欢迎页关闭后触发检查）
                 ChangelogPopupOverlay()
                     .zIndex(60)
+
+                AIResonanceUpdatePopupHost(isReady: !showWelcome)
+                    .zIndex(62)
 
                 // 周报 / 月报弹窗（与更新日志、专属问候错峰弹出）
                 ListeningReportPopupOverlay()
@@ -265,6 +267,7 @@ public struct ContentView: View {
     /// 自定义悬浮栏，彻底避开有问题的 UIKit Tab 子控制器转场。
     private var usesSystemTabBarAtRuntime: Bool {
         settings.useSystemTabBar
+            && settings.systemTabBarStyle == .native
             && settings.globalThemeId != .signal
             && !SystemTabBarRuntimePolicy.requiresStableAccessoryFallback
     }
@@ -410,122 +413,12 @@ public struct ContentView: View {
         LocalizedStringKey(tabLabelKey(for: tab))
     }
 
-    @ViewBuilder
     private func tabIcon(for tab: Tab) -> some View {
-        let iconSet = AppInterfaceIconSet.selectedFromDefaults
-
-        if iconSet == .sfSymbols {
-            // 系统 TabBar 会提取 tabItem 内部的原始 UIImage，并忽略自定义
-            // View 的 frame。SF 图标包内部使用 60pt 符号源，必须在这里
-            // 交回原生 Image(systemName:) 才会应用系统标准 Tab 图标尺寸。
-            systemTabSymbolIcon(for: tab)
-        } else if iconSet == .hicon {
-            defaultTabIcon(for: tab)
-        } else if iconSet == .pawPrint {
-            originalArtworkTabIcon(
-                icon: pawPrintTabIcon(for: tab),
-                iconSet: iconSet,
-                visualSize: pawPrintTabIconVisualSize(for: tab)
-            )
-        } else if iconSet.usesOriginalArtwork {
-            originalArtworkTabIcon(
-                icon: themedTabIcon(for: tab),
-                iconSet: iconSet,
-                visualSize: themedTabIconVisualSize(for: iconSet)
-            )
-        } else {
-            MonoIcon(
-                icon: themedTabIcon(for: tab),
-                size: themedTabIconVisualSize(for: iconSet),
-                normalizesBitmapScale: true
-            )
-            .frame(width: tabIconFrameSize, height: tabIconFrameSize)
-        }
-    }
-
-    @ViewBuilder
-    private func systemTabSymbolIcon(for tab: Tab) -> some View {
-        // `tabItem` 的内容必须保持稳定。若根据 `currentTab` 在选中瞬间把
-        // outline/filled 图像整棵替换，SwiftUI 会在 UITabBarController 正在
-        // 搬移导航控制器时同步重建 Tab item；iOS 26 会把这次更新扩散到
-        // UINavigationBar 布局并触发一致性断言。选中反馈由系统 tint 负责。
-        switch tab {
-        case .home:
-            Image(systemName: "house")
-        case .podcast:
-            if displayedOnlineContent {
-                Image(systemName: "mic")
-            } else {
-                Image(systemName: "music.note")
-            }
-        case .library:
-            Image(systemName: "square.stack")
-        case .profile:
-            Image(systemName: "person")
-        }
-    }
-
-    private func originalArtworkTabIcon(
-        icon: MonoIcon.IconType,
-        iconSet: AppInterfaceIconSet,
-        visualSize: CGFloat
-    ) -> some View {
-        let artwork = originalArtworkImage(for: icon, iconSet: iconSet)
-        let tabArtwork = systemTabArtworkImage(
-            artwork,
-            iconSet: iconSet,
-            visualSize: visualSize
-        )
-
-        return Image(uiImage: tabArtwork)
-            .resizable()
-            .interpolation(.high)
-            .antialiased(true)
-            .scaledToFit()
-            .frame(width: visualSize, height: visualSize)
-            .frame(width: tabIconFrameSize, height: tabIconFrameSize)
-    }
-
-    private func systemTabArtworkImage(
-        _ image: UIImage,
-        iconSet: AppInterfaceIconSet,
-        visualSize: CGFloat
-    ) -> UIImage {
-        guard iconSet == .monoGlyph,
-              visualSize > 0,
-              let cgImage = image.cgImage else {
-            return image
-        }
-
-        // 系统 TabBar 使用 UIImage 的逻辑尺寸；MonoGlyph 原图是 128pt，
-        // SwiftUI 外层 frame 不会缩小系统提取后的 Tab 图标。调整 UIImage
-        // 的逻辑 scale 即可，无需在主线程再次栅格化同一份像素。
-        let pixelExtent = max(CGFloat(cgImage.width), CGFloat(cgImage.height))
-        guard pixelExtent > 0 else { return image }
-
-        return UIImage(
-            cgImage: cgImage,
-            scale: pixelExtent / visualSize,
-            orientation: image.imageOrientation
-        )
-            .withRenderingMode(.alwaysOriginal)
-    }
-
-    private func originalArtworkImage(
-        for icon: MonoIcon.IconType,
-        iconSet: AppInterfaceIconSet
-    ) -> UIImage {
-        // `tabItem` 不读取 currentTab，保持系统 Tab 项身份稳定；明暗资源只
-        // 根据系统 TabBar 当前稳定的选中强调色选取。
-        let prefersLightOutline = MonoIconArtworkContrast.prefersLightArtwork(
-            on: tabBarTint,
+        SystemTabBarIcon(
+            tab: tab,
+            isLocalMode: !displayedOnlineContent,
             colorScheme: settings.activeColorScheme
         )
-        return iconSet.image(
-            for: icon,
-            prefersLightOutline: prefersLightOutline
-        )
-        .withRenderingMode(.alwaysOriginal)
     }
 
     private var tabBarTint: Color {
@@ -535,86 +428,6 @@ public struct ContentView: View {
         // 并进一步触发 UINavigationBar 的重新挂载。动态取色仍保留在播放器
         // 和页面背景，根导航只使用当前主题的稳定强调色。
         themeManager.provider(for: settings.globalThemeId).colorPalette.accent
-    }
-
-    private var tabIconFrameSize: CGFloat { 23 }
-
-    private func pawPrintTabIconVisualSize(for tab: Tab) -> CGFloat {
-        switch tab {
-        case .library:
-            return 23
-        case .home, .podcast, .profile:
-            return 18.5
-        }
-    }
-
-    private func pawPrintTabIcon(for tab: Tab) -> MonoIcon.IconType {
-        switch tab {
-        case .home:
-            return .home
-        case .podcast:
-            if displayedOnlineContent {
-                return .podcast
-            } else {
-                return .musicNote
-            }
-        case .library:
-            return .library
-        case .profile:
-            return .profile
-        }
-    }
-
-    private func themedTabIconVisualSize(for iconSet: AppInterfaceIconSet) -> CGFloat {
-        switch iconSet {
-        case .doodlePop:
-            return 16.5
-        case .blobIcons, .dotDogSnake, .minimalWhiteIcons, .pulseBloom, .monoGlyph:
-            return 17
-        case .pawPrint:
-            return 18
-        case .hicon, .sfSymbols, .zappicon, .lucide, .solar:
-            return 23
-        }
-    }
-
-    private func themedTabIcon(for tab: Tab) -> MonoIcon.IconType {
-        switch tab {
-        case .home:
-            return .home
-        case .podcast:
-            if displayedOnlineContent {
-                return .podcast
-            } else {
-                return .musicNote
-            }
-        case .library:
-            return .library
-        case .profile:
-            return .profile
-        }
-    }
-
-    @ViewBuilder
-    private func defaultTabIcon(for tab: Tab) -> some View {
-        switch tab {
-        case .home:
-            Image(uiImage: Hicon.home1)
-                .renderingMode(.template)
-        case .podcast:
-            if displayedOnlineContent {
-                Image(uiImage: Hicon.microphone3)
-                    .renderingMode(.template)
-            } else {
-                MonoIcon(icon: .musicNote, size: 23)
-            }
-        case .library:
-            Image(uiImage: Hicon.headphone1)
-                .renderingMode(.template)
-        case .profile:
-            Image(uiImage: Hicon.profile1)
-                .renderingMode(.template)
-        }
     }
 
     private func queueDeepLink(_ url: URL) {
@@ -788,6 +601,7 @@ public struct ContentView: View {
     }
 
     private var floatingBarGestureExclusionHeight: CGFloat {
+        if settings.useSystemTabBar && settings.systemTabBarStyle.usesCustomLayout { return 176 }
         switch settings.floatingBarStyle {
         case .minimal:
             return playerAwareBottomGestureHeight(hasMiniPlayer: PlayerManager.shared.currentSong != nil)
@@ -795,12 +609,8 @@ public struct ContentView: View {
             return 112
         case .unified, .classic, .flux, .liquid:
             return 96
-        case .cassette:
-            return 132
-        case .orbit:
-            return 142
-        case .vinylNeedle, .waveform, .filmstrip, .studioMeter:
-            return 176
+        case .cassette, .orbit, .vinylNeedle, .waveform, .filmstrip, .studioMeter:
+            return SignatureFloatingBarKind(style: settings.floatingBarStyle).activeHeight + 40
         }
     }
 
@@ -870,6 +680,7 @@ private struct ContentViewFloatingBarContainer: View {
 
     private var usesSystemTabBarAtRuntime: Bool {
         settings.useSystemTabBar
+            && settings.systemTabBarStyle == .native
             && settings.globalThemeId != .signal
             && !SystemTabBarRuntimePolicy.requiresStableAccessoryFallback
     }
@@ -881,7 +692,7 @@ private struct ContentViewFloatingBarContainer: View {
                !textInputActivity.isEditing
             {
                 floatingBarView
-                    .id("\(settings.globalThemeId.rawValue)-\(settings.globalThemeRevision)-\(settings.floatingBarStyle.rawValue)")
+                    .id("\(settings.globalThemeId.rawValue)-\(settings.globalThemeRevision)-\(settings.floatingBarStyle.rawValue)-\(settings.systemTabBarStyle.rawValue)-\(settings.useSystemTabBar)")
                     .environment(\.floatingBarColorRevision, colorEngine.revision)
                     .themeRenderInteractiveLayer()
                     .simultaneousGesture(floatingTabSwipeGesture)
@@ -929,7 +740,9 @@ private struct ContentViewFloatingBarContainer: View {
 
     @ViewBuilder
     private var floatingBarView: some View {
-        if settings.globalThemeId == .signal {
+        if settings.useSystemTabBar && settings.systemTabBarStyle.usesCustomLayout {
+            MonoNavigationDock(currentTab: $currentTab, layout: settings.systemTabBarStyle == .monoDock ? .unified : .separated)
+        } else if settings.globalThemeId == .signal {
             switch settings.floatingBarStyle {
             case .unified:
                 VStack {
@@ -981,7 +794,10 @@ private struct ContentViewFloatingBarContainer: View {
             }
         } else if settings.globalThemeId == .clarity {
             ClarityFloatingBarFamily(currentTab: $currentTab)
-        } else if settings.globalThemeId == .manga {
+        } else if settings.globalThemeId == .manga
+                    && !settings.floatingBarStyle.isSignatureStyle
+                    && settings.floatingBarStyle != .flux
+                    && settings.floatingBarStyle != .liquid {
             VStack {
                 Spacer()
                 UnifiedFloatingBar(currentTab: $currentTab)
@@ -1160,6 +976,7 @@ private struct ContentViewCompactPlayerContainer: View {
     private var shouldUseNativeBottomAccessory: Bool {
         if #available(iOS 26.0, *) {
             return settings.useSystemTabBar
+                && settings.systemTabBarStyle == .native
                 && settings.globalThemeId != .manga
                 && !SystemTabBarRuntimePolicy.requiresStableAccessoryFallback
         }
@@ -1170,15 +987,16 @@ private struct ContentViewCompactPlayerContainer: View {
         Group {
             if !shouldUseNativeBottomAccessory,
                settings.useSystemTabBar
+                && settings.systemTabBarStyle == .native
                 && !SystemTabBarRuntimePolicy.requiresStableAccessoryFallback
                 && settings.globalThemeId != .manga
                 && !isTabBarHidden,
                !textInputActivity.isEditing,
-               let song = currentSong
+               currentSong != nil
             {
                 VStack {
                     Spacer()
-                    CompactMiniPlayerView(song: song)
+                    CompactMiniPlayerView()
                         .themeRenderInteractiveLayer()
                         .id("compact-mini-\(settings.globalThemeId.rawValue)-\(settings.globalThemeRevision)")
                         .iPadContentWidth(600)
@@ -1252,430 +1070,6 @@ private struct SystemTabBarWithAccessory<Content: View>: View {
         } else {
             PlaylistPopupView()
         }
-    }
-}
-
-// MARK: - iOS 26 的 TabView bottomAccessory 迷你播放器
-
-/// 原生嵌入在 TabBar 顶部的 Liquid Glass 胶囊迷你播放器。
-/// 文字使用 `.primary` / `.secondary` 语义色，系统会根据 Liquid Glass 背景
-/// 自动补偿对比度（浅色背景自动变深色字、反之亦然）。
-@available(iOS 26.0, *)
-@MainActor
-private struct TabViewBottomMiniPlayer: View {
-    @Binding var playlistPresented: Bool
-    @ObservedObject private var player = FloatingBarPlaybackModel.shared
-    @ObservedObject private var settings = SettingsManager.shared
-    @ObservedObject private var themeManager = GlobalThemeManager.shared
-
-    private var hasActiveSong: Bool {
-        player.currentSong != nil && !player.isTabBarHidden
-    }
-
-    private var accent: Color {
-        themeManager.provider(for: settings.globalThemeId).colorPalette.accent
-    }
-
-    var body: some View {
-        // 用 ZStack 而不是 if/else：让系统 accessory 容器感知的子视图身份稳定，
-        // 两种内容交叉淡出即可，避免整条胶囊被系统 TabBar 判定为「换人」重新布局/重绘，
-        // 造成用户看到的「关闭时整个页面重新加载」的观感。
-        ZStack {
-            TabBottomAccessoryPlaceholder()
-                .opacity(hasActiveSong ? 0 : 1)
-                .allowsHitTesting(!hasActiveSong)
-
-            if let song = player.currentSong {
-                TabBottomAccessoryContent(
-                    song: song,
-                    accent: accent,
-                    playlistPresented: $playlistPresented
-                )
-                    .opacity(hasActiveSong ? 1 : 0)
-                    .allowsHitTesting(hasActiveSong)
-            }
-        }
-        .animation(.easeInOut(duration: 0.22), value: hasActiveSong)
-        // 封面为深色时 app 会被强制 `.preferredColorScheme(.dark)`，
-        // 但系统 TabBar 的 Liquid Glass 背景是按 `activeColorScheme`
-        // （用户真实亮/暗模式）渲染的，这里把 environment 重置回去，
-        // 避免出现"浅色 TabBar 背景 + 白色文字"的对比不足。
-        .environment(\.colorScheme, settings.activeColorScheme)
-    }
-}
-
-/// bottomAccessory 在无歌时的占位内容。
-///
-/// 设计目标：
-/// - 不抢戏：使用 Apple Music 式静态唱片占位，不制造持续动画
-/// - 有召唤感：主标题与探索提示保持两级信息层次
-/// - 可操作：整条胶囊可点击，发送 `SwitchToHome` 通知跳回首页发现音乐
-@available(iOS 26.0, *)
-private struct TabBottomAccessoryPlaceholder: View {
-    private var primaryTextColor: Color {
-        Color(uiColor: .label)
-    }
-
-    private var secondaryTextColor: Color {
-        Color(uiColor: .secondaryLabel)
-    }
-
-    private var tertiaryTextColor: Color {
-        Color(uiColor: .tertiaryLabel)
-    }
-
-    var body: some View {
-        Button {
-            NotificationCenter.default.post(name: .init("SwitchToHome"), object: nil)
-        } label: {
-            HStack(spacing: 12) {
-                idleIcon
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(NSLocalizedString("not_playing", comment: "未在播放"))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(primaryTextColor)
-                        .lineLimit(1)
-
-                    Text(NSLocalizedString("not_playing_subtitle", comment: "点此探索音乐"))
-                        .font(.system(size: 11.5, weight: .regular))
-                        .foregroundColor(secondaryTextColor)
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: 4)
-
-                MonoIcon(icon: .chevronRight, size: 12, color: tertiaryTextColor)
-                    .frame(width: 20, height: 30)
-            }
-            .padding(.horizontal, 12)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var idleIcon: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(Color(uiColor: .quaternarySystemFill))
-                .frame(width: 36, height: 36)
-
-            MonoIcon(icon: .musicNote, size: 15, color: tertiaryTextColor)
-        }
-    }
-}
-
-/// iOS 26 bottomAccessory 里的紧凑播放器内容。
-/// - 颜色使用 UIKit 动态语义色（`UIColor.label` / `UIColor.secondaryLabel`），
-///   跟随系统 TabBar 所在窗口的 trait 反色，避免浅色 TabBar 背景下出现"白字"。
-/// - 图标全部走自定义 `MonoIcon`，和 `CompactMiniPlayerView` 视觉一致。
-/// - 支持左右滑动切歌（`swipeToSkip()`：右滑下一首、左滑上一首）。
-/// - 歌名/歌词使用 `MarqueeText` 跑马灯滚动，不再缩略。
-@available(iOS 26.0, *)
-@MainActor
-private struct TabBottomAccessoryContent: View {
-    let song: Song
-    let accent: Color
-    @Binding var playlistPresented: Bool
-    @ObservedObject private var player = FloatingBarPlaybackModel.shared
-
-    private func subtitleText(for lineText: String?) -> String {
-        if let text = lineText {
-            return text
-        }
-        return song.artistName
-    }
-
-    /// iOS 的 bottomAccessory 会让系统 TabBar 根据窗口级 userInterfaceStyle
-    /// 渲染背景；用 UIKit 动态色可保证文字和系统 TabBar 背景一致。
-    private var primaryTextColor: Color {
-        Color(uiColor: .label)
-    }
-
-    private var secondaryTextColor: Color {
-        Color(uiColor: .secondaryLabel)
-    }
-
-    /// 进度条颜色 — 跟随系统 Liquid Glass 背景自动适配亮/暗
-    private var progressTrackColor: Color {
-        Color(uiColor: .quaternaryLabel)
-    }
-
-    private var progressFillColors: [Color] {
-        [accent.opacity(0.64), accent]
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                CachedAsyncImage(url: song.coverUrl) {
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(Color.gray.opacity(0.15))
-                }
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 38, height: 38)
-                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    MarqueeText(
-                        text: song.name,
-                        font: .system(size: 14, weight: .semibold),
-                        color: primaryTextColor,
-                        speed: 25
-                    )
-                    .frame(height: 17)
-
-                    FloatingBarLyricReader { lineText in
-                        MarqueeText(
-                            text: subtitleText(for: lineText),
-                            font: .system(size: 11.5, weight: .regular),
-                            color: secondaryTextColor,
-                            speed: 25
-                        )
-                        .frame(height: 15)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .swipeSkipTextMotion()
-
-                Button(action: { player.togglePlayPause() }) {
-                    MonoIcon(
-                        icon: player.isPlaying ? .pause : .play,
-                        size: 17,
-                        color: primaryTextColor
-                    )
-                    .frame(width: 36, height: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(
-                    player.isPlaying ? String(localized: "暂停") : String(localized: "action_play")
-                )
-
-                Button(action: { player.next() }) {
-                    MonoIcon(icon: .next, size: 16, color: primaryTextColor)
-                        .frame(width: 36, height: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "playback_next_track"))
-
-                Button(action: { playlistPresented = true }) {
-                    MonoIcon(
-                        icon: .list,
-                        size: 14,
-                        color: secondaryTextColor
-                    )
-                    .frame(width: 32, height: 44)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "player_queue"))
-            }
-            .padding(.horizontal, 10)
-
-            MiniPlayerProgressStrip(
-                height: 2,
-                minFillWidth: 4,
-                trackColor: progressTrackColor,
-                strokeColor: .clear,
-                fillColors: progressFillColors
-            )
-                .padding(.horizontal, 10)
-                .padding(.top, 3)
-                .padding(.bottom, 1)
-        }
-        .contentShape(Rectangle())
-        .swipeToSkip()
-        .onTapGesture {
-            withAnimation(MonoAnimation.playerTransition) {
-                switch player.playSource {
-                case .fm:
-                    NotificationCenter.default.post(name: .init("OpenFMPlayer"), object: nil)
-                case let .podcast(radioId):
-                    NotificationCenter.default.post(name: .init("OpenRadioPlayer"), object: radioId)
-                case .normal:
-                    NotificationCenter.default.post(name: .init("OpenNormalPlayer"), object: nil)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - 紧凑迷你播放器（独立视图，隔离高频订阅）
-
-@MainActor
-private struct CompactMiniPlayerView: View {
-    let song: Song
-    @ObservedObject private var player = FloatingBarPlaybackModel.shared
-    @Environment(\.colorScheme) private var systemColorScheme
-    @State private var showCompactPlaylist = false
-
-    private func subtitleText(for lineText: String?) -> String {
-        if let text = lineText {
-            return text
-        }
-        return song.artistName
-    }
-
-    private var compactProgressTrackColor: Color {
-        systemColorScheme == .dark
-            ? Color.white.opacity(0.12)
-            : Color.black.opacity(0.07)
-    }
-
-    private var compactProgressFillColors: [Color] {
-        [Color.monoAccent.opacity(0.64), Color.monoAccent]
-    }
-
-    private var primaryTextColor: Color {
-        Color(uiColor: .label)
-    }
-
-    private var secondaryTextColor: Color {
-        Color(uiColor: .secondaryLabel)
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                CachedAsyncImage(url: song.coverUrl) {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.gray.opacity(0.15))
-                }
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 44, height: 44)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    MarqueeText(
-                        text: song.name,
-                        font: .system(size: 14, weight: .semibold),
-                        color: primaryTextColor,
-                        speed: 25
-                    )
-                    .frame(height: 17)
-
-                    FloatingBarLyricReader { lineText in
-                        MarqueeText(
-                            text: subtitleText(for: lineText),
-                            font: .system(size: 11.5, weight: .regular),
-                            color: secondaryTextColor,
-                            speed: 22
-                        )
-                        .frame(height: 15)
-                        .animation(.easeInOut(duration: 0.25), value: lineText)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .swipeSkipTextMotion()
-
-                HStack(spacing: 2) {
-                    Button(action: { player.togglePlayPause() }) {
-                        MonoIcon(
-                            icon: player.isPlaying ? .pause : .play,
-                            size: 18,
-                            color: primaryTextColor
-                        )
-                        .frame(width: 40, height: 44)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(
-                        player.isPlaying ? String(localized: "暂停") : String(localized: "action_play")
-                    )
-
-                    Button(action: { player.next() }) {
-                        MonoIcon(icon: .next, size: 17, color: primaryTextColor)
-                            .frame(width: 40, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "playback_next_track"))
-
-                    Button(action: { showCompactPlaylist = true }) {
-                        MonoIcon(icon: .list, size: 14, color: secondaryTextColor)
-                            .frame(width: 36, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "player_queue"))
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
-            .padding(.bottom, 6)
-
-            MiniPlayerProgressStrip(
-                height: 2,
-                minFillWidth: 4,
-                trackColor: compactProgressTrackColor,
-                strokeColor: .clear,
-                fillColors: compactProgressFillColors
-            )
-                .padding(.horizontal, 12)
-                .padding(.bottom, 5)
-        }
-        .background {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(
-                            Color(uiColor: .systemBackground)
-                                .opacity(systemColorScheme == .dark ? 0.30 : 0.52)
-                        )
-                }
-                .shadow(
-                    color: Color.black.opacity(systemColorScheme == .dark ? 0.24 : 0.10),
-                    radius: 12,
-                    x: 0,
-                    y: 5
-                )
-        }
-        .contentShape(Rectangle())
-        .swipeToSkip()
-        .onTapGesture {
-            withAnimation(MonoAnimation.playerTransition) {
-                switch player.playSource {
-                case .fm:
-                    NotificationCenter.default.post(name: .init("OpenFMPlayer"), object: nil)
-                case let .podcast(radioId):
-                    NotificationCenter.default.post(name: .init("OpenRadioPlayer"), object: radioId)
-                case .normal:
-                    NotificationCenter.default.post(name: .init("OpenNormalPlayer"), object: nil)
-                }
-            }
-        }
-        .monoSheet(isPresented: $showCompactPlaylist, preset: .standard) {
-            if player.isPlayingPodcast {
-                PodcastPlaylistPopupView()
-            } else {
-                PlaylistPopupView()
-            }
-        }
-    }
-}
-
-@MainActor
-private struct MiniPlayerProgressStrip: View {
-    let height: CGFloat
-    let minFillWidth: CGFloat
-    let trackColor: Color
-    let strokeColor: Color
-    let fillColors: [Color]
-
-    @ObservedObject private var timePublisher = PlaybackTimePublisher.shared
-
-    var body: some View {
-        GlobalPlaybackProgressBar(
-            progress: CGFloat(timePublisher.progress),
-            height: height,
-            minFillWidth: minFillWidth,
-            trackColor: trackColor,
-            strokeColor: strokeColor,
-            fillColors: fillColors
-        )
     }
 }
 

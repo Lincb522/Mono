@@ -161,6 +161,8 @@ final class AIEqualizerAgent: ObservableObject {
     static let maxGenerationRetryAttempts = 3
     let sampler = AIEqualizerFeatureSampler()
     let client = AIProviderClient()
+    let tuningServiceStore = AITuningServiceStore.shared
+    var isAutomaticTuningActive: Bool { tuningServiceStore.settings.isEnabled && automaticConfigurationEnabled }
     let providerStore = AIProviderConfigurationStore.shared
     let usageLimiter = AIUsageLimiter.shared
     var activePromptVersion: String {
@@ -219,6 +221,22 @@ final class AIEqualizerAgent: ObservableObject {
             rawValue: defaults.integer(forKey: Self.learningRetentionKey)
         ) ?? .oneYear
         learningStore.setRetentionDays(learningRetention.days)
+        tuningServiceStore.changes
+            .sink { [weak self] in self?.handleTuningServiceChanged() }
+            .store(in: &cancellables)
+        AIResonanceUpdateStore.shared.changes
+            .sink { [weak self] in
+                guard let self, self.tuningServiceStore.settings.service == .resonance else { return }
+                self.handleTuningServiceChanged()
+            }
+            .store(in: &cancellables)
+        AIPersonalProviderStore.shared.changes
+            .sink { [weak self] in
+                guard let self, self.tuningServiceStore.settings.service == .custom else { return }
+                self.handleTuningServiceChanged()
+            }
+            .store(in: &cancellables)
+
         let player = PlayerManager.shared
         learningStore.hydrateSongMetadata(from: learningSongMetadata(in: player))
         learningEvidenceCount = learningStore.evidenceCount
@@ -226,7 +244,7 @@ final class AIEqualizerAgent: ObservableObject {
         recentProfileNames = Array(
             (defaults.stringArray(forKey: Self.recentProfileNamesKey) ?? []).suffix(16)
         )
-        if !automaticConfigurationEnabled {
+        if !isAutomaticTuningActive {
             EQManager.shared.restoreProcessingBeforeAI(reason: "agent-restored-disabled")
         }
 
@@ -257,7 +275,7 @@ final class AIEqualizerAgent: ObservableObject {
                 self.scheduledAutomaticRunID = nil
                 self.scheduledAutomaticSongIdentifier = nil
                 if let identifier,
-                   self.automaticConfigurationEnabled,
+                   self.isAutomaticTuningActive,
                    PlayerManager.shared.currentSong?.isAppleMusic != true {
                     EQManager.shared.prepareForAIAnalysis(songIdentifier: identifier)
                 } else {
@@ -325,7 +343,7 @@ final class AIEqualizerAgent: ObservableObject {
         .sink { [weak self] readiness in
             let (song, isPlaying, isLoading) = readiness
             guard let self,
-                  self.automaticConfigurationEnabled,
+                  self.isAutomaticTuningActive,
                   song != nil,
                   isPlaying,
                   !isLoading else { return }
@@ -345,7 +363,7 @@ final class AIEqualizerAgent: ObservableObject {
             guard let self,
                   let currentSong = PlayerManager.shared.currentSong else { return }
             self.flushPendingManualEqualizerLearning()
-            guard self.automaticConfigurationEnabled else {
+            guard self.isAutomaticTuningActive else {
                 self.measuredFeatures = self.restoredMeasurement(for: currentSong)
                 return
             }
@@ -400,7 +418,7 @@ final class AIEqualizerAgent: ObservableObject {
                     "[AIEqualizerAgent] Graphic EQ mode changed bands=\(mode.bandCount)",
                     step: "ai-tuning.eq-mode"
                 )
-                if self.automaticConfigurationEnabled,
+                if self.isAutomaticTuningActive,
                    PlayerManager.shared.currentSong != nil {
                     self.scheduleAutomaticAnalysis()
                 }

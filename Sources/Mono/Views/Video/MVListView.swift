@@ -371,6 +371,16 @@ struct MVDiscoverView: View {
 
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 24) {
+                        if SignalStyle.isActive {
+                            SignalNestedPageHeader(
+                                title: "MV",
+                                eyebrow: "VIDEO FEED",
+                                icon: .mv,
+                                module: .track
+                            )
+                            .padding(.horizontal, DeviceLayout.viewHorizontalPadding)
+                        }
+
                         sourceFilter
 
                         if let source = selectedSource {
@@ -399,10 +409,11 @@ struct MVDiscoverView: View {
                 }
             }
         }
-        .themedNavigationChrome(title: "MV", eyebrow: "VIDEO", icon: .mv)
+        .navigationTitle("")
+        .toolbar(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .defaultNavigationPageTitle("MV")
+        .monoNavigationBackButton()
         .onAppear { viewModel.fetchUnified() }
         .fullScreenCover(item: $selectedItem) { item in
             switch item.source {
@@ -672,10 +683,11 @@ private struct LegacyMVDiscoverView: View {
             .themeRenderScrollLayer()
             }
         }
-        .themedNavigationChrome(title: "MV", eyebrow: "VIDEO", icon: .mv)
+        .navigationTitle("")
+        .toolbar(.visible, for: .navigationBar)
         .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-        .defaultNavigationPageTitle("MV")
+        .monoNavigationBackButton()
         .onAppear {
             if viewModel.latestMVs.isEmpty {
                 viewModel.fetchAll()
@@ -1224,7 +1236,7 @@ struct MVFullListView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: title)
+        .monoNavigationBackButton()
         .onAppear {
             if viewModel.mvs.isEmpty {
                 viewModel.fetchInitial()

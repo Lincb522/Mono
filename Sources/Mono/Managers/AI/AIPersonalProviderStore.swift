@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 @preconcurrency import Combine
 
 struct AIPersonalProviderSettings: Codable, Equatable, Sendable {
@@ -57,6 +58,17 @@ struct AIProviderRequestContext: Sendable {
     let apiKey: String
     let usageLimits: AIUsageLimits?
     let persistsDiscoveredModel: Bool
+    var requiredDistributedModelIdentity: String? = nil
+
+    var requiresTrainedModel: Bool { requiredDistributedModelIdentity != nil }
+
+    var cacheIdentity: String {
+        let values = [configuration.wireProtocol.rawValue, configuration.resolvedBaseURL,
+                      configuration.resolvedModel, configuration.customHeadersJSON, apiKey]
+        let identity = values.map { "\($0.utf8.count):\($0)" }.joined()
+        // Keep endpoint credentials and custom headers out of persisted cache keys.
+        return SHA256.hash(data: Data(identity.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
 
     static func resolve(
         personal: AIPersonalProviderSettings,
@@ -77,6 +89,7 @@ struct AIProviderRequestContext: Sendable {
 final class AIPersonalProviderStore: ObservableObject {
     static let shared = AIPersonalProviderStore()
     @Published private(set) var settings: AIPersonalProviderSettings
+    let changes = PassthroughSubject<Void, Never>()
     private let persist: (Data) -> Bool
 
     init(
@@ -95,6 +108,8 @@ final class AIPersonalProviderStore: ObservableObject {
         let value = try draft.validated()
         let data = try JSONEncoder().encode(value)
         guard persist(data) else { throw AIPersonalProviderError.saveFailed }
+        guard value != settings else { return }
         settings = value
+        changes.send()
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import MonoGlyphIcons
 
 enum AppInterfaceIconSet: String, CaseIterable, Identifiable {
     case hicon
@@ -78,6 +79,17 @@ enum AppInterfaceIconSet: String, CaseIterable, Identifiable {
         UserDefaults.standard.set(style.rawValue, forKey: solarStyleKey)
     }
 
+    static var monoGlyphStyleKey: String { "mono_glyph_style" }
+
+    static var selectedMonoGlyphStyle: MonoGlyphIconStyle {
+        let raw = UserDefaults.standard.string(forKey: monoGlyphStyleKey) ?? MonoGlyphIconStyle.classic.rawValue
+        return MonoGlyphIconStyle(rawValue: raw) ?? .classic
+    }
+
+    static func setMonoGlyphStyle(_ style: MonoGlyphIconStyle) {
+        UserDefaults.standard.set(style.rawValue, forKey: monoGlyphStyleKey)
+    }
+
     static var selectedFromDefaults: AppInterfaceIconSet {
         resolved(rawValue: UserDefaults.standard.string(forKey: AppConfig.StorageKeys.interfaceIconSet))
     }
@@ -88,6 +100,17 @@ enum AppInterfaceIconSet: String, CaseIterable, Identifiable {
         }
 
         return GlobalThemeId.persistedOrDefault.preferredInterfaceIconSet
+    }
+}
+
+extension MonoGlyphIconStyle {
+    var displayName: String {
+        switch self {
+        case .classic:
+            return String(localized: "settings_mono_glyph_style_classic")
+        case .expressiveOutline:
+            return String(localized: "settings_mono_glyph_style_expressive")
+        }
     }
 }
 

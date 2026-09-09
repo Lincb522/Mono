@@ -55,6 +55,66 @@ final class StorageRegressionTests: XCTestCase {
         XCTAssertEqual(playlist.songs, [ncm])
     }
 
+    func testTargetedSaveSnapshotsOnlySelectedRowsAndKeepsOtherChangesPending() {
+        let backend = TestBackend()
+        let store = MonoStore(backend: backend)
+        let records = (0..<1_000).map { SnapshotCountingEntity(key: String($0)) }
+        records.forEach { store.insert($0) }
+        XCTAssertTrue(store.save())
+        records.forEach { $0.snapshotCount = 0 }
+        records[0].value = 10
+        records[1].value = 20
+
+        XCTAssertTrue(store.object(SnapshotCountingEntity.self, uniqueKey: "0") === records[0])
+        XCTAssertTrue(store.save([records[0], records[0]]))
+        XCTAssertEqual(records[0].snapshotCount, 1)
+        XCTAssertTrue(records.dropFirst().allSatisfy { $0.snapshotCount == 0 })
+        XCTAssertEqual(backend.persisted["SnapshotCountingEntity"]?["0"]?["value"] as? Int, 10)
+        XCTAssertEqual(backend.persisted["SnapshotCountingEntity"]?["1"]?["value"] as? Int, 0)
+
+        XCTAssertTrue(store.save())
+        XCTAssertEqual(backend.persisted["SnapshotCountingEntity"]?["1"]?["value"] as? Int, 20)
+    }
+
+    func testTargetedSaveRetainsFailedWritesAndPendingDeletesForRetry() throws {
+        let backend = TestBackend()
+        let store = MonoStore(backend: backend)
+        let first = CachedSong(from: try song(source: "netease"))
+        let second = CachedSong(from: try song(source: "qqmusic"))
+        store.insert(first)
+        store.insert(second)
+        XCTAssertTrue(store.save())
+        store.delete(first)
+        second.name = "Changed"
+        backend.fail = true
+        XCTAssertFalse(store.save([second]))
+        XCTAssertNotNil(backend.persisted["CachedSong"]?[first.monoUniqueKey])
+        XCTAssertGreaterThan(store.pendingWriteCount, 0)
+        backend.fail = false
+        XCTAssertTrue(store.save([second]))
+        XCTAssertNil(backend.persisted["CachedSong"]?[first.monoUniqueKey])
+        XCTAssertEqual(backend.persisted["CachedSong"]?[second.monoUniqueKey]?["name"] as? String, "Changed")
+        XCTAssertEqual(store.pendingWriteCount, 0)
+    }
+
+    func testTargetedSaveDefersWithinBatchAndReconcilesRenamedKeys() {
+        let backend = TestBackend()
+        let store = MonoStore(backend: backend)
+        let record = SnapshotCountingEntity(key: "before")
+        store.insert(record)
+        store.performBatch {
+            record.value = 1
+            XCTAssertFalse(store.save([record]))
+            XCTAssertTrue(backend.persisted.isEmpty)
+            record.value = 2
+        }
+        XCTAssertEqual(backend.persisted["SnapshotCountingEntity"]?["before"]?["value"] as? Int, 2)
+        record.key = "after"
+        XCTAssertTrue(store.save([record]))
+        XCTAssertNil(backend.persisted["SnapshotCountingEntity"]?["before"])
+        XCTAssertTrue(store.object(SnapshotCountingEntity.self, uniqueKey: "after") === record)
+    }
+
     func testKugouFieldsSurviveCacheHistoryAndCloudRoundTrips() throws {
         let original = try song(source: "kugou")
         let cached = CachedSong.monoMake(from: CachedSong(from: original).monoSnapshot()).toSong()
@@ -258,6 +318,28 @@ final class StorageRegressionTests: XCTestCase {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
+    }
+}
+
+private final class SnapshotCountingEntity: MonoEntity {
+    static let monoEntityName = "SnapshotCountingEntity"
+    static let monoAttributes = [MonoAttribute("key", .string), MonoAttribute("value", .int)]
+    var key: String
+    var value = 0
+    var snapshotCount = 0
+    var monoUniqueKey: String { key }
+
+    init(key: String) { self.key = key }
+
+    func monoSnapshot() -> [String: Any?] {
+        snapshotCount += 1
+        return ["key": key, "value": value]
+    }
+
+    static func monoMake(from snapshot: [String: Any?]) -> SnapshotCountingEntity {
+        let record = SnapshotCountingEntity(key: MonoSnapshotValue.string(snapshot, "key"))
+        record.value = MonoSnapshotValue.int(snapshot, "value")
+        return record
     }
 }
 

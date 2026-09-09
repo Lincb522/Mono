@@ -17,9 +17,10 @@ struct LossyDecodable<Value: Decodable>: Decodable {
 
 @MainActor
 final class AIEqualizerProposalCacheStore {
-    private static let storageKey = "ai.eq.agent.proposal-cache.v1"
-    private static let historyStorageKey = "ai.eq.agent.proposal-history.v1"
-    private static let trainingSampleFileName = "AIEqualizerTrainingSamples-v2.json"
+    nonisolated private static let trainingSampleFileName = "AIEqualizerTrainingSamples-v2.json"
+    nonisolated private static let trainingSampleWriteQueue = DispatchQueue(
+        label: "com.monologue.ai-training-sample-archive", qos: .utility
+    )
     private static let maximumAge: TimeInterval = 45 * 24 * 60 * 60
 
     private var values: [String: AIEqualizerProposal]
@@ -443,12 +444,11 @@ final class AIEqualizerProposalCacheStore {
     }
 
     private static func restoreCachedProposals() -> [String: AIEqualizerProposal] {
-        guard let data = UserDefaults.standard.data(forKey: storageKey) else { return [:] }
         do {
-            let decoded = try JSONDecoder().decode(
+            guard let decoded = try PreferenceDataArchive.shared.load(
                 [String: LossyDecodable<AIEqualizerProposal>].self,
-                from: data
-            )
+                for: .equalizerProposals
+            ) else { return [:] }
             let restored = decoded.compactMapValues(\.value)
             if restored.count != decoded.count {
                 AppLogger.warning(
@@ -467,12 +467,11 @@ final class AIEqualizerProposalCacheStore {
     }
 
     private static func restoreSavedProposalHistory() -> [String: [AIEqualizerSavedProposal]] {
-        guard let data = UserDefaults.standard.data(forKey: historyStorageKey) else { return [:] }
         do {
-            let decoded = try JSONDecoder().decode(
+            guard let decoded = try PreferenceDataArchive.shared.load(
                 [String: [LossyDecodable<AIEqualizerSavedProposal>]].self,
-                from: data
-            )
+                for: .equalizerProposalHistory
+            ) else { return [:] }
             var skippedCount = 0
             let restored = decoded.reduce(
                 into: [String: [AIEqualizerSavedProposal]]()
@@ -521,29 +520,34 @@ final class AIEqualizerProposalCacheStore {
     }
 
     private func persist() {
-        guard let data = try? JSONEncoder().encode(values) else { return }
-        UserDefaults.standard.set(data, forKey: Self.storageKey)
+        PreferenceDataArchive.shared.save(encoding: values, for: .equalizerProposals)
     }
 
     private func persistHistory() {
-        guard let data = try? JSONEncoder().encode(histories) else { return }
-        UserDefaults.standard.set(data, forKey: Self.historyStorageKey)
+        PreferenceDataArchive.shared.save(encoding: histories, for: .equalizerProposalHistory)
     }
 
     private func persistTrainingSamples() {
-        guard let storageURL = Self.trainingSampleStorageURL else { return }
-        do {
-            let data = try JSONEncoder().encode(trainingSamples)
-            try data.write(to: storageURL, options: .atomic)
-        } catch {
-            AppLogger.error(
-                "[AIEqualizerAgent] Training sample persistence failed entries=\(trainingSamples.count) error=\(error.localizedDescription)",
-                step: "ai-tuning.training-sample-save-failed"
-            )
+        let snapshot = trainingSamples
+        Self.trainingSampleWriteQueue.async {
+            guard let storageURL = Self.trainingSampleStorageURL else { return }
+            do {
+                let data = try JSONEncoder().encode(snapshot)
+                try data.write(to: storageURL, options: .atomic)
+            } catch {
+                AppLogger.error(
+                    "[AIEqualizerAgent] Training sample persistence failed entries=\(snapshot.count) domain=\((error as NSError).domain) code=\((error as NSError).code)",
+                    step: "ai-tuning.training-sample-save-failed"
+                )
+            }
         }
     }
 
-    private static var trainingSampleStorageURL: URL? {
+    nonisolated static func waitForPendingTrainingSampleWrites() {
+        trainingSampleWriteQueue.sync {}
+    }
+
+    nonisolated private static var trainingSampleStorageURL: URL? {
         guard let applicationSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask

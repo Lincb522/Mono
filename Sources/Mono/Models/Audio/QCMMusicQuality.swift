@@ -3,7 +3,7 @@ import QQMusicKit
 
 /// qcm独立音质体系
 /// 包装 QQMusicKit 的 SongFileType，提供 UI 显示信息
-enum QQMusicQuality: String, CaseIterable, Codable {
+enum QQMusicQuality: String, CaseIterable, Codable, Sendable {
     case master = "MASTER"         // 臻品母带 24Bit 192kHz
     case dtsx = "DTS_X"            // DTS:X 臻品音效
     case atmos71 = "ATMOS_71"      // 臻品全景声 7.1

@@ -20,6 +20,8 @@ enum WidgetTheme: String, CaseIterable, Hashable, Sendable {
     case soundwave
     case typewriter
     case lyrics
+    case lyricsDark
+    case lyricsCover
 
     var displayName: String {
         switch self {
@@ -35,7 +37,9 @@ enum WidgetTheme: String, CaseIterable, Hashable, Sendable {
         case .dashboard: return "仪表盘"
         case .soundwave: return "声波"
         case .typewriter: return "打字机"
-        case .lyrics: return "歌词"
+        case .lyrics: return "歌词排版"
+        case .lyricsDark: return "歌词排版（深色）"
+        case .lyricsCover: return "专辑封面"
         }
     }
 

@@ -178,6 +178,10 @@ final class AirPodsExperienceManager: ObservableObject {
     private var routeObserver: NSObjectProtocol?
     private var spatialObserver: NSObjectProtocol?
     private var activityRuntime: AnyObject?
+    private var activityOutputUID: String?
+    private var activitySessionID = 0
+    private var pendingMotionState: AirPodsMotionState?
+    private var motionTransitionTask: Task<Void, Never>?
     private var runtimeReady = false
     private var experienceApplied = false
     private var baselineSpatialEnabled = false
@@ -268,6 +272,7 @@ final class AirPodsExperienceManager: ObservableObject {
     }
 
     func setAdaptsToMotion(_ enabled: Bool) {
+        guard adaptsToMotion != enabled else { return }
         adaptsToMotion = enabled
         defaults.set(enabled, forKey: StorageKey.adaptiveMotion)
         updateActivityRuntime()
@@ -277,6 +282,7 @@ final class AirPodsExperienceManager: ObservableObject {
     }
 
     func selectProfile(_ profile: AirPodsListeningProfile) {
+        guard selectedProfile != profile else { return }
         selectedProfile = profile
         defaults.set(profile.rawValue, forKey: StorageKey.profile)
         if isEnabled {
@@ -336,6 +342,11 @@ final class AirPodsExperienceManager: ObservableObject {
     private func refreshConnection(reason: String) {
         let previous = connection
         let output = AVAudioSession.sharedInstance().currentRoute.outputs.first(where: Self.isAirPodsOutput)
+        let outputChanged = activityOutputUID != output?.uid
+        if outputChanged {
+            activityOutputUID = output?.uid
+            stopActivityRuntime()
+        }
         if let output {
             connection = AirPodsConnectionSnapshot(
                 isConnected: true,
@@ -347,7 +358,7 @@ final class AirPodsExperienceManager: ObservableObject {
             connection = .disconnected
         }
 
-        guard previous != connection else { return }
+        guard previous != connection || outputChanged else { return }
         AppLogger.info(
             "[AirPodsExperience] route changed connected=\(connection.isConnected) device=\(connection.deviceName) headTracking=\(connection.supportsHeadTracking) systemSpatial=\(connection.systemSpatialAudioEnabled) reason=\(reason)",
             step: "airpods.route"
@@ -364,6 +375,8 @@ final class AirPodsExperienceManager: ObservableObject {
            isEnabled,
            autoApplyOnConnect {
             applyCurrentExperience(reason: "AirPods connected")
+        } else if outputChanged, connection.isConnected, experienceApplied {
+            applyCurrentExperience(reason: "AirPods output changed")
         }
     }
 
@@ -413,8 +426,7 @@ final class AirPodsExperienceManager: ObservableObject {
             configuration = adapt(configuration, for: motionState)
         }
 
-        suite.setEnabled(.spatialLive, enabled: true)
-        suite.setSpatialConfiguration(configuration)
+        suite.setSpatialConfiguration(configuration, enabled: true)
         let effects = PlayerManager.shared.audioEffects
         AppLogger.info(
             "[AirPodsExperience] applied model=\(selectedDeviceModel.rawValue) profile=\(selectedProfile.rawValue) motion=\(motionState.rawValue) mode=\(configuration.mode.rawValue) requestedWidth=\(String(format: "%.3f", configuration.stageWidth)) requestedDepth=\(String(format: "%.3f", configuration.stageDepth)) committedSurround=\(String(format: "%.3f", effects.surroundLevel)) committedReverb=\(String(format: "%.3f", effects.reverbLevel)) committedWidth=\(String(format: "%.3f", effects.stereoWidth)) reason=\(reason)",
@@ -427,10 +439,10 @@ final class AirPodsExperienceManager: ObservableObject {
     private func restoreSpatialBaseline(reason: String) {
         guard experienceApplied else { return }
         let suite = MonoNextSuiteManager.shared
-        if let baselineSpatialConfiguration {
-            suite.setSpatialConfiguration(baselineSpatialConfiguration)
-        }
-        suite.setEnabled(.spatialLive, enabled: baselineSpatialEnabled)
+        suite.setSpatialConfiguration(
+            baselineSpatialConfiguration ?? .init(),
+            enabled: baselineSpatialEnabled
+        )
         experienceApplied = false
         baselineSpatialConfiguration = nil
         AppLogger.info(
@@ -551,30 +563,71 @@ final class AirPodsExperienceManager: ObservableObject {
             activityRuntime = manager
         }
         guard manager.isActivityAvailable else {
-            motionState = .unavailable
+            stopActivityRuntime()
             return
         }
         guard !manager.isActivityActive else { return }
+        activitySessionID &+= 1
         manager.startActivityUpdates(
             to: activityQueue,
-            withHandler: Self.makeActivityHandler(owner: self)
+            withHandler: Self.makeActivityHandler(owner: self, sessionID: activitySessionID)
         )
     }
 
     private func stopActivityRuntime() {
+        activitySessionID &+= 1
+        cancelMotionTransition()
         if #available(iOS 18.0, *),
            let manager = activityRuntime as? CMHeadphoneActivityManager,
            manager.isActivityActive {
             manager.stopActivityUpdates()
         }
-        if !connection.isConnected || !adaptsToMotion || !isEnabled {
-            motionState = .unavailable
+        motionState = .unavailable
+    }
+
+    private func cancelMotionTransition() {
+        motionTransitionTask?.cancel()
+        motionTransitionTask = nil
+        pendingMotionState = nil
+    }
+
+    private func receiveMotionState(_ state: AirPodsMotionState, sessionID: Int) {
+        guard activitySessionID == sessionID,
+              experienceApplied, isEnabled, adaptsToMotion, connection.isConnected else { return }
+        guard state == .walking || state == .running || state == .stationary,
+              state != motionState else {
+            // Uncertain classifications must not reopen the immersive stage.
+            cancelMotionTransition()
+            return
+        }
+        guard pendingMotionState != state else { return }
+        cancelMotionTransition()
+        pendingMotionState = state
+        // Require a stable classification; returning to head tracking needs
+        // a longer dwell than narrowing the stage while moving.
+        let dwell: UInt64 = state == .stationary ? 4_000_000_000 : 2_000_000_000
+        motionTransitionTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: dwell)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled, let self,
+                  self.activitySessionID == sessionID,
+                  self.pendingMotionState == state,
+                  self.experienceApplied, self.isEnabled,
+                  self.adaptsToMotion, self.connection.isConnected else { return }
+            self.motionTransitionTask = nil
+            self.pendingMotionState = nil
+            self.motionState = state
+            self.applyCurrentExperience(reason: "stable headphone activity changed")
         }
     }
 
     @available(iOS 18.0, *)
     nonisolated private static func makeActivityHandler(
-        owner: AirPodsExperienceManager
+        owner: AirPodsExperienceManager,
+        sessionID: Int
     ) -> CMHeadphoneActivityManager.ActivityHandler {
         return { [weak owner] activity, error in
             let errorText = error?.localizedDescription
@@ -593,7 +646,7 @@ final class AirPodsExperienceManager: ObservableObject {
                 state = .unknown
             }
             Task { @MainActor [weak owner] in
-                guard let owner else { return }
+                guard let owner, owner.activitySessionID == sessionID else { return }
                 if let errorText {
                     AppLogger.warning(
                         "[AirPodsExperience] motion update failed error=\(errorText)",
@@ -603,9 +656,7 @@ final class AirPodsExperienceManager: ObservableObject {
                     owner.stopActivityRuntime()
                     return
                 }
-                guard owner.motionState != state else { return }
-                owner.motionState = state
-                owner.applyCurrentExperience(reason: "headphone activity changed")
+                owner.receiveMotionState(state, sessionID: sessionID)
             }
         }
     }

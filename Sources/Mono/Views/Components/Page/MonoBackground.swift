@@ -84,6 +84,9 @@ private struct MonoNavigationBackButtonModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationBarBackButtonHidden(true)
             .toolbar(.visible, for: .navigationBar)
             .toolbar {
@@ -99,18 +102,9 @@ private struct MonoNavigationBackButtonModifier: ViewModifier {
 }
 
 extension View {
-    /// 统一使用应用自定义返回按钮，并关闭系统导航返回按钮。
-    @ViewBuilder
-    func monoNavigationBackButton(
-        iconColor: Color = .monoTextPrimary,
-        title: String? = nil
-    ) -> some View {
-        if let title {
-            themedInlineNavigationTitle(title, color: iconColor)
-                .modifier(MonoNavigationBackButtonModifier(iconColor: iconColor))
-        } else {
-            modifier(MonoNavigationBackButtonModifier(iconColor: iconColor))
-        }
+    /// Navigation chrome contains controls only; page titles belong to content.
+    func monoNavigationBackButton(iconColor: Color = .monoTextPrimary) -> some View {
+        modifier(MonoNavigationBackButtonModifier(iconColor: iconColor))
     }
 }
 
@@ -131,7 +125,6 @@ struct MonoBackground: View {
     private var useAsideFluidBackground: Bool {
         themeId == .default
             && settings.asideMusicFluidBackgroundEnabled
-            && coverURL != nil
     }
 
     /// 当前全局主题 ID
@@ -160,11 +153,9 @@ struct MonoBackground: View {
                 .transition(.opacity)
             }
 
-            if let coverUrl = coverURL,
-               settings.asideMusicFluidBackgroundEnabled,
-               themeId == .default {
+            if useAsideFluidBackground {
                 AsideMusicFluidBackground(
-                    artworkURL: coverUrl.absoluteString,
+                    artworkURL: coverURL?.absoluteString,
                     onBrightnessChanged: { isDark in
                         if settings.globalCoverIsDark != isDark {
                             settings.globalCoverIsDark = isDark

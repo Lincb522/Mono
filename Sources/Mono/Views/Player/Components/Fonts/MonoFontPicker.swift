@@ -431,7 +431,7 @@ struct PlayerTypographySettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "player_more_lyrics_appearance"))
+        .monoNavigationBackButton(iconColor: .white)
         .onAppear {
             coverColors.extract(from: player.currentSong?.coverUrl?.sized(200).absoluteString)
         }

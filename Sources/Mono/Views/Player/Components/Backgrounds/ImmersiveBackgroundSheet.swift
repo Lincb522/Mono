@@ -67,7 +67,7 @@ struct ImmersiveBackgroundSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "immersive_bg_title"))
+        .monoNavigationBackButton(iconColor: .white)
         // monoSheet 内呈现时，深色背景铺满整个面板（含把手区）
         .monoSheetSurface(id: "immersive-background") {
             sheetBackdrop

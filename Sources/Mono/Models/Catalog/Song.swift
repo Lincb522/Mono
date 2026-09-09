@@ -6,7 +6,7 @@ import Foundation
 ///
 /// ncm 字段作为基础结构，qcm、qsm、Apple Music、本地文件与播客信息
 /// Platform identity keeps numeric catalog IDs in their own namespaces.
-struct Song: Identifiable, Codable, Hashable, Equatable {
+struct Song: Identifiable, Codable, Hashable, Equatable, Sendable {
     static func == (lhs: Song, rhs: Song) -> Bool { lhs.identityKey == rhs.identityKey }
     func hash(into hasher: inout Hasher) { hasher.combine(identityKey) }
 
@@ -416,7 +416,7 @@ final class SongArtworkFallbackRegistry: @unchecked Sendable {
     }
 }
 
-struct SongQuality: Codable {
+struct SongQuality: Codable, Sendable {
     let br: Int
     let fid: Int?
     let size: Int?
@@ -424,7 +424,7 @@ struct SongQuality: Codable {
     let sr: Int?
 }
 
-struct Privilege: Codable {
+struct Privilege: Codable, Sendable {
     let id: Int?
     let fee: Int?
     let payed: Int?
@@ -455,25 +455,25 @@ struct Privilege: Codable {
     let chargeInfoList: [ChargeInfo]?
 }
 
-struct FreeTrialPrivilege: Codable {
+struct FreeTrialPrivilege: Codable, Sendable {
     let resConsumable: Bool
     let userConsumable: Bool
     let listenType: Int?
 }
 
-struct ChargeInfo: Codable {
+struct ChargeInfo: Codable, Sendable {
     let rate: Int
     let chargeUrl: String?
     let chargeMessage: String?
     let chargeType: Int
 }
 
-struct Artist: Codable {
+struct Artist: Codable, Sendable {
     let id: Int
     let name: String
 }
 
-struct Album: Codable {
+struct Album: Codable, Sendable {
     let id: Int
     let name: String
     let picUrl: String?

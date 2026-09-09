@@ -103,12 +103,14 @@ extension AIEqualizerAgent {
     }
 
     func resolvedProviderRequestContext(
-        usePublishedConfiguration: Bool = true
+        usePublishedConfiguration: Bool = true,
+        service: AITuningService? = nil
     ) async throws -> AIProviderRequestContext {
-        if usePublishedConfiguration, !AIPersonalProviderStore.shared.settings.isEnabled {
+        if usePublishedConfiguration, service == .builtIn {
             providerStore.refreshRemoteConfigurationInBackgroundIfNeeded()
         }
-        var context = try providerStore.requestContext(usePublishedConfiguration: usePublishedConfiguration)
+        var context = try service.map { try providerStore.tuningRequestContext(service: $0) }
+            ?? providerStore.requestContext(usePublishedConfiguration: usePublishedConfiguration)
         let configuration = context.configuration
         let apiKey = context.apiKey
         if configuration.wireProtocol.requiresAPIKey,

@@ -49,5 +49,16 @@
   "appSimulatorRuntime": "unverified",
   "realDeviceRuntime": "unverified",
   "repeatExtractionIdentical": true,
-  "exportedAssetCount": 466
+  "exportedAssetCount": 466,
+  "podcastRevision": {
+    "design": "voice bubble with two short voice slots",
+    "generatedWith": "built-in image generation",
+    "assetVerification": "passed",
+    "packageBuild": "passed",
+    "packageBuildLog": "artifacts/podcast-voice-bubble/package-build.log",
+    "changedPNGsAcrossBothStyles": 8,
+    "unchangedPNGsAcrossBothStyles": 924,
+    "previousFullAppAndRuntimeEvidence": "predates this asset-only revision",
+    "newFullAppRuntime": "unverified"
+  }
 }

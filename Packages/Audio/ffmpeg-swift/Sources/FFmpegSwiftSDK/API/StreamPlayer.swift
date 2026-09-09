@@ -296,6 +296,10 @@ public final class StreamPlayer {
     /// Serial queue for synchronizing state changes.
     private let stateQueue = DispatchQueue(label: "com.ffmpeg-sdk.player-state")
 
+    private let resourceCleanupQueue = DispatchQueue(
+        label: "com.ffmpeg-sdk.resource-cleanup", qos: .utility
+    )
+
     /// Flag indicating whether the playback loop should continue.
     private var isPlaybackActive: Bool = false
 
@@ -698,9 +702,13 @@ public final class StreamPlayer {
 
     /// 取消预加载
     public func cancelNextPreparation() {
-        let cancelled = stateQueue.sync { () -> (ConnectionManager?, [DecodedAudioBatch]) in
-            let manager = nextConnectionManager
-            let preroll = nextPrerollBatches
+        let cancelled = stateQueue.sync { () -> RetiredResources in
+            let resources = RetiredResources(
+                connection: nextConnectionManager,
+                demuxer: nextDemuxer,
+                audioDecoder: nextAudioDecoder,
+                preroll: nextPrerollBatches
+            )
             nextPreparationGeneration &+= 1
             nextConnectionManager = nil
             nextDemuxer = nil
@@ -712,10 +720,9 @@ public final class StreamPlayer {
             isNextReady = false
             nextPreparationFailed = false
             forceTransition = false
-            return (manager, preroll)
+            return resources
         }
-        cancelled.0?.disconnect()
-        releaseDecodedAudioBatches(cancelled.1)
+        retireResources(cancelled)
     }
 
     /// 处理音频路由变化（蓝牙连接/断开）。
@@ -892,6 +899,58 @@ public final class StreamPlayer {
         let packetPTS: Int64
         let timeBase: AVRational
         let buffers: [AudioBuffer]
+    }
+
+    /// Removed from stateQueue before transfer to resourceCleanupQueue. Decoder
+    /// references are retained only for lifetime management, never decoding here.
+    private final class RetiredResources: @unchecked Sendable {
+        private var connection: ConnectionManager?
+        private var demuxer: Demuxer?
+        private var audioDecoder: AudioDecoder?
+        private var videoDecoder: VideoDecoder?
+        private var preroll: [DecodedAudioBatch]
+
+        init(
+            connection: ConnectionManager?,
+            demuxer: Demuxer?,
+            audioDecoder: AudioDecoder?,
+            videoDecoder: VideoDecoder? = nil,
+            preroll: [DecodedAudioBatch] = []
+        ) {
+            self.connection = connection
+            self.demuxer = demuxer
+            self.audioDecoder = audioDecoder
+            self.videoDecoder = videoDecoder
+            self.preroll = preroll
+        }
+
+        func interruptIO() {
+            connection?.interruptActiveIO()
+        }
+
+        /// Only the cleanup queue may access this bundle after submission.
+        func release() {
+            connection?.disconnect()
+            connection = nil
+            demuxer = nil
+            audioDecoder = nil
+            videoDecoder = nil
+            for batch in preroll {
+                for buffer in batch.buffers {
+                    buffer.data.deallocate()
+                }
+            }
+            preroll = []
+        }
+    }
+
+    private func retireResources(_ resources: RetiredResources) {
+        // Wake blocked reads immediately; closing inputs and freeing preroll
+        // buffers must not hold the player state lock or the caller's UI thread.
+        resources.interruptIO()
+        resourceCleanupQueue.async {
+            resources.release()
+        }
     }
 
     private func prepareSeekAudioPreroll(demuxer: Demuxer) -> [DecodedAudioBatch] {
@@ -2560,21 +2619,23 @@ public final class StreamPlayer {
         // Reset sync controller
         syncController.reset()
 
-        // Clean up decoders
-        stateQueue.sync {
+        let retired = stateQueue.sync { () -> RetiredResources in
+            let resources = RetiredResources(
+                connection: connectionManager,
+                demuxer: demuxer,
+                audioDecoder: audioDecoder,
+                videoDecoder: videoDecoder
+            )
             audioDecoder = nil
             videoDecoder = nil
             demuxer = nil
+            connectionManager = nil
             audioTimeBase = AVRational(num: 0, den: 1)
             audioPTSOffset = nil
             decodedTime = 0
+            return resources
         }
-
-        // Disconnect
-        stateQueue.sync {
-            connectionManager?.disconnect()
-            connectionManager = nil
-        }
+        retireResources(retired)
         return true
     }
 

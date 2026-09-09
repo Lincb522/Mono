@@ -1,0 +1,134 @@
+{
+  "style": "expressiveOutline",
+  "semanticCount": 233,
+  "newPNGCount": 466,
+  "canvas": [
+    128,
+    128
+  ],
+  "centerMaxErrorPixels": 0.5,
+  "minTransparentMarginPixels": 9,
+  "appearanceGeometryIdentical": true,
+  "classicAssetsUnchanged": false,
+  "assetVerification": "Packages/Icons/MonoGlyphIcons/Tools/verify-assets: both styles passed",
+  "packageBuild": {
+    "result": "passed",
+    "log": "artifacts/mono-glyph-expressive/mono-glyph-outline-package.log"
+  },
+  "appBuild": {
+    "result": "passed",
+    "destination": "generic/platform=iOS Simulator",
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "log": "artifacts/mono-glyph-expressive/mono-glyph-app-build.log"
+  },
+  "compiledCatalog": {
+    "names": 466,
+    "renditions": 932,
+    "size": [
+      128,
+      128
+    ]
+  },
+  "browserPreview": {
+    "widths": [
+      390,
+      1440
+    ],
+    "horizontalOverflow": false,
+    "loadedImageCountPerPage": 40,
+    "screenshots": [
+      "QA/browser-narrow.png",
+      "QA/browser-wide.png"
+    ]
+  },
+  "review": {
+    "disposition": "ship",
+    "materialFindings": 0,
+    "detectorWarning": "flat-type-hierarchy: reviewed as nonblocking; existing inspection-tool typography retained"
+  },
+  "nativeComponentValidation": [
+    {
+      "appearanceAlphaEqual": true,
+      "defaultClassic": true,
+      "distinctStyleAssets": true,
+      "invalidPreferenceClassic": true,
+      "loadedVariants": 932,
+      "passed": true,
+      "pickerRenders": [
+        "picker-320-light-classic.png",
+        "picker-320-light-expressiveOutline.png",
+        "picker-320-dark-classic.png",
+        "picker-320-dark-expressiveOutline.png",
+        "picker-390-light-classic.png",
+        "picker-390-light-expressiveOutline.png",
+        "picker-390-dark-classic.png",
+        "picker-390-dark-expressiveOutline.png",
+        "picker-768-light-classic.png",
+        "picker-768-light-expressiveOutline.png",
+        "picker-768-dark-classic.png",
+        "picker-768-dark-expressiveOutline.png"
+      ],
+      "preferenceRoundTrip": true,
+      "runtime": "26.4",
+      "scope": "Production package and preference model; production IconStylePicker rendered with default theme font/color fixtures. Full app navigation and touch dispatch not exercised.",
+      "relaunchPersistence": true
+    },
+    {
+      "appearanceAlphaEqual": true,
+      "defaultClassic": true,
+      "distinctStyleAssets": true,
+      "invalidPreferenceClassic": true,
+      "loadedVariants": 932,
+      "passed": true,
+      "pickerRenders": [
+        "picker-320-light-classic.png",
+        "picker-320-light-expressiveOutline.png",
+        "picker-320-dark-classic.png",
+        "picker-320-dark-expressiveOutline.png",
+        "picker-390-light-classic.png",
+        "picker-390-light-expressiveOutline.png",
+        "picker-390-dark-classic.png",
+        "picker-390-dark-expressiveOutline.png",
+        "picker-768-light-classic.png",
+        "picker-768-light-expressiveOutline.png",
+        "picker-768-dark-classic.png",
+        "picker-768-dark-expressiveOutline.png"
+      ],
+      "preferenceRoundTrip": true,
+      "runtime": "18.4",
+      "scope": "Production package and preference model; production IconStylePicker rendered with default theme font/color fixtures. Full app navigation and touch dispatch not exercised.",
+      "relaunchPersistence": true
+    }
+  ],
+  "unverified": [
+    "Full app navigation and touch-driven style switch",
+    "Physical device rendering",
+    "iOS 16 runtime",
+    "VoiceOver touch targets and accessibility audit",
+    "Every app theme and page"
+  ],
+  "downloadArchive": {
+    "file": "mono-glyph-expressive-outline.zip",
+    "sha256": "0a0fffb3049c3e19751c62be21120f246740143453696250ce074d8e7829579d",
+    "pngs": 466,
+    "crc": "passed"
+  },
+  "classicAssetChanges": [
+    "podcast",
+    "podcastFilled"
+  ],
+  "podcastRevision": {
+    "design": "voice bubble with two short voice slots",
+    "generatedWith": "built-in image generation",
+    "assetVerification": "passed",
+    "packageBuild": "passed",
+    "packageBuildLog": "artifacts/podcast-voice-bubble/package-build.log",
+    "changedPNGsAcrossBothStyles": 8,
+    "unchangedPNGsAcrossBothStyles": 924,
+    "previousFullAppAndRuntimeEvidence": "predates this asset-only revision",
+    "newFullAppRuntime": "unverified"
+  }
+}

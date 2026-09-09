@@ -18,6 +18,7 @@ struct AIProviderDeveloperSettingsView: View {
     @State private var modelDiscoveryRequestID = UUID()
     @State private var remoteActionMessage: String?
     @State private var showsCloudSecrets = false
+    @State private var resonanceModelRefreshID = UUID()
 
     private let client = AIProviderClient()
 
@@ -75,6 +76,8 @@ struct AIProviderDeveloperSettingsView: View {
                             )
                             .disabled(isRemoteActionRunning || store.tokenAdminCredential.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
+
+                        resonanceConfigurationSection
 
                         cloudConfigurationSection
 
@@ -199,6 +202,97 @@ struct AIProviderDeveloperSettingsView: View {
         .task(id: modelDiscoveryFingerprint) {
             await fetchModels(automatic: true)
         }
+        .task(id: resonanceModelRefreshID) {
+            await store.fetchPublishedResonanceModels()
+        }
+    }
+
+    private var resonanceConfigurationSection: some View {
+        SettingsSection(title: String(localized: "ai_resonance_section")) {
+            SettingsToggleRow(
+                icon: .waveform,
+                title: String(localized: "ai_resonance_enabled"),
+                subtitle: String(localized: "ai_resonance_distribution_description"),
+                isOn: $store.resonanceEnabled
+            )
+            developerDivider
+            VStack(alignment: .leading, spacing: 8) {
+                Text(String(localized: "ai_resonance_cloud_model"))
+                    .font(.rounded(size: 15, weight: .medium))
+                    .foregroundStyle(.white)
+                ForEach(store.publishedResonanceModels) { model in
+                    resonanceModelRow(model)
+                }
+                if !store.resonanceModelID.isEmpty,
+                   !store.publishedResonanceModels.contains(where: { $0.id == store.resonanceModelID }) {
+                    Text(String(localized: "ai_resonance_selected_model_unavailable"))
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let error = store.resonanceModelsError {
+                    Text(error).font(.callout).foregroundStyle(.red)
+                } else if !store.isLoadingResonanceModels, store.publishedResonanceModels.isEmpty {
+                    Text(String(localized: "ai_resonance_no_published_models"))
+                        .font(.callout).foregroundStyle(.white.opacity(0.6))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            developerDivider
+            SettingsButtonRow(
+                icon: .refresh,
+                title: String(localized: store.isLoadingResonanceModels
+                              ? "ai_resonance_loading_models" : "ai_resonance_refresh_models")
+            ) {
+                resonanceModelRefreshID = UUID()
+            }
+            .disabled(store.isLoadingResonanceModels)
+        }
+    }
+
+    private func resonanceModelRow(_ model: AudioTrainingModelInstallDescriptor) -> some View {
+        let selected = store.resonanceModelID == model.id
+        let publishedSelection = store.publishedConfiguration?.resonance?.model?.id
+            ?? store.remoteConfiguration?.resonance?.model?.id
+        return Button {
+            store.resonanceModelID = model.id
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(model.displayName)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(.white)
+                    if let release = model.release {
+                        Text(String(format: String(localized: "ai_resonance_published_at"), release.publicationDateText))
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.65))
+                        if !release.summary.isEmpty {
+                            Text(release.summary)
+                                .font(.callout)
+                                .foregroundStyle(.white.opacity(0.75))
+                        }
+                    }
+                    if publishedSelection == model.id {
+                        Text(String(localized: "ai_resonance_cloud_selected_model"))
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.cyan)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if selected {
+                    MonoIcon(icon: .checkmark, size: 16, color: .cyan)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(.vertical, 12)
+            .frame(minHeight: 48)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     private var providerRow: some View {
@@ -521,6 +615,14 @@ struct AIProviderDeveloperSettingsView: View {
                     value: displayDate(value.updatedAt)
                 ),
                 AIProviderCloudField(
+                    id: "resonance",
+                    title: String(localized: "ai_resonance_section"),
+                    value: value.resonance?.enabled == true
+                        ? (value.resonance?.model?.version ?? "—")
+                        : String(localized: "ai_provider_remote_disabled"),
+                    usesExpandedLayout: true
+                ),
+                AIProviderCloudField(
                     id: "protocol",
                     title: String(localized: "ai_provider_protocol"),
                     value: value.wireProtocol.title
@@ -593,6 +695,14 @@ struct AIProviderDeveloperSettingsView: View {
                 id: "updatedAt",
                 title: String(localized: "ai_provider_cloud_updated_at"),
                 value: displayDate(value.updatedAt)
+            ),
+            AIProviderCloudField(
+                id: "resonance",
+                title: String(localized: "ai_resonance_section"),
+                value: value.resonance?.enabled == true
+                    ? (value.resonance?.model?.version ?? "—")
+                    : String(localized: "ai_provider_remote_disabled"),
+                usesExpandedLayout: true
             ),
             AIProviderCloudField(
                 id: "protocol",

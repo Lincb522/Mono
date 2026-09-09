@@ -88,6 +88,11 @@ final class MonoStore: ObservableObject {
         fetchAll(type).first(where: predicate)
     }
 
+    func object<T: MonoEntity>(_ type: T.Type, uniqueKey: String) -> T? {
+        ensureLoaded(type)
+        return tables[T.monoEntityName]?[uniqueKey]?.object as? T
+    }
+
     func count<T: MonoEntity>(_ type: T.Type, where predicate: ((T) -> Bool)? = nil) -> Int {
         if let predicate {
             return fetchAll(type).filter(predicate).count
@@ -154,7 +159,6 @@ final class MonoStore: ObservableObject {
             return false
         }
 
-        var didChange = hasPendingDeletes
         var committedSnapshots: [(Row, NSDictionary)] = []
         for name in loadedEntities {
             guard var table = tables[name] else { continue }
@@ -166,7 +170,6 @@ final class MonoStore: ObservableObject {
                 if row.lastSnapshot == nil || !bridged.isEqual(row.lastSnapshot) || currentKey != key {
                     backend.upsert(entityName: name, uniqueKey: currentKey, snapshot: snapshot)
                     committedSnapshots.append((row, bridged))
-                    didChange = true
                 }
                 // uniqueKey 属性本身被修改的场景：重新挂到新 key 下
                 if currentKey != key {
@@ -178,7 +181,42 @@ final class MonoStore: ObservableObject {
             }
             tables[name] = table
         }
-        if didChange {
+        return commitSnapshots(committedSnapshots)
+    }
+
+    /// Cache updates know their exact rows; avoid snapshotting every loaded
+    /// entity on each track change. Other dirty objects remain pending for save().
+    @discardableResult
+    func save<T: MonoEntity>(_ objects: [T]) -> Bool {
+        guard let backend else { return false }
+        if batchDepth > 0 {
+            deferredSaveRequested = true
+            return false
+        }
+        let table = tables[T.monoEntityName] ?? [:]
+        // Renamed or noncanonical objects require the full reconciliation path.
+        guard objects.allSatisfy({ table[$0.monoUniqueKey]?.object === $0 }) else {
+            return save()
+        }
+
+        var committedSnapshots: [(Row, NSDictionary)] = []
+        var visitedKeys: Set<String> = []
+        for object in objects {
+            let key = object.monoUniqueKey
+            guard visitedKeys.insert(key).inserted, let row = table[key] else { continue }
+            let snapshot = object.monoSnapshot()
+            let bridged = Self.bridge(snapshot)
+            if row.lastSnapshot == nil || !bridged.isEqual(row.lastSnapshot) {
+                backend.upsert(entityName: T.monoEntityName, uniqueKey: key, snapshot: snapshot)
+                committedSnapshots.append((row, bridged))
+            }
+        }
+        return commitSnapshots(committedSnapshots)
+    }
+
+    private func commitSnapshots(_ committedSnapshots: [(Row, NSDictionary)]) -> Bool {
+        guard let backend else { return false }
+        if !committedSnapshots.isEmpty || hasPendingDeletes {
             do {
                 try backend.flush()
             } catch {

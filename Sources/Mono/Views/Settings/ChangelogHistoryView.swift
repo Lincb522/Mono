@@ -61,7 +61,7 @@ struct ChangelogHistoryView: View {
 
             content
         }
-        .asideSettingsDetailChrome(String(localized: "更新日志"))
+        .asideSettingsDetailChrome()
         // 版本号/日期用等宽字体，关掉全局 .rounded 覆盖
         .compatFontDesign(nil)
         .task(id: reloadID) { await load() }
@@ -70,6 +70,13 @@ struct ChangelogHistoryView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                SettingsScrollablePageHeader(
+                    title: String(localized: "更新日志"),
+                    eyebrow: String(localized: "settings_eyebrow_changelog"),
+                    icon: .history,
+                    signalModule: .changelog
+                )
+
                 contentState
                 FloatingBarBottomSpacer()
             }

@@ -379,6 +379,17 @@ final class SettingsManager: ObservableObject {
     @AppStorage("qmcDecryptEnabled") var qmcDecryptEnabled: Bool = false
 
     @AppStorage("useSystemTabBar") var useSystemTabBar: Bool = false
+    @AppStorage("systemTabBarStyle") var systemTabBarStyleRaw = SystemTabBarStyle.native.rawValue
+
+    var systemTabBarStyle: SystemTabBarStyle {
+        get { SystemTabBarStyle(rawValue: systemTabBarStyleRaw) ?? .native }
+        set {
+            guard systemTabBarStyleRaw != newValue.rawValue else { return }
+            objectWillChange.send()
+            systemTabBarStyleRaw = newValue.rawValue
+        }
+    }
+
 
     // MARK: - 封面背景设置
 

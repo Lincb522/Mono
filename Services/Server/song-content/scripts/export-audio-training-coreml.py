@@ -212,6 +212,9 @@ def export_model(source_path, output_path):
             artifact.get("graphicEQModes", []), separators=(",", ":")
         ),
         "mono.training_strategy": str(artifact.get("trainingStrategy", "")),
+        "mono.confidence_calibration": json.dumps(
+            artifact.get("confidenceCalibration"), separators=(",", ":"), allow_nan=False
+        ),
         "mono.feature_names": json.dumps(feature_names, separators=(",", ":")),
         "mono.target_names": json.dumps(target_names, separators=(",", ":")),
         "mono.complete_sample_count": str(

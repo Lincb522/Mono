@@ -15,6 +15,16 @@ struct PodcastSearchView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+                if SignalStyle.isActive {
+                    SignalNestedPageHeader(
+                        title: String(localized: "podcast_title"),
+                        eyebrow: "RADIO SEARCH",
+                        icon: .magnifyingGlass,
+                        module: .search
+                    )
+                    .padding(.horizontal, DeviceLayout.homeHorizontalPadding)
+                }
+
                 // 搜索栏
                 searchBar
                     .padding(.top, 8)
@@ -40,7 +50,7 @@ struct PodcastSearchView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "podcast_title"))
+        .monoNavigationBackButton()
         .onAppear {
             viewModel.fetchHotRadios()
         }

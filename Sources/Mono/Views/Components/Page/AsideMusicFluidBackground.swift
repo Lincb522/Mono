@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// AsideMusic 默认主题的全屏流体背景。
 ///
@@ -6,7 +7,7 @@ import SwiftUI
 /// 切到后台或开启“减弱动态效果”时冻结当前画面。
 @MainActor
 struct AsideMusicFluidBackground: View {
-    let artworkURL: String
+    let artworkURL: String?
     var onBrightnessChanged: ((Bool) -> Void)?
 
     @State private var isPlaying = FloatingBarPlaybackModel.shared.isPlaying
@@ -23,28 +24,27 @@ struct AsideMusicFluidBackground: View {
     @State private var motionIsRunning = false
     @State private var isVisible = false
     @State private var computeWorkloadToken: UUID?
+    @State private var paletteTransition = AsideMusicFluidPaletteTransition()
 
-    private var palette: [Color] {
+    private var resolvedPalette: AsideMusicFluidPalette? {
         let extracted = coverColors.palette
-        guard extracted.count >= 3 else {
-            return [
-                coverColors.dominantColor,
-                coverColors.secondaryColor,
-                coverColors.dominantColor.opacity(0.78),
-            ]
-        }
-
-        return [
-            extracted[0],
-            extracted[extracted.count / 2],
-            extracted[extracted.count - 1],
-        ]
+        guard extracted.count >= 3,
+              let first = rgb(extracted[0]),
+              let middle = rgb(extracted[extracted.count / 2]),
+              let last = rgb(extracted[extracted.count - 1]) else { return nil }
+        return AsideMusicFluidPalette(first: first, middle: middle, last: last)
     }
 
     private var shouldRunMotion: Bool {
-        isVisible && isPlaying
+        guard #available(iOS 17.0, *) else { return false }
+        return isVisible && isPlaying
             && scenePhase == .active
             && !reduceMotion
+    }
+
+    private var shouldRenderFrames: Bool {
+        isVisible && scenePhase == .active
+            && (motionIsRunning || paletteTransition.isAnimating)
     }
 
     var body: some View {
@@ -60,30 +60,51 @@ struct AsideMusicFluidBackground: View {
             ZStack {
                 Color.monoBackground
 
-                if coverColors.resolvedURL == artworkURL,
-                   #available(iOS 17.0, *) {
-                    AsideMusicFluidMetalSurface(
-                        size: renderSize,
-                        colors: palette,
-                        accumulatedMotionTime: accumulatedMotionTime,
-                        motionAnchorDate: motionAnchorDate,
-                        motionIsRunning: motionIsRunning,
-                        isDarkMode: colorScheme == .dark
-                    )
-                    .frame(width: renderSize.width, height: renderSize.height)
-                    .scaleEffect(1 / renderScale, anchor: .topLeading)
-                    .frame(
-                        width: proxy.size.width,
-                        height: proxy.size.height,
-                        alignment: .topLeading
-                    )
-                } else if coverColors.resolvedURL == artworkURL {
-                    DynamicCoverPaletteLayer(
-                        colors: palette,
-                        opacity: colorScheme == .dark ? 0.82 : 0.62
-                    )
-                    .blur(radius: 34)
-                    .scaleEffect(1.16)
+                // Loading a cover must not unmount the material or expose the base color.
+                if paletteTransition.target != nil {
+                    TimelineView(
+                        AppFrameRate.throttledTimeline(
+                            maximumFramesPerSecond: 30,
+                            paused: !shouldRenderFrames
+                        )
+                    ) { context in
+                        let palette = paletteTransition.value(at: context.date.timeIntervalSinceReferenceDate)
+                        if let palette {
+                            let colors = [palette.first, palette.middle, palette.last].map {
+                                Color(red: $0.x, green: $0.y, blue: $0.z)
+                            }
+                            Group {
+                                if #available(iOS 17.0, *) {
+                                    AsideMusicFluidMetalSurface(
+                                        size: renderSize,
+                                        colors: colors,
+                                        motionTime: motionTime(at: context.date),
+                                        isDarkMode: colorScheme == .dark
+                                    )
+                                    .frame(width: renderSize.width, height: renderSize.height)
+                                    .scaleEffect(1 / renderScale, anchor: .topLeading)
+                                    .frame(
+                                        width: proxy.size.width,
+                                        height: proxy.size.height,
+                                        alignment: .topLeading
+                                    )
+                                } else {
+                                    DynamicCoverPaletteLayer(
+                                        colors: colors,
+                                        opacity: colorScheme == .dark ? 0.82 : 0.62
+                                    )
+                                    .blur(radius: 34)
+                                    .scaleEffect(1.16)
+                                }
+                            }
+                            .onChange(of: context.date) { _, date in
+                                let time = date.timeIntervalSinceReferenceDate
+                                guard let end = paletteTransition.completionTime, time >= end else { return }
+                                paletteTransition.finishIfNeeded(at: time)
+                                synchronizeComputeWorkload()
+                            }
+                        }
+                    }
                 }
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -99,7 +120,6 @@ struct AsideMusicFluidBackground: View {
         }
         .onChange(of: artworkURL) { _, newURL in
             coverColors.extract(from: newURL)
-            synchronizeMotionClock(reset: true)
         }
         .onReceive(FloatingBarPlaybackModel.shared.$isPlaying.removeDuplicates()) { playing in
             guard isPlaying != playing else { return }
@@ -113,12 +133,15 @@ struct AsideMusicFluidBackground: View {
             synchronizeMotionClock()
         }
         .onChange(of: coverColors.isDark) { _, isDark in
-            onBrightnessChanged?(isDark)
+            if let resolvedURL = coverColors.resolvedURL, resolvedURL == artworkURL {
+                onBrightnessChanged?(isDark)
+            }
         }
-        .onChange(of: coverColors.resolvedURL) { _, resolvedURL in
-            guard resolvedURL == artworkURL else { return }
-            onBrightnessChanged?(coverColors.isDark)
-            synchronizeComputeWorkload()
+        .onChange(of: coverColors.resolvedURL) { _, _ in
+            acceptResolvedPalette()
+        }
+        .onChange(of: coverColors.palette) { _, _ in
+            acceptResolvedPalette()
         }
         .onDisappear {
             isVisible = false
@@ -126,12 +149,31 @@ struct AsideMusicFluidBackground: View {
         }
     }
 
-    private func synchronizeMotionClock(reset: Bool = false) {
-        let now = Date()
+    private func acceptResolvedPalette() {
+        guard let resolvedURL = coverColors.resolvedURL,
+              resolvedURL == artworkURL,
+              let resolvedPalette else { return }
+        paletteTransition.update(to: resolvedPalette, at: Date().timeIntervalSinceReferenceDate)
+        onBrightnessChanged?(coverColors.isDark)
+        synchronizeComputeWorkload()
+    }
 
-        if reset {
-            accumulatedMotionTime = 0
-        } else if motionIsRunning {
+    private func rgb(_ color: Color) -> SIMD3<Double>? {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        guard UIColor(color).getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return nil }
+        return SIMD3(Double(red), Double(green), Double(blue))
+    }
+
+    private func motionTime(at date: Date) -> TimeInterval {
+        accumulatedMotionTime + (motionIsRunning ? max(date.timeIntervalSince(motionAnchorDate), 0) : 0)
+    }
+
+    private func synchronizeMotionClock() {
+        let now = Date()
+        if motionIsRunning {
             accumulatedMotionTime += max(now.timeIntervalSince(motionAnchorDate), 0)
         }
 
@@ -141,8 +183,7 @@ struct AsideMusicFluidBackground: View {
     }
 
     private func synchronizeComputeWorkload() {
-        let shouldObserve = shouldRunMotion
-            && coverColors.resolvedURL == artworkURL
+        let shouldObserve = shouldRenderFrames && paletteTransition.target != nil
         if shouldObserve, computeWorkloadToken == nil {
             computeWorkloadToken = MonoComputeEngine.shared.beginWorkload(.fluidBackground)
         } else if !shouldObserve, let computeWorkloadToken {
@@ -156,37 +197,21 @@ struct AsideMusicFluidBackground: View {
 private struct AsideMusicFluidMetalSurface: View {
     let size: CGSize
     let colors: [Color]
-    let accumulatedMotionTime: TimeInterval
-    let motionAnchorDate: Date
-    let motionIsRunning: Bool
+    let motionTime: TimeInterval
     let isDarkMode: Bool
 
     var body: some View {
-        TimelineView(
-            AppFrameRate.throttledTimeline(
-                maximumFramesPerSecond: 30,
-                paused: !motionIsRunning
-            )
-        ) { context in
-            Rectangle()
-                .fill(Color.white)
-                .colorEffect(
-                    ShaderLibrary.asideMusicFluidBackgroundMaterial(
-                        .float2(size),
-                        .float(Float(motionTime(at: context.date))),
-                        .float(isDarkMode ? 1 : 0),
-                        .color(colors[0]),
-                        .color(colors[1]),
-                        .color(colors[2])
-                    )
+        Rectangle()
+            .fill(Color.white)
+            .colorEffect(
+                ShaderLibrary.asideMusicFluidBackgroundMaterial(
+                    .float2(size),
+                    .float(Float(motionTime)),
+                    .float(isDarkMode ? 1 : 0),
+                    .color(colors[0]),
+                    .color(colors[1]),
+                    .color(colors[2])
                 )
-        }
-    }
-
-    private func motionTime(at date: Date) -> TimeInterval {
-        let liveElapsed = motionIsRunning
-            ? max(date.timeIntervalSince(motionAnchorDate), 0)
-            : 0
-        return accumulatedMotionTime + liveElapsed
+            )
     }
 }

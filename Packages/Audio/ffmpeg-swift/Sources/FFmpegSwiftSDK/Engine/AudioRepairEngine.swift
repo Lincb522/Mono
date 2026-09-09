@@ -317,7 +317,7 @@ public final class AudioRepairEngine {
     }
 
     private static func safeOutputGain(_ value: Float) -> Float {
-        min(9, max(-9, value.isFinite ? value : 0))
+        min(9, max(-18, value.isFinite ? value : 0))
     }
 
     private static func safeMakeup(_ value: Float, outputGain: Float) -> Float {
@@ -698,7 +698,7 @@ private final class AudioRepairProcessor {
     }
 
     private func setOutputGainTarget(_ value: Float) {
-        let safeValue = min(9, max(-9, value.isFinite ? value : 0))
+        let safeValue = min(9, max(-18, value.isFinite ? value : 0))
         guard abs(safeValue - outputGainDBStorage) > 0.005 else { return }
         outputGainDBStorage = safeValue
         outputGainTargetLinear = powf(10, safeValue / 20)

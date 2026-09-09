@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import MonoGlyphIcons
 
 struct SettingsAppBrandRow: View {
     let title: String
@@ -96,6 +97,7 @@ struct SettingsInterfaceIconSetRow: View {
     @State private var isExpanded = false
     @AppStorage(AppInterfaceIconSet.zappiconStyleKey) private var zappiconStyleRaw: String = ZappiconIconStyle.light.rawValue
     @AppStorage(AppInterfaceIconSet.solarStyleKey) private var solarStyleRaw: String = SolarIconStyle.line.rawValue
+    @AppStorage(AppInterfaceIconSet.monoGlyphStyleKey) private var monoGlyphStyleRaw: String = MonoGlyphIconStyle.classic.rawValue
 
     private var iconSetPreviewColumns: [GridItem] {
         [GridItem(.adaptive(minimum: 118, maximum: 168), spacing: 8)]
@@ -109,12 +111,18 @@ struct SettingsInterfaceIconSetRow: View {
         SolarIconStyle(rawValue: solarStyleRaw) ?? .line
     }
 
+    private var monoGlyphStyle: MonoGlyphIconStyle {
+        MonoGlyphIconStyle(rawValue: monoGlyphStyleRaw) ?? .classic
+    }
+
     private var subtitle: String {
         switch selection {
         case .zappicon:
             return "\(selection.displayName) · \(zappiconStyle.displayName)"
         case .solar:
             return "\(selection.displayName) · \(solarStyle.displayName)"
+        case .monoGlyph:
+            return "\(selection.displayName) · \(monoGlyphStyle.displayName)"
         default:
             return selection.displayName
         }
@@ -158,7 +166,8 @@ struct SettingsInterfaceIconSetRow: View {
                             } label: {
                                 InterfaceIconSetOptionCard(
                                     iconSet: iconSet,
-                                    isSelected: selection == iconSet
+                                    isSelected: selection == iconSet,
+                                    monoGlyphStyle: monoGlyphStyle
                                 )
                             }
                             .buttonStyle(.plain)
@@ -175,6 +184,20 @@ struct SettingsInterfaceIconSetRow: View {
                             onSelect: { style in
                                 zappiconStyleRaw = style.rawValue
                                 AppInterfaceIconSet.setZappiconStyle(style)
+                            }
+                        )
+                        .padding(.horizontal, 14)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    if selection == .monoGlyph {
+                        IconStylePicker(
+                            label: String(localized: "settings_mono_glyph_style"),
+                            items: MonoGlyphIconStyle.allCases,
+                            selected: monoGlyphStyle,
+                            onSelect: { style in
+                                monoGlyphStyleRaw = style.rawValue
+                                AppInterfaceIconSet.setMonoGlyphStyle(style)
                             }
                         )
                         .padding(.horizontal, 14)
@@ -203,7 +226,7 @@ struct SettingsInterfaceIconSetRow: View {
     }
 }
 
-/// 通用图标风格选择器（Zappicon / Solar 共用）
+/// Shared style picker for icon families with multiple variants.
 struct IconStylePicker<Item: Identifiable & CaseIterable & Hashable>: View where Item.AllCases: RandomAccessCollection {
     let label: String
     let items: Item.AllCases
@@ -226,6 +249,7 @@ struct IconStylePicker<Item: Identifiable & CaseIterable & Hashable>: View where
         displayName = { item in
             if let z = item as? ZappiconIconStyle { return z.displayName }
             if let s = item as? SolarIconStyle { return s.displayName }
+            if let g = item as? MonoGlyphIconStyle { return g.displayName }
             return "\(item)"
         }
     }
@@ -259,6 +283,7 @@ struct IconStylePicker<Item: Identifiable & CaseIterable & Hashable>: View where
                             }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityAddTraits(selected == item ? .isSelected : [])
                 }
             }
         }
@@ -268,6 +293,7 @@ struct IconStylePicker<Item: Identifiable & CaseIterable & Hashable>: View where
 struct InterfaceIconSetOptionCard: View {
     let iconSet: AppInterfaceIconSet
     let isSelected: Bool
+    let monoGlyphStyle: MonoGlyphIconStyle
     @Environment(\.colorScheme) private var colorScheme
 
     private let samples: [MonoIcon.IconType] = [
@@ -311,10 +337,7 @@ struct InterfaceIconSetOptionCard: View {
     @ViewBuilder
     private func previewIcon(_ icon: MonoIcon.IconType) -> some View {
         if iconSet.usesOriginalArtwork {
-            Image(uiImage: iconSet.image(
-                for: icon,
-                prefersLightOutline: colorScheme == .dark
-            ))
+            Image(uiImage: originalArtwork(for: icon))
                 .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -332,6 +355,17 @@ struct InterfaceIconSetOptionCard: View {
                 .frame(width: 26, height: 26)
                 .background(previewIconBackground, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
         }
+    }
+
+    private func originalArtwork(for icon: MonoIcon.IconType) -> UIImage {
+        if iconSet == .monoGlyph {
+            return icon.monoGlyphImage(
+                assetId: nil,
+                prefersLightOutline: colorScheme == .dark,
+                style: monoGlyphStyle
+            )
+        }
+        return iconSet.image(for: icon, prefersLightOutline: colorScheme == .dark)
     }
 
     private var previewIconSize: CGFloat {

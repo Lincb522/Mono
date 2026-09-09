@@ -11,6 +11,10 @@ extension AIEqualizerAgent {
         expectedOutputIdentity: String? = nil,
         isManualAction: Bool = false
     ) -> Bool {
+        guard tuningServiceStore.settings.isEnabled else {
+            if isManualAction { phase = .failed(String(localized: "ai_tuning_service_disabled")) }
+            return false
+        }
         let currentSong = PlayerManager.shared.currentSong
         let currentSongID = currentSong?.id
         let currentSongIdentifier = currentSong.map(songIdentifier)

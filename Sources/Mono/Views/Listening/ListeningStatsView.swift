@@ -78,10 +78,7 @@ struct ListeningStatsView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(
-            iconColor: settings.globalThemeId == .default ? .monoTextPrimary : .white,
-            title: String(localized: "listening_stats")
-        )
+        .monoNavigationBackButton(iconColor: settings.globalThemeId == .default ? .monoTextPrimary : .white)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -419,6 +416,13 @@ struct ListeningStatsView: View {
 
     private var signalStatsHeader: some View {
         VStack(alignment: .leading, spacing: 16) {
+            SignalNestedPageHeader(
+                title: String(localized: "听歌统计"),
+                eyebrow: "LISTENING DATA",
+                icon: .chart,
+                module: .playback
+            )
+
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(String(localized: "听歌时长"))

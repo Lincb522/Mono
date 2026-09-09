@@ -64,7 +64,7 @@ struct MessageListView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "message_title"))
+        .monoNavigationBackButton()
         .onAppear { viewModel.fetchMessages() }
     }
 }

@@ -23,6 +23,7 @@ extension EQManager {
 
     func setGraphicEQMode(_ mode: GraphicEQMode) {
         guard mode != graphicEQMode else { return }
+        stopLoudnessMatchedReferenceAudition()
         if isAIManagedPresetActive {
             restoreProcessingBeforeAI(reason: "manual-band-mode")
         }
@@ -204,62 +205,9 @@ extension EQManager {
         captureProcessingBeforeAIIfNeeded()
 
         let professional = proposal.professional
-        let requestedSpatial = spatialOverride ?? proposal.spatial
-        let isSpatialProfile = proposal.resolvedTuningProfile == .monoSpatialEnhancement
-        let spatialMinimum: (surround: Float, reverb: Float, width: Float)
-        let spatialMaximum: (surround: Float, reverb: Float, width: Float)
-        // 空间档的下限要保证与标准档拉开可闻差距：标准档上限（约 0.06/0.03/1.05）
-        // 与这里的下限之间需要留出足够的侧声道与湿度间隔，否则两档听感趋同。
-        switch (isSpatialProfile, currentOutputKind) {
-        // 外放时宽度感知弱，主要靠混响湿度与舞台展宽制造空间感。
-        case (true, .builtInSpeaker):
-            spatialMinimum = (0.30, 0.40, 1.16)
-            spatialMaximum = (0.48, 0.64, 1.30)
-        case (true, .bluetooth):
-            spatialMinimum = (0.38, 0.34, 1.22)
-            spatialMaximum = (0.62, 0.58, 1.42)
-        case (true, .wired), (true, .usb):
-            spatialMinimum = (0.42, 0.38, 1.26)
-            spatialMaximum = (0.68, 0.62, 1.48)
-        case (true, .car):
-            spatialMinimum = (0.30, 0.32, 1.16)
-            spatialMaximum = (0.50, 0.54, 1.30)
-        case (true, .airPlay):
-            spatialMinimum = (0.30, 0.32, 1.18)
-            spatialMaximum = (0.52, 0.56, 1.34)
-        case (true, .other):
-            spatialMinimum = (0.34, 0.34, 1.20)
-            spatialMaximum = (0.58, 0.58, 1.38)
-        case (false, .builtInSpeaker):
-            spatialMinimum = (0, 0, 1)
-            spatialMaximum = (0.03, 0.012, 1.025)
-        case (false, .wired), (false, .usb):
-            spatialMinimum = (0, 0, 1)
-            spatialMaximum = (0.06, 0.025, 1.05)
-        case (false, .bluetooth):
-            spatialMinimum = (0, 0, 1)
-            spatialMaximum = (0.055, 0.022, 1.045)
-        case (false, .car):
-            spatialMinimum = (0, 0, 1)
-            spatialMaximum = (0.04, 0.018, 1.035)
-        case (false, .airPlay), (false, .other):
-            spatialMinimum = (0, 0, 1)
-            spatialMaximum = (0.05, 0.020, 1.04)
-        }
-        let resolvedSpatial = AIEqualizerSpatialConfiguration(
-            surroundLevel: min(
-                spatialMaximum.surround,
-                max(spatialMinimum.surround, requestedSpatial.surroundLevel)
-            ),
-            reverbLevel: min(
-                spatialMaximum.reverb,
-                max(spatialMinimum.reverb, requestedSpatial.reverbLevel)
-            ),
-            stereoWidth: min(
-                spatialMaximum.width,
-                max(spatialMinimum.width, requestedSpatial.stereoWidth)
-            )
-        )
+        // The proposal already includes route, phase and intensity validation.
+        // Reapplying floors here would undo those limits and change its voicing.
+        let resolvedSpatial = spatialOverride ?? proposal.spatial
         let dynamicBands = professional.dynamicEQ.bands.map {
             DynamicEQBand(
                 frequency: $0.frequency,
@@ -291,100 +239,7 @@ extension EQManager {
             attackMS: multiband.attackMS,
             releaseMS: multiband.releaseMS
         )
-        var resolvedEnhance = proposal.enhance
-        // Applying an AI proposal always enables the safe native tuning core.
-        // Providers may reduce individual values, but cannot silently turn the
-        // entire result into bypass while the UI reports “已应用”.
-        resolvedEnhance.isEnabled = true
-        if resolvedEnhance.isEnabled {
-            let intensityScale: Float
-            switch proposal.tuningIntensity ?? .smart {
-            case .gentle: intensityScale = 0.72
-            case .standard: intensityScale = 0.88
-            case .smart: intensityScale = 1
-            case .strong: intensityScale = 1.14
-            }
-            let tonalFloor: (
-                attack: Float,
-                sustain: Float,
-                vocal: Float,
-                air: Float,
-                deEss: Float,
-                lowFocus: Float,
-                microDynamics: Float,
-                lowLevel: Float
-            )
-            switch currentOutputKind {
-            case .builtInSpeaker:
-                tonalFloor = (0.36, 0.22, 0.30, 0.18, 0.22, 0.42, 0.28, 0.24)
-            case .bluetooth:
-                tonalFloor = (0.32, 0.20, 0.26, 0.20, 0.25, 0.34, 0.26, 0.18)
-            case .wired, .usb:
-                tonalFloor = (0.34, 0.21, 0.25, 0.21, 0.25, 0.35, 0.27, 0.18)
-            case .car, .airPlay, .other:
-                tonalFloor = (0.31, 0.20, 0.27, 0.18, 0.23, 0.37, 0.25, 0.20)
-            }
-            // 标准与空间方案都要先完成可闻的音色、瞬态和动态处理；
-            // 空间方案只是在同一调音底座上额外展开声场，不能靠削弱标准方案制造差异。
-            resolvedEnhance.transientAttack = max(
-                tonalFloor.attack * intensityScale,
-                resolvedEnhance.transientAttack
-            )
-            resolvedEnhance.transientSustain = max(
-                tonalFloor.sustain * intensityScale,
-                resolvedEnhance.transientSustain
-            )
-            resolvedEnhance.vocalFocus = max(
-                tonalFloor.vocal * intensityScale,
-                resolvedEnhance.vocalFocus
-            )
-            resolvedEnhance.airAmount = max(
-                tonalFloor.air * intensityScale,
-                resolvedEnhance.airAmount
-            )
-            resolvedEnhance.deEssAmount = max(
-                tonalFloor.deEss * intensityScale,
-                resolvedEnhance.deEssAmount
-            )
-            resolvedEnhance.lowFrequencyFocus = max(
-                tonalFloor.lowFocus * intensityScale,
-                resolvedEnhance.lowFrequencyFocus
-            )
-            resolvedEnhance.microDynamics = max(
-                tonalFloor.microDynamics * intensityScale,
-                resolvedEnhance.microDynamics
-            )
-            resolvedEnhance.lowLevelCompensation = max(
-                tonalFloor.lowLevel * intensityScale,
-                resolvedEnhance.lowLevelCompensation
-            )
-            if isSpatialProfile {
-                let minimumStageWidth: Float
-                switch currentOutputKind {
-                case .builtInSpeaker: minimumStageWidth = 0.76
-                case .bluetooth, .wired, .usb: minimumStageWidth = 0.78
-                case .car, .airPlay, .other: minimumStageWidth = 0.72
-                }
-                resolvedEnhance.stageWidth = max(minimumStageWidth, resolvedEnhance.stageWidth)
-                resolvedEnhance.vocalFocus = max(0.16, resolvedEnhance.vocalFocus)
-            } else {
-                // 标准方案的调音保持完整，但不主动扩张原始声场。
-                resolvedEnhance.stageWidth = min(0.08, resolvedEnhance.stageWidth)
-            }
-            let outputVolume = AVAudioSession.sharedInstance().outputVolume
-            let quietness = min(1, max(0, (0.62 - outputVolume) / 0.62))
-            let deviceMaximum: Float
-            switch currentOutputKind {
-            case .builtInSpeaker: deviceMaximum = 0.34
-            case .bluetooth, .wired, .usb: deviceMaximum = 0.42
-            case .car, .airPlay, .other: deviceMaximum = 0.38
-            }
-            let highVolumeFloor = resolvedEnhance.lowLevelCompensation * 0.35
-            resolvedEnhance.lowLevelCompensation = min(
-                deviceMaximum,
-                highVolumeFloor + (deviceMaximum - highVolumeFloor) * quietness
-            )
-        }
+        let resolvedEnhance = proposal.enhance
         let generatedPreset = EQPreset(
             id: "ai_\(proposal.songID)",
             name: proposal.profileName,

@@ -235,6 +235,7 @@ struct ThemedPageHeader<Accessory: View>: View {
             ) {
                 accessory
             }
+            .monoPageHeaderCollapse()
         } else if SequoiaStyle.isActive {
             SequoiaPageHeader(
                 eyebrow: eyebrow,
@@ -309,87 +310,135 @@ extension ThemedPageHeader where Accessory == EmptyView {
     }
 }
 
-/// 二级页面紧凑头部：把标题放进导航栏 principal 位置，与返回按钮同排，
-/// 替代原先"返回按钮一排 + 大标题又一排"的高头部。
-private struct ThemedInlineNavigationTitleModifier: ViewModifier {
-    let title: String
-    var color: Color? = nil
-    @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 17
-    @ObservedObject private var settings = SettingsManager.shared
-
-    func body(content: Content) -> some View {
-        let _ = settings.globalThemeRevision
-
-        content
-            .navigationTitle("")
-            .toolbar(.visible, for: .navigationBar)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(title)
-                        .font(inlineTitleFont)
-                        .foregroundColor(color ?? inlineTitleColor)
-                        .lineLimit(1)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityShowsLargeContentViewer { Text(title) }
-                }
-            }
-    }
-
-    private var inlineTitleFont: Font {
-        if MinimalWhiteStyle.isActive { return MinimalWhiteStyle.titleFont(min(titleSize, 24), weight: .semibold) }
-        if MangaStyle.isActive { return MangaStyle.titleFont(min(titleSize, 24), weight: .black) }
-        if MujiStyle.isActive { return MujiStyle.titleFont(min(titleSize, 24), weight: .medium) }
-        if NeumorphicStyle.isActive { return NeumorphicStyle.titleFont(min(titleSize, 24), weight: .semibold) }
-        if SignalStyle.isActive { return SignalStyle.titleFont(min(titleSize, 24), weight: .bold) }
-        if CapsuleStyle.isActive { return CapsuleStyle.bodyFont(min(titleSize, 24), weight: .bold) }
-        if ClarityStyle.isActive { return ClarityStyle.titleFont(min(titleSize, 24), weight: .semibold) }
-        if SequoiaStyle.isActive { return SequoiaStyle.labelFont(min(titleSize, 24), weight: .semibold) }
-        if PetWhiteStyle.isActive { return PetWhiteStyle.bodyFont(min(titleSize, 24), weight: .black) }
-        return .system(size: min(titleSize, 24), weight: .semibold, design: .rounded)
-    }
-
-    private var inlineTitleColor: Color {
-        if MinimalWhiteStyle.isActive { return MinimalWhiteStyle.ink }
-        if MangaStyle.isActive { return MangaStyle.ink }
-        if MujiStyle.isActive { return MujiStyle.ink }
-        if NeumorphicStyle.isActive { return NeumorphicStyle.ink }
-        if SignalStyle.isActive { return SignalStyle.ink }
-        if CapsuleStyle.isActive { return CapsuleStyle.ink }
-        if ClarityStyle.isActive { return ClarityStyle.ink }
-        if SequoiaStyle.isActive { return SequoiaStyle.ink }
-        if PetWhiteStyle.isActive { return PetWhiteStyle.ink }
-        return .monoTextPrimary
-    }
-}
-
-extension View {
-    /// 二级页面标题与返回按钮同排（导航栏内联标题），头部不再单独占一大块
-    func themedInlineNavigationTitle(_ title: String, color: Color? = nil) -> some View {
-        modifier(ThemedInlineNavigationTitleModifier(title: title, color: color))
-    }
-}
-
-private struct ThemedNavigationChromeModifier: ViewModifier {
+struct SettingsScrollablePageHeader: View {
     let title: String
     let eyebrow: String
     let subtitle: String
     let icon: MonoIcon.IconType
+    let artwork: MonoGlyphSemantic?
+    let signalModule: SignalConsoleModule
 
-    private var isThemed: Bool {
-        MinimalWhiteStyle.isActive || MangaStyle.isActive || PetWhiteStyle.isActive || PureWhiteStyle.isActive || MujiStyle.isActive || NeumorphicStyle.isActive || CapsuleStyle.isActive || ClarityStyle.isActive || SequoiaStyle.isActive || LiquidGlassStyle.isActive || ClayStyle.isActive || SignalStyle.isActive || BentoStyle.isActive
+    init(
+        title: String,
+        eyebrow: String,
+        subtitle: String = "",
+        icon: MonoIcon.IconType = .sparkle,
+        artwork: MonoGlyphSemantic? = nil,
+        signalModule: SignalConsoleModule = .system
+    ) {
+        self.title = title
+        self.eyebrow = eyebrow
+        self.subtitle = subtitle
+        self.icon = icon
+        self.artwork = artwork
+        self.signalModule = signalModule
     }
 
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        // 标题放进导航栏与返回按钮同排，不再渲染独占一大块的页头
-        if isThemed {
-            content
-                .themedInlineNavigationTitle(title)
-        } else {
-            content
-                .navigationTitle(title)
+    var body: some View {
+        Group {
+            if SignalStyle.isActive {
+            SignalNestedPageHeader(
+                title: title,
+                eyebrow: eyebrow,
+                icon: icon,
+                module: signalModule
+            )
+            .padding(.horizontal, settingsHeaderHorizontalInset)
+            } else if ClarityStyle.isActive {
+            ZStack(alignment: .trailing) {
+                HStack(alignment: .center, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Capsule(style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [ClarityStyle.accent, ClarityStyle.cyan.opacity(0.74), .clear],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: 74, height: 3)
+
+                        Text(title)
+                            .font(ClarityStyle.title(24, weight: .semibold))
+                            .foregroundStyle(ClarityStyle.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        if !subtitle.isEmpty {
+                            Text(subtitle)
+                                .font(ClarityStyle.body(11.5))
+                                .foregroundStyle(ClarityStyle.inkSoft)
+                                .lineLimit(2)
+                        }
+                    }
+
+                    Spacer(minLength: 58)
+                }
+
+                ZStack {
+                    Circle()
+                        .fill(ClarityStyle.cyan.opacity(0.10))
+                        .frame(width: 64, height: 64)
+                        .blur(radius: 10)
+                    MonoIcon(icon: icon, size: 24, color: ClarityStyle.inkSoft, lineWidth: 1.35)
+                        .frame(width: 52, height: 52)
+                        .background(ClarityMembrane(shape: Circle(), strength: .quiet))
+                }
+                .accessibilityHidden(true)
+            }
+            .padding(.horizontal, DeviceLayout.settingsHeaderHorizontalPadding)
+            .padding(.top, 8)
+            .padding(.bottom, 5)
+            .iPadContentWidth(700)
+            .monoPageHeaderCollapse()
+            } else if ThemedPageStyle.isActive {
+            ThemedPageHeader(
+                eyebrow: eyebrow,
+                title: title,
+                subtitle: subtitle,
+                icon: icon
+            )
+            .padding(.horizontal, settingsHeaderHorizontalInset)
+            .padding(.bottom, -2)
+            } else {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.monoIconBackground.opacity(0.14))
+                        .frame(width: 46, height: 46)
+                    MonoIcon(icon: icon, size: 20, color: .monoTextPrimary, lineWidth: 1.7)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(eyebrow)
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundColor(.monoTextSecondary)
+                        .tracking(1.2)
+
+                    Text(title)
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .foregroundColor(.monoTextPrimary)
+
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.monoTextSecondary)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, DeviceLayout.settingsHeaderHorizontalPadding)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
+            .iPadContentWidth(700)
+            .monoPageHeaderCollapse()
+            }
         }
+        .monoIconArtwork(artwork?.rawValue)
+    }
+
+    private var settingsHeaderHorizontalInset: CGFloat {
+        DeviceLayout.settingsHeaderHorizontalPadding - DeviceLayout.homeHorizontalPadding
     }
 }
 
@@ -614,22 +663,6 @@ enum ThemedPageStyle {
 }
 
 extension View {
-    func themedNavigationChrome(
-        title: String,
-        eyebrow: String,
-        subtitle: String = "",
-        icon: MonoIcon.IconType = .sparkle
-    ) -> some View {
-        modifier(
-            ThemedNavigationChromeModifier(
-                title: title,
-                eyebrow: eyebrow,
-                subtitle: subtitle,
-                icon: icon
-            )
-        )
-    }
-
     func themedPageSurface(
         cornerRadius: CGFloat = 18,
         elevated: Bool = true,

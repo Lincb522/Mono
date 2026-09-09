@@ -53,6 +53,9 @@ struct AudioTrainingOnDevicePrediction: Sendable {
     let fallbackOutputCount: Int
     let inference: AudioTrainingInferenceTrace
     let populationInference: AudioTrainingInferenceTrace?
+    let confidenceCalibration: AudioTrainingConfidenceCalibration?
+    let modelID: String
+    let modelSHA256: String
 }
 
 actor AudioTrainingOnDeviceModelStore {
@@ -82,8 +85,12 @@ actor AudioTrainingOnDeviceModelStore {
     private var loadedModel: MLModel?
     private var loadedIdentity: String?
     private var loadedInputMean: [Float]?
+    private var loadedConfidenceCalibration: AudioTrainingConfidenceCalibration?
     private var latestInferenceTrace: AudioTrainingInferenceTrace?
     private var onDeviceSettings: AudioTrainingOnDeviceSettings
+    private var distributedModel: AudioTrainingModelInstallDescriptor?
+    private var distributionPreparation: (id: UUID, identity: String, task: Task<String, Error>)?
+    private var isInstalling = false
 
     private init() {
         let defaults = UserDefaults.standard
@@ -120,6 +127,7 @@ actor AudioTrainingOnDeviceModelStore {
     func updateSettings(
         _ value: AudioTrainingOnDeviceSettings
     ) throws -> AudioTrainingOnDeviceSettings {
+        guard !isInstalling else { throw AIResonanceDistributionError.installationInProgress }
         guard AppConfig.DeveloperAccess.hasFullTools else {
             throw AudioTrainingOnDeviceModelError.fullAccessRequired
         }
@@ -142,7 +150,6 @@ actor AudioTrainingOnDeviceModelStore {
     }
 
     func activeStatus() throws -> AudioTrainingInstalledModelStatus? {
-        guard AppConfig.DeveloperAccess.hasFullTools else { return nil }
         let directory = try rootDirectory().appendingPathComponent(
             Self.currentDirectoryName,
             isDirectory: true
@@ -162,26 +169,130 @@ actor AudioTrainingOnDeviceModelStore {
     func activeIdentity() -> String? {
         guard onDeviceSettings.isEnabled else { return nil }
         do {
-            guard let identity = try activeStatus()?.identity else { return nil }
-            return "\(identity):\(onDeviceSettings.computeMode.rawValue):\(onDeviceSettings.legacyPriorStrength):\(onDeviceSettings.advancedStageMinimumSamples)"
+            guard let status = try activeStatus(), canUse(status) else { return nil }
+            let identity = status.identity
+            return "\(identity):\(onDeviceSettings.computeMode.rawValue):\(onDeviceSettings.legacyPriorStrength):\(onDeviceSettings.advancedStageMinimumSamples):\(AudioTrainingProposalSummary.revision)"
         } catch {
             return nil
         }
+    }
+
+    func clearDistributedAuthorization() {
+        distributedModel = nil
+        distributionPreparation?.task.cancel()
+    }
+
+    func prepareDistributedModel(
+        _ descriptor: AudioTrainingModelInstallDescriptor,
+        request: URLRequest? = nil,
+        bundledModelURL: URL? = nil
+    ) async throws -> String {
+        try Task.checkCancellation()
+        try descriptor.validateDistribution()
+        distributedModel = descriptor
+        let key = descriptor.distributionIdentity
+        if let previous = distributionPreparation, previous.identity != key {
+            previous.task.cancel()
+        }
+        if let status = try? activeStatus(), matches(status, descriptor) {
+            do {
+                _ = try loadActiveModel(status: status, root: rootDirectory())
+                if !onDeviceSettings.isEnabled {
+                    onDeviceSettings.isEnabled = true
+                    try persistSettings()
+                }
+                guard let identity = activeIdentity() else { throw AIResonanceDistributionError.modelUnavailable }
+                return identity
+            } catch {
+                loadedModel = nil
+                loadedIdentity = nil
+                loadedInputMean = nil
+                AppLogger.warning(
+                    "[LocalModel] Installed model unavailable; downloading the selected version again",
+                    step: "local-model.reinstall-required", category: .localModel,
+                    event: "local-model.reinstall-required"
+                )
+            }
+        }
+        if let preparation = distributionPreparation,
+           preparation.identity == key, !preparation.task.isCancelled {
+            return try await withTaskCancellationHandler {
+                try await preparation.task.value
+            } onCancel: { preparation.task.cancel() }
+        }
+        if let previous = distributionPreparation {
+            previous.task.cancel()
+            _ = await previous.task.result
+            try Task.checkCancellation()
+            guard distributedModel?.distributionIdentity == key else { throw CancellationError() }
+            if let current = distributionPreparation, current.id != previous.id {
+                return try await prepareDistributedModel(descriptor, request: request, bundledModelURL: bundledModelURL)
+            }
+        }
+        let preparationID = UUID()
+        let task = Task {
+            let data: Data
+            if let bundledModelURL {
+                data = try Data(contentsOf: bundledModelURL, options: .mappedIfSafe)
+            } else if let request {
+                data = try await AudioTrainingModelDownloader.download(descriptor, request: request)
+            } else {
+                throw AIResonanceDistributionError.modelUnavailable
+            }
+            try Task.checkCancellation()
+            guard self.distributedModel?.distributionIdentity == key else { throw CancellationError() }
+            _ = try await self.installValidated(modelData: data, descriptor: descriptor)
+            try Task.checkCancellation()
+            guard self.distributedModel?.distributionIdentity == key,
+                  let identity = self.activeIdentity() else { throw CancellationError() }
+            return identity
+        }
+        distributionPreparation = (preparationID, key, task)
+        defer {
+            if distributionPreparation?.id == preparationID { distributionPreparation = nil }
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: { task.cancel() }
+    }
+
+    private func matches(
+        _ status: AudioTrainingInstalledModelStatus,
+        _ descriptor: AudioTrainingModelInstallDescriptor
+    ) -> Bool {
+        status.id == descriptor.id && status.version == descriptor.version
+            && status.sha256.lowercased() == descriptor.sha256.lowercased()
+            && status.featureSchemaVersion == descriptor.featureSchemaVersion
+            && status.targetSchemaVersion == descriptor.targetSchemaVersion
+    }
+
+    private func canUse(_ status: AudioTrainingInstalledModelStatus) -> Bool {
+        AppConfig.DeveloperAccess.hasFullTools || distributedModel.map { matches(status, $0) } == true
     }
 
     func install(
         modelData: Data,
         descriptor: AudioTrainingModelInstallDescriptor
     ) async throws -> AudioTrainingInstalledModelStatus {
+        guard AppConfig.DeveloperAccess.hasFullTools else {
+            throw AudioTrainingOnDeviceModelError.fullAccessRequired
+        }
+        return try await installValidated(modelData: modelData, descriptor: descriptor)
+    }
+
+    private func installValidated(
+        modelData: Data,
+        descriptor: AudioTrainingModelInstallDescriptor
+    ) async throws -> AudioTrainingInstalledModelStatus {
+        guard !isInstalling else { throw AIResonanceDistributionError.installationInProgress }
+        isInstalling = true
+        defer { isInstalling = false }
         AppLogger.info(
             "[LocalModel] Install started version=\(descriptor.version) bytes=\(modelData.count) featureSchema=\(descriptor.featureSchemaVersion) targetSchema=\(descriptor.targetSchemaVersion)",
             step: "local-model.install-started",
             category: .localModel,
             event: "local-model.install-started"
         )
-        guard AppConfig.DeveloperAccess.hasFullTools else {
-            throw AudioTrainingOnDeviceModelError.fullAccessRequired
-        }
         guard descriptor.byteCount == modelData.count,
               let inputWidth = Self.inputWidth(
                   forFeatureSchemaVersion: descriptor.featureSchemaVersion
@@ -211,10 +322,12 @@ actor AudioTrainingOnDeviceModelStore {
         )
         try fileManager.createDirectory(at: candidate, withIntermediateDirectories: false)
         do {
-            let sourceModelFileName = Self.sourceModelFileName(for: descriptor.version)
+            let sourceModelFileName = descriptor.downloadFileName
             let source = candidate.appendingPathComponent(sourceModelFileName)
             try modelData.write(to: source, options: [.atomic, .completeFileProtection])
             let compiledTemporary = try await MLModel.compileModel(at: source)
+            defer { try? fileManager.removeItem(at: compiledTemporary) }
+            try Task.checkCancellation()
             let compiled = candidate.appendingPathComponent(Self.compiledModelName, isDirectory: true)
             try fileManager.moveItem(at: compiledTemporary, to: compiled)
 
@@ -250,6 +363,7 @@ actor AudioTrainingOnDeviceModelStore {
                 ).count
             )
             try writeManifest(status, in: candidate)
+            try Task.checkCancellation()
             try activateCandidate(candidate, root: root)
             onDeviceSettings.isEnabled = true
             try persistSettings()
@@ -279,6 +393,7 @@ actor AudioTrainingOnDeviceModelStore {
     }
 
     func rollback() throws -> AudioTrainingInstalledModelStatus {
+        guard !isInstalling else { throw AIResonanceDistributionError.installationInProgress }
         guard AppConfig.DeveloperAccess.hasFullTools else {
             throw AudioTrainingOnDeviceModelError.fullAccessRequired
         }
@@ -325,6 +440,7 @@ actor AudioTrainingOnDeviceModelStore {
     }
 
     func deactivate() throws {
+        guard !isInstalling else { throw AIResonanceDistributionError.installationInProgress }
         guard AppConfig.DeveloperAccess.hasFullTools else {
             throw AudioTrainingOnDeviceModelError.fullAccessRequired
         }
@@ -359,10 +475,11 @@ actor AudioTrainingOnDeviceModelStore {
         tuningIntensity: AIEqualizerTuningIntensity,
         tuningProfile: AIEqualizerTuningProfile,
         learningContext: AIEqualizerLearningContext?,
-        deviceTrainingContext: AIEqualizerDeviceTrainingContext
+        deviceTrainingContext: AIEqualizerDeviceTrainingContext,
+        expectedModelIdentity: String? = nil
     ) throws -> AudioTrainingOnDevicePrediction {
-        guard AppConfig.DeveloperAccess.hasFullTools else {
-            throw AudioTrainingOnDeviceModelError.fullAccessRequired
+        if let expectedModelIdentity, activeIdentity() != expectedModelIdentity {
+            throw AIResonanceDistributionError.modelUnavailable
         }
         guard onDeviceSettings.isEnabled else {
             throw AudioTrainingOnDeviceModelError.modelDisabled
@@ -373,6 +490,7 @@ actor AudioTrainingOnDeviceModelStore {
         guard let status = try readManifestIfPresent(in: current) else {
             throw AudioTrainingOnDeviceModelError.noActiveModel
         }
+        guard canUse(status) else { throw AudioTrainingOnDeviceModelError.fullAccessRequired }
         guard status.featureSchemaVersion >= 6 || mode == .tenBand else {
             throw AudioTrainingOnDeviceModelError.unsupportedSchema
         }
@@ -452,7 +570,7 @@ actor AudioTrainingOnDeviceModelStore {
             trackCorrectionStrength: trackCorrectionStrength
         )
         latestInferenceTrace = inference
-        let (output, fallbackOutputCount) = Self.modelOutput(
+        let decoded = Self.modelOutput(
             values,
             status: status,
             features: features,
@@ -460,6 +578,14 @@ actor AudioTrainingOnDeviceModelStore {
             tuningProfile: tuningProfile,
             settings: onDeviceSettings
         )
+        var output = decoded.output
+        let fallbackOutputCount = decoded.fallbackCount
+        if trackCorrectionStrength == 1 || !priorOutputValues.isEmpty {
+            output.confidenceCalibration = loadedConfidenceCalibration?.evidence(
+                for: branchKey, trackCorrectionStrength: trackCorrectionStrength
+            )
+        }
+        output.confidence = Float(output.confidenceCalibration?.coverage ?? 0)
         let populationOutput: AIEqualizerModelOutput?
         let populationInference: AudioTrainingInferenceTrace?
         if embedsLearningContext, learningContext?.isActive == true {
@@ -538,7 +664,10 @@ actor AudioTrainingOnDeviceModelStore {
             trackCorrectionStrength: trackCorrectionStrength,
             fallbackOutputCount: fallbackOutputCount,
             inference: inference,
-            populationInference: populationInference
+            populationInference: populationInference,
+            confidenceCalibration: loadedConfidenceCalibration,
+            modelID: status.id,
+            modelSHA256: status.sha256
         )
     }
 
@@ -939,6 +1068,9 @@ actor AudioTrainingOnDeviceModelStore {
         loadedModel = model
         loadedIdentity = status.identity
         let metadata = model.modelDescription.metadata[.creatorDefinedKey] as? [String: String]
+        loadedConfidenceCalibration = metadata?["mono.confidence_calibration"]
+            .flatMap { $0.data(using: .utf8) }
+            .flatMap { try? JSONDecoder().decode(AudioTrainingConfidenceCalibration.self, from: $0) }
         let inputMean = Self.floatArray(metadata?["mono.input_mean"])
         loadedInputMean = inputMean?.count == Self.inputWidth(
             forFeatureSchemaVersion: status.featureSchemaVersion
@@ -1383,9 +1515,6 @@ actor AudioTrainingOnDeviceModelStore {
         let haasEnabled = canUseLearnedStages
             && tuningProfile == .monoSpatialEnhancement
             && boolean(value(45))
-        let summary = supervised
-            ? String(localized: "audio_training_generated_summary")
-            : String(localized: "audio_training_generated_prior_summary")
         let effects = MonoEffectTuningConfiguration(
             loudnessNormalizationEnabled: usesDetailedOutputs && canUseLearnedStages && boolean(value(40)),
             targetLUFS: bounded(value(23), -30, -8, fallback: -14),
@@ -1436,10 +1565,11 @@ actor AudioTrainingOnDeviceModelStore {
             ),
             professional: professional,
             effects: effects,
-            // The regressor has no calibrated uncertainty head. Zero remains
-            // the wire-compatible placeholder; local-model UI shows uncalibrated.
+            // The adapter attaches held-out coverage from the model metadata.
+            // Legacy artifacts without this evidence keep the zero placeholder.
             confidence: 0,
-            summary: summary
+            // Listening copy is composed from the final validated proposal.
+            summary: ""
         )
         return (output, fallbackCount)
     }
@@ -1545,16 +1675,6 @@ actor AudioTrainingOnDeviceModelStore {
 
     private static func sha256(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-    }
-
-    private static func sourceModelFileName(for version: String) -> String {
-        let safe = version.map { character in
-            character.isLetter || character.isNumber || character == "-" || character == "_"
-                ? character
-                : "-"
-        }
-        let stem = String(safe.prefix(120)).trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-        return "\(stem.isEmpty ? "AudioTuning" : stem).mlmodel"
     }
 
     private static func boolean(_ value: Float) -> Bool {

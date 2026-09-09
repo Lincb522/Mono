@@ -110,6 +110,7 @@ struct AIRemoteAIConfiguration: Codable, Equatable, Sendable {
     var usageLimits: AIUsageLimits
     var revision: String
     var updatedAt: Date?
+    var resonance: AIResonanceConfiguration? = nil
 }
 
 struct AIAdminProviderConfiguration: Codable, Equatable, Sendable {
@@ -125,6 +126,7 @@ struct AIAdminProviderConfiguration: Codable, Equatable, Sendable {
     var usageLimits: AIUsageLimits
     var revision: String
     var updatedAt: Date?
+    var resonance: AIResonanceConfiguration? = nil
 }
 
 struct AIAdminProviderConfigurationUpdate: Encodable, Sendable {
@@ -133,6 +135,7 @@ struct AIAdminProviderConfigurationUpdate: Encodable, Sendable {
     var configuration: AIProviderConfiguration
     var apiKey: String
     var usageLimits: AIUsageLimits
+    var resonance: AIResonanceConfigurationUpdate? = nil
 
     enum CodingKeys: String, CodingKey {
         case enabled
@@ -140,6 +143,7 @@ struct AIAdminProviderConfigurationUpdate: Encodable, Sendable {
         case configuration
         case apiKey
         case usageLimits
+        case resonance
     }
 
     func encode(to encoder: Encoder) throws {
@@ -149,6 +153,7 @@ struct AIAdminProviderConfigurationUpdate: Encodable, Sendable {
         try container.encode(configuration, forKey: .configuration)
         try container.encode(apiKey, forKey: .apiKey)
         try container.encode(usageLimits, forKey: .usageLimits)
+        try container.encodeIfPresent(resonance, forKey: .resonance)
     }
 }
 
@@ -614,7 +619,8 @@ struct AIEqualizerModelOutput: Codable, Equatable, Sendable {
     let calibration: AIEqualizerCalibrationConfiguration?
     let professional: AIEqualizerProfessionalConfiguration?
     let effects: MonoEffectTuningConfiguration?
-    let confidence: Float
+    var confidence: Float
+    var confidenceCalibration: AudioTrainingConfidenceEvidence? = nil
     let summary: String
     let artistStyleReference: String
     let vocalCharacterReference: String
@@ -728,6 +734,7 @@ struct AIEqualizerProposal: Identifiable, Codable, Equatable, Sendable {
     let professional: AIEqualizerProfessionalConfiguration
     let effects: MonoEffectTuningConfiguration
     let confidence: Float
+    let confidenceCalibration: AudioTrainingConfidenceEvidence?
     let summary: String
     let artistStyleReference: String?
     let vocalCharacterReference: String?
@@ -751,6 +758,10 @@ struct AIEqualizerProposal: Identifiable, Codable, Equatable, Sendable {
     var confidenceDisplayText: String {
         if skillCompliance?.executionMode == .trainedCoreMLModel
             || model.hasPrefix("mono-resonance-") || model.hasPrefix("mono-audio-") {
+            if let evidence = confidenceCalibration, evidence.isValid,
+               evidence.branch == "\(graphicEQMode.rawValue):\(resolvedTuningProfile.rawValue)" {
+                return evidence.displayText
+            }
             return String(localized: "audio_training_confidence_uncalibrated")
         }
         return "\(Int(confidence * 100))%"
@@ -782,6 +793,7 @@ struct AIEqualizerProposal: Identifiable, Codable, Equatable, Sendable {
         case professional
         case effects
         case confidence
+        case confidenceCalibration
         case summary
         case artistStyleReference
         case vocalCharacterReference
@@ -849,6 +861,9 @@ struct AIEqualizerProposal: Identifiable, Codable, Equatable, Sendable {
             0,
             (try? values.decode(Float.self, forKey: .confidence)) ?? 0.65
         ))
+        confidenceCalibration = try? values.decode(
+            AudioTrainingConfidenceEvidence.self, forKey: .confidenceCalibration
+        )
         summary = (try? values.decode(String.self, forKey: .summary)) ?? ""
         artistStyleReference = try? values.decode(String.self, forKey: .artistStyleReference)
         vocalCharacterReference = try? values.decode(String.self, forKey: .vocalCharacterReference)
@@ -1020,7 +1035,10 @@ struct AIEqualizerProposal: Identifiable, Codable, Equatable, Sendable {
         )
         professional = resolvedProfessional
         effects = resolvedEffects
-        confidence = min(1, max(0, output.confidence))
+        confidenceCalibration = skillCompliance.executionMode == .trainedCoreMLModel
+            ? output.confidenceCalibration : nil
+        confidence = confidenceCalibration?.isValid == true
+            ? Float(confidenceCalibration?.coverage ?? 0) : min(1, max(0, output.confidence))
         let resolvedArtistReference = allowsArtistStyleReference
             ? Self.localizedReference(output.artistStyleReference)
             : nil
@@ -1029,7 +1047,38 @@ struct AIEqualizerProposal: Identifiable, Codable, Equatable, Sendable {
             : nil
         artistStyleReference = resolvedArtistReference
         vocalCharacterReference = resolvedVocalReference
-        summary = Self.localizedSummary(output.summary, tuningProfile: tuningProfile)
+        if skillCompliance.executionMode == .trainedCoreMLModel {
+            // Describe only the track's contribution relative to the calibrated device baseline.
+            let baseline = Self.validatedGains(
+                deviceBandAdjustments,
+                mode: features.graphicEQMode,
+                intensity: tuningIntensity
+            )
+            let dynamicEQActive = resolvedProfessional.dynamicEQ.enabled
+                && resolvedProfessional.dynamicEQ.bands.contains { $0.ratio > 1.01 && $0.maxReductionDB > 0.05 }
+            let multibandActive = resolvedProfessional.multiband.enabled
+                && zip(resolvedProfessional.multiband.ratios, resolvedProfessional.multiband.maxReductionDB)
+                    .contains { $0 > 1.01 && $1 > 0.05 }
+            let description = AudioTrainingProposalSummary.make(
+                bandFrequenciesHz: features.bandFrequenciesHz,
+                gains: zip(normalized, baseline).map { $0 - $1 },
+                tone: (resolvedTone.bassGain, resolvedTone.trebleGain),
+                enhancement: (resolvedEnhance.isEnabled, resolvedEnhance.vocalFocus,
+                              resolvedEnhance.airAmount, resolvedEnhance.deEssAmount,
+                              resolvedEnhance.transientAttack, resolvedEnhance.stageWidth),
+                spatial: (resolvedSpatial.stereoWidth, resolvedSpatial.surroundLevel,
+                          resolvedSpatial.reverbLevel),
+                isSpatialProfile: tuningProfile == .monoSpatialEnhancement,
+                protectsPeaks: resolvedEffects.finalLimiterEnabled
+                    && min(output.preampDB, requiredHeadroom) < -1.5,
+                controlsDynamics: (resolvedEffects.compressorEnabled && resolvedEffects.compressorRatio > 1.01)
+                    || (resolvedProfessional.processingIntensity > 0
+                        && (dynamicEQActive || multibandActive))
+            )
+            summary = "\(description)\n\(tuningProfile.summaryFocus)"
+        } else {
+            summary = Self.localizedSummary(output.summary, tuningProfile: tuningProfile)
+        }
         self.provider = provider
         self.model = model
         self.agentVersion = agentVersion
@@ -1878,6 +1927,7 @@ enum AIEqualizerSamplingStage: String, Equatable, Sendable {
 
 enum AIEqualizerGenerationStage: String, Equatable, Sendable {
     case preparing
+    case preparingModel
     case generating
     case validating
     case finalizing
@@ -1885,6 +1935,7 @@ enum AIEqualizerGenerationStage: String, Equatable, Sendable {
     var title: String {
         switch self {
         case .preparing: return String(localized: "ai_generation_stage_preparing")
+        case .preparingModel: return String(localized: "ai_resonance_preparing_model")
         case .generating: return String(localized: "ai_generation_stage_generating")
         case .validating: return String(localized: "ai_generation_stage_validating")
         case .finalizing: return String(localized: "ai_generation_stage_finalizing")

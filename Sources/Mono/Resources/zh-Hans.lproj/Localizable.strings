@@ -1689,6 +1689,7 @@
 "基于 FFmpeg + AVAudioEngine 深度定制" = "基于 FFmpeg + AVAudioEngine 深度定制";
 "智能系统" = "智能系统";
 "首创自研智能调音Agent" = "首创自研智能调音Agent";
+"自研调音模型" = "自研调音模型";
 "AI 服务由 DengDeng 提供" = "AI 服务由 DengDeng 提供";
 "SwiftUI + Combine · 原生 MVVM 架构" = "SwiftUI + Combine · 原生 MVVM 架构";
 "丰富的主题、图标与播放器个性化设置" = "丰富的主题、图标与播放器个性化设置";
@@ -1847,7 +1848,12 @@
 "ai_lab_stereo_width" = "声场宽度";
 "ai_lab_professional_processing" = "专业处理";
 "ai_lab_enabled" = "开启";
-"ai_lab_service_credit" = "AI 服务由 DengDeng AI 提供";
+"ai_lab_service_credit" = "调音服务基于 Mono 自研的共鸣模型";
+"ai_lab_service_credit_builtin" = "调音方案由 Mono 内置的大模型服务生成";
+"ai_lab_service_credit_custom" = "调音方案由当前配置的 AI 服务生成";
+"ai_lab_result_notice_custom" = "自定义 AI 服务通过你配置的接口生成调音方案。可用性取决于网络、接口配置和服务额度；请求失败时，请检查接口地址、密钥及模型设置后重试。";
+"ai_lab_result_notice_resonance" = "共鸣模型目前处于 Beta 阶段，调音效果可能尚不完善。方案生成速度取决于设备性能。";
+"ai_lab_service_version_format" = "Version: %@";
 "ai_eq_profile_default" = "AI 调音";
 "ai_lab_automation" = "自动调音";
 "ai_learning_enabled" = "自适应听感学习";
@@ -2086,7 +2092,6 @@
 "audio_training_downloaded" = "模型文件（文件 App）";
 "audio_training_publish" = "发布当前模型";
 "audio_training_publish_confirm_title" = "发布当前模型？";
-"audio_training_publish_confirm_message" = "发布后会把该版本标记为线上调音基础模型。";
 "audio_training_loading" = "正在读取云端状态";
 "audio_training_error_full_access" = "当前账号没有完整开发者权限。";
 "audio_training_error_missing_credential" = "请先在“AI 服务”填写管理凭证，然后重试。";
@@ -2109,8 +2114,29 @@
 "audio_training_error_no_rollback_model" = "手机上没有可回滚的调音模型。";
 "audio_training_error_storage" = "无法访问手机模型存储目录。";
 "audio_training_generated_profile_name" = "Mono 群体调音";
-"audio_training_generated_summary" = "云端训练模型根据本次音频测量生成候选参数，并由本地调音编译器完成设备校准、余量与安全约束。";
-"audio_training_generated_prior_summary" = "当前模型使用所有用户历史方案学到的群体先验；因训练时还没有完整音频输入，歌曲测量仅参与本地安全编译，不会让模型针对不同歌曲生成不同参数。";
+"audio_training_summary_bass_fuller" = "为低音增加厚度和分量";
+"audio_training_summary_bass_tighter" = "收紧低音的分量，让节奏更利落";
+"audio_training_summary_body_warmer" = "为中音添一点温润感";
+"audio_training_summary_body_lighter" = "减轻中低音的厚重感，让声音更轻盈";
+"audio_training_summary_presence_forward" = "让人声与主奏的轮廓更鲜明";
+"audio_training_summary_presence_softer" = "柔和主体旋律的边缘，让听感更舒展";
+"audio_training_summary_treble_brighter" = "提亮高音细节，增加清亮感";
+"audio_training_summary_treble_softer" = "柔和高音的锋芒，减少尖锐感";
+"audio_training_summary_treble_airier" = "带出高音的空气感，让细节更轻盈";
+"audio_training_summary_transients" = "突出节奏的起落，让声音更有弹性";
+"audio_training_summary_dynamics" = "适度收敛强音的冲劲，保留轻重变化";
+"audio_training_summary_one_change" = "%@。";
+"audio_training_summary_two_changes" = "%1$@，同时%2$@。";
+"audio_training_summary_neutral" = "保留整体音色，细调声音之间的衔接。";
+"audio_training_summary_neutral_protected" = "保留整体音色，并为强音留出余量。";
+"audio_training_summary_spatial_wide_ambience" = "向两侧展开声场，并用余韵增加远近感，兼顾中央主体的集中感。";
+"audio_training_summary_spatial_wide_dry" = "向两侧展开声场，同时保持较干净的尾音与集中的主体。";
+"audio_training_summary_spatial_ambience" = "保留相对集中的声像，用余韵增加声音的远近感。";
+"audio_training_summary_spatial_focused" = "声场保持克制，优先保留主体的集中感和干净的尾音。";
+"audio_training_summary_standard_narrower" = "适度收拢声像，让中央的声音更集中。";
+"audio_training_summary_standard_wider" = "轻轻展开两侧，尽量保留原有的声像位置关系。";
+"audio_training_summary_standard_preserved" = "尽量保留原有的声像布局和远近关系。";
+"audio_training_summary_sentences" = "%1$@%2$@";
 "audio_training_model_mode" = "训练模式";
 "audio_training_model_mode_supervised" = "音频特征回归 + 群体先验";
 "audio_training_model_mode_prior" = "已优化群体先验";
@@ -2124,7 +2150,7 @@
 "audio_training_target_mode_population" = "群体目标";
 "audio_training_target_mode_personalized" = "个性化目标";
 "audio_training_target_mode_joint" = "群体与个性化联合";
-"audio_training_confidence_uncalibrated" = "未校准";
+"audio_training_confidence_uncalibrated" = "置信度未校准";
 "audio_training_prior_pass" = "群体先验输入与输出";
 "audio_training_blended_output" = "混合后模型输出";
 "audio_training_applied_dsp" = "已提交的 DSP 参数";
@@ -2221,9 +2247,6 @@
 "ai_provider_protocol_section" = "模型协议";
 "ai_config_title" = "AI 接口配置";
 "ai_config_service" = "AI 服务";
-"ai_config_enabled" = "使用自定义接口";
-"ai_config_custom" = "自定义";
-"ai_config_default" = "默认";
 "ai_config_saved" = "已保存";
 "ai_config_invalid_endpoint" = "接口地址无效，请填写完整的 HTTP 或 HTTPS 地址，并将密钥填入 API Key。";
 "ai_config_missing_model" = "请填写模型名称。";
@@ -2797,3 +2820,87 @@
 "artist_deselect_all" = "取消全选";
 
 "playback_audio_session_unavailable" = "音频输出暂时不可用，请稍后重新播放。";
+
+/* Resonance S2 model distribution */
+"ai_resonance_section" = "共鸣 S2 调音";
+"ai_resonance_enabled" = "启用共鸣 S2";
+"ai_resonance_distribution_description" = "分发后，用户首次调音时自动下载模型并在本地运行。";
+"ai_resonance_cloud_model" = "云端模型";
+"ai_resonance_selected_model_unavailable" = "已选模型（请刷新列表）";
+"ai_resonance_no_published_models" = "暂无已发布的共鸣 S2 模型。请先在共鸣设置中发布模型，再刷新列表。";
+"ai_resonance_loading_models" = "正在获取模型";
+"ai_resonance_refresh_models" = "刷新云端模型";
+"ai_resonance_invalid_model" = "共鸣 S2 模型不兼容或文件校验失败，请重新调音以重试下载。";
+"ai_resonance_model_unavailable" = "共鸣 S2 模型尚未就绪，请确认服务已选择并分发模型后重试。";
+"ai_resonance_download_failed" = "共鸣 S2 模型下载失败（%d），请稍后重新调音。";
+"ai_resonance_install_busy" = "模型正在安装，请完成后重新调音。";
+"ai_resonance_preparing_model" = "正在准备共鸣 S2 模型，首次使用需下载";
+
+"ai_tuning_service_title" = "调音服务设置";
+"ai_tuning_service_enabled" = "启用调音服务";
+"ai_tuning_service_select" = "选择服务";
+"ai_tuning_service_builtin" = "内置大模型服务";
+"ai_tuning_service_custom" = "自定义 AI 服务";
+"ai_tuning_service_resonance" = "共鸣 S2 模型";
+"ai_tuning_service_builtin_detail" = "使用 Mono 提供的大模型服务，无需填写接口。";
+"ai_tuning_service_disabled" = "调音服务已关闭，可在「调音服务设置」中开启。";
+"ai_tuning_service_model_loading" = "正在获取模型信息…";
+"ai_tuning_service_model_refresh" = "刷新模型信息";
+"ai_tuning_service_other_ai" = "其他 AI 功能使用此接口";
+
+"audio_training_confidence_calibrated" = "EQ %d%% · ±%.2f dB";
+
+// Resonance model publication
+"ai_resonance_model_name_date" = "%1$@ · %2$@";
+"ai_resonance_model_name_version" = "共鸣 %@";
+"ai_resonance_beta_version" = "%@ Beta";
+"ai_resonance_publication_date_unknown" = "发布时间暂不可用";
+"ai_resonance_published_at" = "发布时间：%@";
+"ai_resonance_cloud_selected_model" = "云端已选模型";
+"audio_training_latest_trained_model" = "最新训练模型";
+"audio_training_published_model" = "已发布模型";
+"audio_training_no_published_model" = "尚未发布模型";
+"audio_training_release_summary" = "更新说明";
+"audio_training_release_changelog_short" = "更新日志";
+"audio_training_release_notes_detailed" = "更新日志（详情）";
+"audio_training_release_notes_empty" = "此版本暂无更新日志。";
+"audio_training_publish_release_confirm" = "发布 %@？\n\n%@\n\n已启用分发的共鸣服务将更新至此版本。";
+"audio_training_publication_success" = "%@ 已发布。已启用分发的共鸣服务会自动获取新版本。";
+"audio_training_publication_upgrade_required" = "服务器未返回自动生成的更新说明和日志。请更新服务端后重新发布。";
+"audio_training_branch_calibration" = "分支置信度校准";
+"audio_training_branch_calibration_format" = "%1$@：%2$@";
+"ai_resonance_s1_model" = "共鸣 S1 模型";
+"audio_training_release_generated_on_publish" = "发布时自动生成更新说明和详细日志。";
+
+// Resonance onboarding and model updates
+"ai_resonance_introduction_title" = "启用共鸣调音";
+"ai_resonance_introduction_body" = "共鸣（Resonance）是 Mono 自研的调音模型，结合歌曲特征、设备信息与听感偏好生成调音方案。";
+"ai_resonance_enable" = "启用共鸣";
+"ai_resonance_keep_service" = "保持当前服务";
+"ai_resonance_updated_title" = "共鸣模型已更新";
+"ai_resonance_update_failed_title" = "共鸣模型准备失败";
+"ai_resonance_update_failed_body" = "本次未完成模型安装或更新。已安装的模型会保留，可稍后重试。";
+"ai_resonance_retry" = "重试";
+"ai_resonance_updating" = "正在准备共鸣模型…";
+"ai_resonance_availability_title" = "可用性说明";
+"ai_resonance_availability_notice" = "共鸣模型目前处于 Beta 阶段，调音效果可能尚不完善，生成速度取决于设备性能。";
+"ai_resonance_training_title" = "训练数据使用告知";
+"ai_resonance_training_notice" = "大模型调音方案会上传，用于共鸣模型训练。建议多使用内置或自行配置的大模型调音服务，为提升共鸣模型的可用性和调音效果提供训练数据。";
+"dev_popup_resonanceIntroduction" = "共鸣首次启用";
+"dev_popup_resonanceUpdate" = "共鸣模型更新";
+"dev_popup_resonanceFailure" = "共鸣准备失败";
+
+/* MONO Glyph styles */
+"settings_mono_glyph_style" = "样式";
+"settings_mono_glyph_style_classic" = "原版";
+"settings_mono_glyph_style_expressive" = "表情描边";
+
+
+"settings_system_tab_bar_style" = "系统底栏样式";
+"system_tab_bar_native" = "A · 原生玻璃";
+"system_tab_bar_dock" = "B · 一体底栏";
+"system_tab_bar_split" = "C · 分离悬浮";
+
+
+
+"playback_progress" = "播放进度";

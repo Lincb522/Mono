@@ -188,6 +188,7 @@ struct AIEqualizerArtworkStatusView: View {
             return min(0.72, max(0.02, progress * 0.72))
         case .requesting:
             switch agent.generationStage {
+            case .preparingModel: return 0.02
             case .preparing: return 0.76
             case .generating: return 0.84
             case .validating: return 0.92
@@ -216,7 +217,7 @@ struct AIEqualizerArtworkStatusView: View {
     private var isVisible: Bool {
         tuningProgress != nil
             || appliedProfileName != nil
-            || agent.automaticConfigurationEnabled
+            || agent.isAutomaticTuningActive
             || agent.proposal != nil
     }
 
@@ -260,7 +261,7 @@ struct AIEqualizerArtworkStatusView: View {
                         AIEqualizerArtworkStatusGlyph(
                             progress: tuningProgress,
                             isComplete: appliedProfileName != nil,
-                            isEnabled: agent.automaticConfigurationEnabled,
+                            isEnabled: agent.isAutomaticTuningActive,
                             reduceMotion: reduceMotion,
                             foregroundColor: foregroundColor
                         )
@@ -354,7 +355,7 @@ struct AIEqualizerArtworkStatusView: View {
         if let name = appliedProfileName {
             return String(format: String(localized: "ai_tuning_player_notice"), name)
         }
-        if !agent.automaticConfigurationEnabled {
+        if !agent.isAutomaticTuningActive {
             return String(localized: "ai_quick_disabled")
         }
         return agent.samplingStage.title
@@ -415,7 +416,7 @@ private struct AIEqualizerQuickControlsView: View {
     private var statusText: String {
         switch agent.phase {
         case .idle:
-            return agent.automaticConfigurationEnabled
+            return agent.isAutomaticTuningActive
                 ? String(localized: "ai_lab_not_analyzed")
                 : String(localized: "ai_quick_disabled")
         case .sampling:
@@ -471,7 +472,7 @@ private struct AIEqualizerQuickControlsView: View {
             AIEqualizerArtworkStatusGlyph(
                 progress: tuningProgress,
                 isComplete: agent.isCurrentProposalApplied,
-                isEnabled: agent.automaticConfigurationEnabled,
+                isEnabled: agent.isAutomaticTuningActive,
                 reduceMotion: reduceMotion,
                 foregroundColor: foregroundColor
             )
@@ -489,7 +490,11 @@ private struct AIEqualizerQuickControlsView: View {
 
             Spacer(minLength: 8)
 
-            Toggle("", isOn: $agent.automaticConfigurationEnabled)
+            Toggle("", isOn: Binding(
+                get: { agent.isAutomaticTuningActive },
+                set: { agent.automaticConfigurationEnabled = $0 }
+            ))
+                .disabled(!agent.tuningServiceStore.settings.isEnabled)
                 .labelsHidden()
                 .tint(accent)
                 .controlSize(.mini)
@@ -514,7 +519,7 @@ private struct AIEqualizerQuickControlsView: View {
                                 $0.proposal.resolvedTuningProfile == profile
                             }) { saved in
                                 Button {
-                                    if !agent.automaticConfigurationEnabled {
+                                    if !agent.isAutomaticTuningActive {
                                         agent.automaticConfigurationEnabled = true
                                     }
                                     agent.applySavedProposal(saved)
@@ -638,7 +643,7 @@ private struct AIEqualizerQuickControlsView: View {
             agent.cancelAnalysis()
             return
         }
-        if !agent.automaticConfigurationEnabled {
+        if !agent.isAutomaticTuningActive {
             agent.automaticConfigurationEnabled = true
         }
         agent.analyzeCurrentSong()

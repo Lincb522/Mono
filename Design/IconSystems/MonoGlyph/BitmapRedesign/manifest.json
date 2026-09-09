@@ -15,7 +15,7 @@
       "prompt": "Create a finished high-resolution PNG design sheet for the MONO music app. Use image 1 as the shape-language reference and image 2 as the refined premium direction. Match the entire family: mature rounded sculptural silhouettes, charcoal ink #202020, subtle asymmetric apertures, optical consistency and generous negative space. Flat 2D graphic artwork on a clean pure white background. Mostly solid compact shapes with carefully carved white functional marks; open shapes only where the meaning needs them. A few tiny expressive incisions, never a smile or a pair of eyes stamped on every icon. Avoid thin generic system-symbol outlines, bloated toys, cartoon faces, decorative dots, gradients, shadows, 3D, texture, text or labels. Every icon must clearly resemble the reference family while retaining a readable function. Uniform optical size about 125 px on a 2048 square canvas. Strict regular five-column, four-row grid, centered cells, wide even whitespace. Exactly 20 icons. No outside headers, borders, captions, or extra items. Row order MUST follow the list, left to right. For explicitly normal/selected pairs preserve identical outer geometry, normal outlined and selected solid. All other icons follow the premium solid style. Row 1: HOME normal outlined rounded roof, PODCAST normal outlined asymmetric oval and two voice apertures, MUSIC LIBRARY normal outlined soft case with handle, SEARCH magnifier with one tiny curved glint, PROFILE normal outlined soft droplet.\nRow 2: HOME selected solid matching row1 col1, PODCAST selected solid matching row1 col2, MUSIC LIBRARY selected solid matching row1 col3, PROFILE selected solid matching row1 col5, PLAY rounded right wedge with one subtle vertical slit.\nRow 3: PAUSE clean paired rounded bars, NEXT rounded right wedge plus terminal, PREVIOUS reversed matching form, STOP rounded solid square, LIKE outlined soft heart.\nRow 4: LIKED matching solid heart with one small incision, REPEAT LIST two rounded circulation arrows, REPEAT ONE same circulation with a tiny legible 1, SHUFFLE two soft interweaving arrows, REFRESH single round return arrow.",
       "width": 1254,
       "height": 1254,
-      "sha256": "076025563b901e5148799e6c057e080a1984f3bec6b90d7de1249d943068215a",
+      "sha256": "56dd9c80423de43d040276108f5968a5668954b79465f2e29c8ff88924dea626",
       "icons": [
         {
           "name": "home",
@@ -157,7 +157,51 @@
           "row": 4,
           "column": 5
         }
-      ]
+      ],
+      "podcastReplacement": {
+        "method": "built-in image generation; raster extraction and compositing only",
+        "source": "Design/IconSystems/MonoGlyph/BitmapRedesign/podcast-voice-bubble-source.png",
+        "sourceSHA256": "b247a654a63eefd38c33e0c162cca96eec67b21bf14620d92b7e6f23dc4fcf73",
+        "prompt": "Use case: logo-brand. Design a minimal MONO music-app PODCAST icon as a soft SOUND BUBBLE, using the attached original reference for its restrained geometric personality, confident round black contours, and tiny expressive incisions. Exactly four matched icon variants on a pure white 1254 square PNG sheet, evenly centered in a 2x2 grid with generous whitespace. This must be as visually simple as the five reference icons: one outer contour plus only TWO SHORT interior marks. Shape: a softly asymmetric oval speech bubble, subtly wider than tall, with one very short integrated tail at lower LEFT (subtle soft corner, not a separate triangle), top gently convex, no bottom stalk. Inside only two vertical rounded voice slots, the left slightly shorter than the right, subtly tilted together. No third mark, no smile, no lines surrounding the shape. Top row classic family: left regular thick outline black on white with two black voice slots, right same exact silhouette filled black and two white slots. Bottom row expressive family: same simple voice-bubble concept with a softer plumper contour and slightly jauntier slots, left outline, right solid; matching normal/selected pairs must have identical geometry. Keep the thick outline 7-8 percent of icon width, interior slots chunky but SHORT, like the eyes on the rightmost reference icon. Each icon approx 270 pixels wide, optically balanced, flat crisp monochrome black with clean white cutouts, no texture or shading. Premium compact rounded geometric mark, not a literal equipment illustration. Absolutely NO microphones, headphones, headsets, radio, antennas, soundwave rings, people, central stem, mouths, gradients, shadows, text, labels, extra decorative elements. The two rows should feel like siblings in the same MONO family, not four different concepts.",
+        "cells": [
+          {
+            "semantic": "podcast",
+            "variantCell": 1,
+            "targetWindow": [
+              284,
+              0,
+              516,
+              375
+            ],
+            "targetArtworkPosition": [
+              56,
+              206
+            ],
+            "targetArtworkSize": [
+              125,
+              103
+            ]
+          },
+          {
+            "semantic": "podcastFilled",
+            "variantCell": 2,
+            "targetWindow": [
+              284,
+              375,
+              516,
+              622
+            ],
+            "targetArtworkPosition": [
+              60,
+              70
+            ],
+            "targetArtworkSize": [
+              119,
+              96
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "02",

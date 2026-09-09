@@ -5,6 +5,7 @@ extension SettingsView {
 
     @ViewBuilder
     var claritySettingsContent: some View {
+        claritySettingsHeader
         ClarityShell(cornerRadius: 32) {
             VStack(spacing: 0) {
                 clarityThemeModeSelector
@@ -63,6 +64,32 @@ extension SettingsView {
         if qqDevMode {
             otherSection
         }
+    }
+
+    var claritySettingsHeader: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(String(localized: "settings_title"))
+                    .font(ClarityStyle.title(24, weight: .semibold))
+                    .foregroundStyle(ClarityStyle.ink)
+                Text(settingsText("settings_navigation_appearance_subtitle"))
+                    .font(ClarityStyle.body(11.5))
+                    .foregroundStyle(ClarityStyle.inkSoft)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            NavigationLink {
+                AboutView()
+            } label: {
+                MonoIcon(icon: .infoCircle, size: 17, color: ClarityStyle.ink, lineWidth: 1.5)
+                    .frame(width: 42, height: 42)
+                    .background(ClarityMembrane(shape: Circle(), strength: .regular))
+            }
+            .buttonStyle(ClarityPressStyle())
+        }
+        .padding(.top, 4)
+        .padding(.horizontal, 4)
+        .monoPageHeaderCollapse()
     }
 
     var clarityThemeModeSelector: some View {

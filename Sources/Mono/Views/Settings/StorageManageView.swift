@@ -90,6 +90,13 @@ struct StorageManageView: View {
 
             ScrollView {
                 VStack(spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "storage_title"),
+                        eyebrow: String(localized: "settings_eyebrow_storage"),
+                        icon: .storage,
+                        signalModule: .storage
+                    )
+
                     VStack(spacing: SettingsPageLayout.sectionSpacing) {
                         if phase == .scanning {
                             scanningCard
@@ -114,7 +121,7 @@ struct StorageManageView: View {
             .coordinateSpace(name: SettingsPageLayout.scrollCoordinateSpace)
             .themeRenderScrollLayer()
         }
-        .asideSettingsDetailChrome(String(localized: "storage_title"))
+        .asideSettingsDetailChrome()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { startScan() } label: {

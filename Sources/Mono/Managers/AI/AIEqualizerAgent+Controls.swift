@@ -4,6 +4,20 @@ import FFmpegSwiftSDK
 import UIKit
 
 extension AIEqualizerAgent {
+    func handleTuningServiceChanged() {
+        cancelAnalysis()
+        discardPendingManualEqualizerLearning()
+        activeLearningSession = nil
+        currentLearningFeedback = nil
+        generationStartedAt = nil
+        proposal = nil
+        appliedProposalID = nil
+        appliedSongIdentifier = nil
+        phase = .idle
+        EQManager.shared.restoreProcessingBeforeAI(reason: "tuning-service-changed")
+        scheduleAutomaticAnalysis()
+    }
+
     func selectTuningProfile(_ profile: AIEqualizerTuningProfile) {
         let selectionChanged = tuningProfile != profile
         let appliedProfileMatches = proposal?.resolvedTuningProfile == profile
@@ -26,7 +40,7 @@ extension AIEqualizerAgent {
         activeLearningSession = nil
         currentLearningFeedback = nil
 
-        guard automaticConfigurationEnabled,
+        guard isAutomaticTuningActive,
               let song = PlayerManager.shared.currentSong else {
             if phase.isWorking { phase = .idle }
             return
@@ -50,6 +64,10 @@ extension AIEqualizerAgent {
     }
 
     func analyzeCurrentSong() {
+        guard tuningServiceStore.settings.isEnabled else {
+            phase = .failed(String(localized: "ai_tuning_service_disabled"))
+            return
+        }
         guard PlayerManager.shared.currentSong?.isAppleMusic != true else {
             phase = .failed(
                 AIEqualizerError.protectedAudioUnsupported.localizedDescription
@@ -95,7 +113,7 @@ extension AIEqualizerAgent {
         appliedSongIdentifier = nil
         phase = .idle
 
-        guard automaticConfigurationEnabled,
+        guard isAutomaticTuningActive,
               PlayerManager.shared.currentSong != nil else { return }
         scheduleAutomaticAnalysis()
     }
@@ -124,6 +142,10 @@ extension AIEqualizerAgent {
     }
 
     func applySavedProposal(_ saved: AIEqualizerSavedProposal) {
+        guard tuningServiceStore.settings.isEnabled else {
+            phase = .failed(String(localized: "ai_tuning_service_disabled"))
+            return
+        }
         guard let song = PlayerManager.shared.currentSong,
               songIdentifier(song) == saved.songIdentifier else {
             rejectManualApply(reason: "song mismatch", saved: saved)

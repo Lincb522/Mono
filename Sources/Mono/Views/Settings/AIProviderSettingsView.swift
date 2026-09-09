@@ -1,22 +1,6 @@
 import SwiftUI
 
 @MainActor
-struct AIProviderSettingsEntry: View {
-    @ObservedObject private var store = AIPersonalProviderStore.shared
-
-    var body: some View {
-        SettingsSection(title: "AI") {
-            SettingsRouteLinkRow(
-                icon: .sparkle,
-                title: String(localized: "ai_config_title"),
-                value: String(localized: store.settings.isEnabled ? "ai_config_custom" : "ai_config_default"),
-                destination: .aiConfiguration
-            )
-        }
-    }
-}
-
-@MainActor
 struct AIProviderSettingsView: View {
     @ObservedObject private var store = AIPersonalProviderStore.shared
     @State private var draft = AIPersonalProviderSettings()
@@ -31,16 +15,30 @@ struct AIProviderSettingsView: View {
             ThemedSettingsBackground()
             ScrollView {
                 VStack(alignment: .leading, spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "ai_config_title"),
+                        eyebrow: "AI",
+                        icon: .sparkle
+                    )
+
                     VStack(spacing: SettingsPageLayout.sectionSpacing) {
                         SettingsSection(title: String(localized: "ai_config_service")) {
                             SettingsToggleRow(
                                 icon: .sparkle,
-                                title: String(localized: "ai_config_enabled"),
+                                title: String(localized: "ai_tuning_service_other_ai"),
                                 subtitle: nil,
                                 isOn: $draft.isEnabled
                             )
                         }
                         configurationSection
+                        SettingsSection(title: String(localized: "ai_resonance_training_title")) {
+                            Text(String(localized: "ai_resonance_training_notice"))
+                                .font(.callout)
+                                .foregroundStyle(themedSettingsSecondaryColor())
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16)
+                        }
                         SettingsSection(title: String(localized: "ai_provider_connection_section")) {
                             SettingsButtonRow(
                                 icon: .refresh,
@@ -75,7 +73,7 @@ struct AIProviderSettingsView: View {
             .coordinateSpace(name: SettingsPageLayout.scrollCoordinateSpace)
             .themeRenderScrollLayer()
         }
-        .asideSettingsDetailChrome(String(localized: "ai_config_title"))
+        .asideSettingsDetailChrome()
         .onAppear {
             guard !hasLoaded else { return }
             draft = store.settings
@@ -148,6 +146,11 @@ struct AIProviderSettingsView: View {
 
     private func save() {
         do {
+            if AITuningServiceStore.shared.settings.service == .custom {
+                var tuningDraft = draft
+                tuningDraft.isEnabled = true
+                _ = try tuningDraft.validated()
+            }
             try store.save(draft)
             isError = false
             message = String(localized: "ai_config_saved")

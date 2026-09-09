@@ -1775,6 +1775,11 @@ final class AudioFilterGraph: @unchecked Sendable {
         filterGraph = avfilter_graph_alloc()
         guard let graph = filterGraph else { return }
 
+        // This graph is pulled by the hardware render callback. Slice workers
+        // add a scheduling barrier to each block of stereo tone processing.
+        graph.pointee.nb_threads = 1
+        graph.pointee.thread_type = 0
+
         // abuffer（输入源）
         guard let abuffer = avfilter_get_by_name("abuffer") else { return }
         // 根据声道数获取对应的声道布局字符串
@@ -2039,57 +2044,38 @@ final class AudioFilterGraph: @unchecked Sendable {
             }
         }
 
-        // Mono 空间声场：surroundLevel 控制侧声道能量，stereoWidth 控制基础宽度。
-        // 旧实现把 surroundLevel 写入 sbal（侧声道平衡），对左右均衡的音乐几乎
-        // 没有可闻变化。合并为一次 Mid/Side 侧声道增益后，参数才真正作用于声场。
-        // 0.55 的环绕系数让空间档（surround ≥ 0.3）与标准档拉开约 3-4 dB 的
-        // 侧声道差距，否则两档在人声居中的流行乐里听感几乎一致。
-        let effectiveStereoWidth = min(
-            1.85,
-            max(0.65, stereoWidth * (1 + surroundLevel * 0.55))
+        let spatial = MonoSpatialFilterParameters(
+            stereoWidth: stereoWidth,
+            surroundLevel: surroundLevel,
+            reverbLevel: reverbLevel
         )
-        if abs(effectiveStereoWidth - 1.0) > 0.0005 && channelCount == 2 {
+        if abs(spatial.effectiveStereoWidth - 1) > 0.0005 && channelCount == 2 {
             if let ctx = createFilter(graph: graph, name: "stereotools", label: "width",
-                                       args: "slev=\(String(format: "%.3f", effectiveStereoWidth))") {
+                                       args: "slev=\(String(format: "%.3f", spatial.effectiveStereoWidth))") {
                 guard avfilter_link(lastCtx, 0, ctx, 0) >= 0 else { destroyGraphUnsafe(); return }
                 lastCtx = ctx
             }
         }
 
-        // 空间混响：reverbLevel 表示用户可理解的湿度，而不是直接拿它
-        // 当 aecho 的总输出增益。旧映射在提高混响时反而会压低整条干声，
-        // 导致百分比不敢超过 10%。现在保持主体响度，只增加短早期反射；
-        // 湿度超过 0.18 后再展开一组更长的反射尾，让空间档有可闻的“房间感”。
-        if reverbLevel > 0.0 {
-            let inputGain = 1 - reverbLevel * 0.18
-            let firstReflection = 0.02 + reverbLevel * 0.62
-            let tail = max(0, reverbLevel - 0.18) * 0.55
-            let delays: String
-            let decays: String
-            if tail > 0.005 {
-                delays = "29|53|89|137|191|251"
-                decays = [
-                    firstReflection,
-                    firstReflection * 0.72,
-                    firstReflection * 0.50,
-                    firstReflection * 0.34,
-                    tail,
-                    tail * 0.62
-                ].map { String(format: "%.3f", $0) }.joined(separator: "|")
-            } else {
-                delays = "29|53|89|137"
-                decays = [
-                    firstReflection,
-                    firstReflection * 0.72,
-                    firstReflection * 0.50,
-                    firstReflection * 0.34
-                ].map { String(format: "%.3f", $0) }.joined(separator: "|")
+        if !spatial.echoDecays.isEmpty {
+            let upstreamBoostDB = max(0, volumeDB) + max(0, bassGain) + max(0, trebleGain)
+                + (compressorEnabled ? max(0, compressorMakeup) : 0)
+                + (subboostEnabled ? max(0, subboostGain) : 0)
+            let workingGain = String(format: "%.9g", spatial.echoWorkingGain(upstreamBoostDB: upstreamBoostDB))
+            let delays = spatial.echoDelays.map { String($0) }.joined(separator: "|")
+            let decays = spatial.echoDecays.map { String(format: "%.3f", $0) }.joined(separator: "|")
+            let args = "in_gain=\(String(format: "%.3f", spatial.echoInputGain)):out_gain=\(workingGain):delays=\(delays):decays=\(decays)"
+            guard let echo = createFilter(graph: graph, name: "aecho", label: "reverb", args: args),
+                  let restoreGain = createFilter(
+                    graph: graph, name: "volume", label: "reverb-working-gain",
+                    args: "volume=1/\(workingGain):precision=double"
+                  ),
+                  avfilter_link(lastCtx, 0, echo, 0) >= 0,
+                  avfilter_link(echo, 0, restoreGain, 0) >= 0 else {
+                destroyGraphUnsafe()
+                return
             }
-            let args = "in_gain=\(String(format: "%.3f", inputGain)):out_gain=1.000:delays=\(delays):decays=\(decays)"
-            if let ctx = createFilter(graph: graph, name: "aecho", label: "reverb", args: args) {
-                guard avfilter_link(lastCtx, 0, ctx, 0) >= 0 else { destroyGraphUnsafe(); return }
-                lastCtx = ctx
-            }
+            lastCtx = restoreGain
         }
 
         // 单声道听感：先下混，再复制到稳定的双声道输出总线。

@@ -32,7 +32,7 @@ struct ClarityMeditationView: View {
                 .themeRenderScrollLayer()
             }
         }
-        .monoNavigationBackButton(iconColor: ClarityStyle.ink, title: String(localized: "meditation_mode_title"))
+        .monoNavigationBackButton(iconColor: ClarityStyle.ink)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

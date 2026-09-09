@@ -23,10 +23,15 @@ const FORBIDDEN_CUSTOM_HEADERS = new Set([
 function installAIRemoteConfigRoutes({ app, saveData, authMiddleware, resolvePublicToken }) {
 
   app.get('/api/ai/config', authMiddleware, (req, res) => {
-    res.json(adminPayload(ensureConfiguration(req.appData.aiProviderConfig)))
+    res.json(adminPayload(withCurrentModelRelease(ensureConfiguration(req.appData.aiProviderConfig), app.locals?.audioTrainingDistribution?.service)))
   })
 
-  app.put('/api/ai/config', authMiddleware, (req, res) => {
+  app.put('/api/ai/config', authMiddleware, (req, res, next) => {
+    if (req.body?.resonance === undefined) return next()
+    const distribution = app.locals?.audioTrainingDistribution
+    if (!distribution) return res.status(503).json({ error: '共鸣模型服务尚未就绪，请稍后重试。' })
+    distribution.authorize(req, res, next)
+  }, (req, res) => {
     const current = ensureConfiguration(req.appData.aiProviderConfig)
     const expectedRevision = cleanString(req.body?.expectedRevision, 160)
     if (expectedRevision && expectedRevision !== current.revision) {
@@ -37,7 +42,7 @@ function installAIRemoteConfigRoutes({ app, saveData, authMiddleware, resolvePub
       })
     }
 
-    const validation = validateAdminUpdate(req.body, current)
+    const validation = validateAdminUpdate(req.body, current, app.locals?.audioTrainingDistribution?.service)
     if (!validation.ok) {
       return res.status(400).json({ error: validation.error })
     }
@@ -51,15 +56,26 @@ function installAIRemoteConfigRoutes({ app, saveData, authMiddleware, resolvePub
     const resolved = resolvePublicToken(req, res)
     if (!resolved) return
 
-    const configuration = ensureConfiguration(resolved.data.aiProviderConfig)
-    res.set('Cache-Control', 'private, max-age=60, must-revalidate')
-    res.set('ETag', `"${configuration.revision}"`)
-    if (req.headers['if-none-match'] === `"${configuration.revision}"`) {
+    const configuration = withCurrentModelRelease(ensureConfiguration(resolved.data.aiProviderConfig), app.locals?.audioTrainingDistribution?.service)
+    const payload = publicPayload(configuration)
+    const modelRevision = crypto.createHash('sha256').update(JSON.stringify(payload.resonance)).digest('hex').slice(0, 16)
+    const etag = `"${configuration.revision}:${modelRevision}"`
+    res.set('Cache-Control', 'private, no-cache')
+    res.set('ETag', etag)
+    if (req.headers['if-none-match'] === etag) {
       return res.status(304).end()
     }
-    res.json(publicPayload(configuration))
+    res.json(payload)
   })
 
+}
+
+function withCurrentModelRelease(configuration, trainingService) {
+  const selected = configuration.resonance?.model
+  if (!selected || !trainingService) return configuration
+  const current = trainingService.distributedModel(configuration)
+  if (!current) return configuration
+  return { ...configuration, resonance: { ...configuration.resonance, model: current } }
 }
 
 function defaultConfiguration() {
@@ -73,6 +89,7 @@ function defaultConfiguration() {
     timeout: 60,
     customHeadersJSON: '',
     apiKey: '',
+    resonance: { enabled: false, model: null },
     usageLimits: {
       dailyRequestLimit: 50,
       hourlyRequestLimit: 20,
@@ -100,13 +117,33 @@ function ensureConfiguration(raw) {
     timeout: clampNumber(raw.timeout, 10, 180, fallback.timeout),
     customHeadersJSON: normalizeCustomHeadersJSON(raw.customHeadersJSON),
     apiKey: typeof raw.apiKey === 'string' ? raw.apiKey.trim() : '',
+    resonance: raw.resonance && typeof raw.resonance === 'object'
+      ? { enabled: raw.resonance.enabled === true, model: raw.resonance.model || null }
+      : fallback.resonance,
     usageLimits: normalizeUsageLimits(raw.usageLimits),
     revision: cleanString(raw.revision, 160) || 'unpublished',
     updatedAt: validISODate(raw.updatedAt) ? new Date(raw.updatedAt).toISOString() : null
   }
 }
 
-function validateAdminUpdate(body, current) {
+function validateAdminUpdate(body, current, trainingService) {
+  let resonance = current.resonance
+  if (body?.resonance !== undefined) {
+    if (!body.resonance || typeof body.resonance.enabled !== 'boolean') {
+      return { ok: false, error: 'invalid resonance configuration' }
+    }
+    const modelID = cleanString(body.resonance.modelID, 160)
+    const model = trainingService?.publishedModels().find((value) => value.id === modelID) || null
+    if ((modelID || body.resonance.enabled) && !model) {
+      return { ok: false, error: '请选择已发布的共鸣 S2 模型。' }
+    }
+    if (body.resonance.enabled) {
+      try { trainingService.publishedCoreMLArtifact(model.id) } catch (error) {
+        return { ok: false, error: error.message }
+      }
+    }
+    resonance = { enabled: body.resonance.enabled, model }
+  }
   const source = body?.configuration && typeof body.configuration === 'object'
     ? body.configuration
     : (body || {})
@@ -122,7 +159,7 @@ function validateAdminUpdate(body, current) {
   const model = cleanString(source.model, 240)
   const modelDiscoveryURL = cleanString(source.modelDiscoveryURL, 2_048)
 
-  if (wireProtocol !== 'appleIntelligence') {
+  if (enabled && wireProtocol !== 'appleIntelligence' && !resonance.enabled) {
     if (!isHTTPURL(baseURL)) return { ok: false, error: 'invalid baseURL' }
     if (!model) return { ok: false, error: 'model is required' }
   }
@@ -152,6 +189,7 @@ function validateAdminUpdate(body, current) {
     timeout: clampNumber(source.timeout, 10, 180, 60),
     customHeadersJSON,
     apiKey,
+    resonance,
     usageLimits: normalizeUsageLimits(body?.usageLimits || source.usageLimits),
     revision: crypto.randomUUID(),
     updatedAt
@@ -179,6 +217,7 @@ function publicPayload(configuration) {
     timeout: configuration.timeout,
     customHeadersJSON: configuration.customHeadersJSON,
     apiKey: configuration.apiKey,
+    resonance: configuration.resonance,
     usageLimits: configuration.usageLimits,
     revision: configuration.revision,
     updatedAt: configuration.updatedAt

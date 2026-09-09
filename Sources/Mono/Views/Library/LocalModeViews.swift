@@ -209,7 +209,7 @@ struct LocalModeHomeView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .localRootNavigation(localModeText("tabbar_home"))
+            .localRootNavigation()
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button {
@@ -249,25 +249,23 @@ struct LocalModeHomeView: View {
 
     private var masthead: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if settings.globalThemeId != .default && !SignalStyle.isActive {
+            if !SignalStyle.isActive {
                 LocalEyebrowRow(label: "COLLECTION")
                     .padding(.bottom, 18)
             }
 
-            if settings.globalThemeId != .default {
-                Text(localModeText("local_home_hero_title"))
-                    .font(SignalStyle.isActive ? SignalStyle.titleFont(30, weight: .semibold) : .system(size: 30, weight: .heavy, design: .rounded))
-                    .foregroundColor(.monoTextPrimary)
+            Text(localModeText("local_home_hero_title"))
+                .font(SignalStyle.isActive ? SignalStyle.titleFont(30, weight: .semibold) : .system(size: 30, weight: .heavy, design: .rounded))
+                .foregroundColor(.monoTextPrimary)
 
-                if !localLibrary.songs.isEmpty {
-                    Text(localModeFormat("local_home_hero_subtitle", localLibrary.songCount))
-                        .font(SignalStyle.isActive ? SignalStyle.bodyFont(13) : .rounded(size: 13))
-                        .foregroundColor(.monoTextSecondary)
-                        .lineSpacing(3)
-                        .padding(.top, 12)
-                }
-
+            if !localLibrary.songs.isEmpty {
+                Text(localModeFormat("local_home_hero_subtitle", localLibrary.songCount))
+                    .font(SignalStyle.isActive ? SignalStyle.bodyFont(13) : .rounded(size: 13))
+                    .foregroundColor(.monoTextSecondary)
+                    .lineSpacing(3)
+                    .padding(.top, 12)
             }
+
             HStack(spacing: 10) {
                 LocalInkCapsuleButton(
                     title: localModeText("local_home_play_all"),
@@ -284,7 +282,7 @@ struct LocalModeHomeView: View {
                     showImporter = true
                 }
             }
-            .padding(.top, settings.globalThemeId == .default ? 0 : 20)
+            .padding(.top, 20)
         }
     }
 
@@ -465,7 +463,7 @@ struct LocalMusicView: View {
 
     private var navigationContent: AnyView {
         AnyView(
-            LocalPageNavigationContainer(isRoot: isRoot, title: localModeText("tabbar_local_music")) {
+            LocalPageNavigationContainer(isRoot: isRoot) {
                 pageContent
                     .navigationTitle("")
                     .navigationBarTitleDisplayMode(.inline)
@@ -648,30 +646,24 @@ struct LocalMusicView: View {
 
     @ViewBuilder
     private var masthead: some View {
-        if isRoot && settings.globalThemeId != .default {
-            VStack(alignment: .leading, spacing: 0) {
-                if !SignalStyle.isActive {
-                    LocalEyebrowRow(label: "TRACKS")
-                        .padding(.bottom, 16)
-                }
-
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(localModeText("tabbar_local_music"))
-                        .font(SignalStyle.isActive ? SignalStyle.titleFont(28, weight: .semibold) : .system(size: 28, weight: .heavy, design: .rounded))
-                        .foregroundColor(.monoTextPrimary)
-
-                    Text("\(songList.filteredSongs.count)")
-                        .font(.system(size: 15, weight: .heavy, design: .rounded))
-                        .foregroundColor(.monoAccent)
-                        .monospacedDigit()
-
-                    Spacer(minLength: 0)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            if !SignalStyle.isActive {
+                LocalEyebrowRow(label: "TRACKS")
+                    .padding(.bottom, 16)
             }
-        } else {
-            Text(String(format: NSLocalizedString("songs_count_format", comment: ""), songList.filteredSongs.count))
-                .font(.subheadline)
-                .foregroundStyle(Color.monoTextSecondary)
+
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(localModeText("tabbar_local_music"))
+                    .font(SignalStyle.isActive ? SignalStyle.titleFont(28, weight: .semibold) : .system(size: 28, weight: .heavy, design: .rounded))
+                    .foregroundColor(.monoTextPrimary)
+
+                Text("\(songList.filteredSongs.count)")
+                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                    .foregroundColor(.monoAccent)
+                    .monospacedDigit()
+
+                Spacer(minLength: 0)
+            }
         }
     }
 
@@ -763,7 +755,7 @@ struct LocalLibraryView: View {
     var body: some View {
         let _ = settings.globalThemeRevision
 
-        LocalPageNavigationContainer(isRoot: isRoot, title: localModeText("local_library_navigation_title")) {
+        LocalPageNavigationContainer(isRoot: isRoot) {
             ZStack {
                 ThemedPageBackground(useRenderLayer: true)
                     .ignoresSafeArea()
@@ -850,17 +842,15 @@ struct LocalLibraryView: View {
 
     private var masthead: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if isRoot && settings.globalThemeId != .default && !SignalStyle.isActive {
+            if !SignalStyle.isActive {
                 LocalEyebrowRow(label: "SHELF")
                     .padding(.bottom, 16)
             }
 
-            if isRoot && settings.globalThemeId != .default {
-                Text(localModeText("local_library_navigation_title"))
-                    .font(SignalStyle.isActive ? SignalStyle.titleFont(28, weight: .semibold) : .system(size: 28, weight: .heavy, design: .rounded))
-                    .foregroundColor(.monoTextPrimary)
+            Text(localModeText("local_library_navigation_title"))
+                .font(SignalStyle.isActive ? SignalStyle.titleFont(28, weight: .semibold) : .system(size: 28, weight: .heavy, design: .rounded))
+                .foregroundColor(.monoTextPrimary)
 
-            }
             HStack(spacing: 10) {
                 LocalInkCapsuleButton(
                     title: localModeText("lib_create_playlist"),
@@ -876,7 +866,7 @@ struct LocalLibraryView: View {
                     showFileImporter = true
                 }
             }
-            .padding(.top, isRoot && settings.globalThemeId != .default ? 18 : 0)
+            .padding(.top, 18)
         }
     }
 
@@ -1123,12 +1113,10 @@ struct LocalModeProfileView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        if settings.globalThemeId != .default {
-                            masthead
-                                .padding(.horizontal, DeviceLayout.homeHorizontalPadding)
-                                .padding(.top, 12)
-                                .monoPageHeaderCollapse()
-                        }
+                        masthead
+                            .padding(.horizontal, DeviceLayout.homeHorizontalPadding)
+                            .padding(.top, 12)
+                            .monoPageHeaderCollapse()
 
                         LocalStatsBand(items: [
                             (value: "\(localLibrary.songCount)", label: localModeText("tabbar_local_music")),
@@ -1161,7 +1149,7 @@ struct LocalModeProfileView: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .defaultRootPageTitle(localModeText("tabbar_profile"))
+            .localRootNavigation()
             .toolbar {
                 if settings.globalThemeId == .default {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -1815,14 +1803,11 @@ private struct LocalStarterPanel: View {
 }
 
 private extension View {
-    @ViewBuilder
-    func localRootNavigation(_ title: String) -> some View {
-        if GlobalThemeId.persistedOrDefault == .default {
-            defaultRootPageTitle(title)
-        } else {
-            // The themed root owns its title in content; keep its existing toolbar actions reachable.
-            toolbar(.visible, for: .navigationBar)
-        }
+    func localRootNavigation() -> some View {
+        navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar(.visible, for: .navigationBar)
     }
 
     @ViewBuilder
@@ -1837,16 +1822,15 @@ private extension View {
 
 private struct LocalPageNavigationContainer<Content: View>: View {
     let isRoot: Bool
-    let title: String
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         if isRoot {
             NavigationStack {
-                content().localRootNavigation(title)
+                content().localRootNavigation()
             }
         } else {
-            content().monoNavigationBackButton(title: title)
+            content().monoNavigationBackButton()
         }
     }
 }

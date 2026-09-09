@@ -39,6 +39,7 @@ struct MonoApp: App {
     
     init() {
         if ProcessInfo.processInfo.environment["MONO_UNIT_TESTS"] == "1" { return }
+        PreferenceDataArchive.shared.migrateLegacyRecords()
         FFmpegDiagnosticLog.setHandler { event in
             switch event.level {
             case .debug:
@@ -298,6 +299,9 @@ struct MonoApp: App {
         guard handle.id != .invalid else { return }
         DispatchQueue.global(qos: .userInitiated).async {
             PlaybackSessionArchive.shared.waitForPendingWrites()
+            PreferenceDataArchive.shared.waitForPendingWrites()
+            AIEqualizerLearningStore.waitForPendingWrites()
+            AIEqualizerProposalCacheStore.waitForPendingTrainingSampleWrites()
             CacheManager.shared.waitForPendingDiskWrites()
             DispatchQueue.main.async {
                 guard handle.id != .invalid else { return }

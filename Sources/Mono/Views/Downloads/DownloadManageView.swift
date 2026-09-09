@@ -423,7 +423,7 @@ struct DownloadManageView: View {
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "下载管理"))
+        .monoNavigationBackButton(iconColor: .white)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: selectedSection)
         .monoSheet(isPresented: $showShareSheet, preset: .standard) {
             DownloadShareSheet(activityItems: shareItems)
@@ -476,19 +476,59 @@ struct DownloadManageView: View {
         .ignoresSafeArea()
     }
 
+    @ViewBuilder
     private var downloadHeader: some View {
-        HStack(spacing: 12) {
-            if activeTaskCount > 0 {
-                DownloadProgressGlyph(progress: overallProgress)
-                    .frame(width: 22, height: 22)
-                Text(L10n.format("download_active_tasks_format", activeTaskCount))
+        if SignalStyle.isActive {
+            SignalNestedPageHeader(
+                title: String(localized: "下载管理"),
+                eyebrow: "DOWNLOAD QUEUE",
+                icon: .download,
+                module: .storage
+            )
+        } else {
+            HStack(spacing: 13) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(DownloadCenterPalette.accent.opacity(0.11))
+
+                    if activeTaskCount == 0 {
+                        MonoIcon(icon: .download, size: 22, color: DownloadCenterPalette.accent)
+                    } else {
+                        DownloadProgressGlyph(progress: overallProgress)
+                    }
+                }
+                .frame(width: 54, height: 54)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .stroke(DownloadCenterPalette.accent.opacity(0.2), lineWidth: 0.8)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: "下载管理"))
+                        .font(.system(size: 20, weight: .heavy, design: .rounded))
+                        .foregroundStyle(DownloadCenterPalette.primary)
+
+                    Text(
+                        activeTaskCount == 0
+                            ? String(localized: "本地音乐与歌词")
+                            : L10n.format("download_active_tasks_format", activeTaskCount)
+                    )
+                    .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                    .foregroundStyle(DownloadCenterPalette.secondary)
+                }
+
+                Spacer(minLength: 0)
+
+                Text(ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(DownloadCenterPalette.secondary)
+                    .padding(.horizontal, 11)
+                    .frame(height: 32)
+                    .background(Capsule().fill(Color.white.opacity(0.06)))
             }
-            Spacer(minLength: 0)
-            Text(ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))
+            .padding(.vertical, 4)
         }
-        .font(.subheadline)
-        .foregroundStyle(DownloadCenterPalette.secondary)
-        }
+    }
 
     private var overallProgress: Double? {
         let active = taskRecords.filter { $0.status == .downloading }

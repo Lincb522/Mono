@@ -89,10 +89,9 @@ struct QCMNewSongsView: View {
             .scrollIndicators(.hidden)
             .themeRenderScrollLayer()
         }
-        .navigationTitle(ThemedPageStyle.isActive ? "" : "QCM 新歌")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "qq_new_songs"))
+        .monoNavigationBackButton()
         .onAppear {
             if songs.isEmpty {
                 viewModel.fetchData()
@@ -103,14 +102,83 @@ struct QCMNewSongsView: View {
         }
     }
 
+    @ViewBuilder
     private var header: some View {
-        Text(String(format: String(localized: "songs_count_format"), songs.count))
-            .font(.subheadline)
-            .foregroundStyle(qcmSecondaryText)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        if SignalStyle.isActive {
+            SignalPageHeader(
+                eyebrow: "QCM NEW",
+                title: "QCM 新歌",
+                subtitle: "\(songs.count) \(String(localized: "songs_unit"))"
+            ) {
+                SignalIconBadge(icon: .musicNote, tint: MusicSource.qqmusic.themedBadgeColor, size: 48)
+            }
+            .padding(.bottom, 2)
+        } else if CapsuleStyle.isActive {
+            CapsulePageHeader(
+                eyebrow: "QCM NEW",
+                title: "QCM 新歌",
+                subtitle: "\(songs.count) \(String(localized: "songs_unit"))"
+            ) {
+                CapsuleIconBadge(icon: .musicNote, tint: CapsuleStyle.mint, size: 48)
+            }
+            .padding(.bottom, 2)
+        } else if PetWhiteStyle.isActive {
+            PetWhitePageHeader(
+                eyebrow: "QCM NEW",
+                title: "QCM 新歌",
+                subtitle: "\(songs.count) \(String(localized: "songs_unit"))",
+                icon: .musicNote
+            ) {
+                EmptyView()
+            }
+            .padding(.bottom, 2)
+        } else if MinimalWhiteStyle.isActive {
+            MinimalWhitePageHeader(eyebrow: "", title: "QCM 新歌", icon: .musicNote) {
+                Text("\(songs.count) \(String(localized: "songs_unit"))")
+                    .font(MinimalWhiteStyle.labelFont(12, weight: .regular))
+                    .foregroundStyle(MinimalWhiteStyle.inkMuted)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(MinimalWhiteStyle.controlGlassFill))
+                    .overlay(Capsule().stroke(MinimalWhiteStyle.hairline, lineWidth: MinimalWhiteStyle.strokeWidth))
+            }
+            .padding(.bottom, 2)
+        } else if ThemedPageStyle.isActive {
+            ThemedPageHeader(
+                eyebrow: "QCM NEW",
+                title: "QCM 新歌",
+                subtitle: "\(songs.count) \(String(localized: "songs_unit"))",
+                icon: .musicNote
+            )
+            .padding(.bottom, 2)
+        } else {
+            HStack(alignment: .center, spacing: 14) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("QCM NEW")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundColor(.monoTextSecondary)
+                        .tracking(1.3)
+
+                    Text("QCM 新歌")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.monoTextPrimary)
+
+                    Text("\(songs.count) \(String(localized: "songs_unit"))")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(.monoTextSecondary)
+                }
+
+                Spacer(minLength: 10)
+
+                MonoIcon(icon: .musicNote, size: 22, color: .monoTextPrimary, lineWidth: 1.8)
+                    .frame(width: 46, height: 46)
+                    .background(Color.monoTextPrimary.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
             .padding(.horizontal, DeviceLayout.viewHorizontalPadding)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
+            .padding(.top, DeviceLayout.headerTopPadding + 8)
+            .padding(.bottom, 12)
+            .monoPageHeaderCollapse()
+        }
     }
 
     private var capsuleSongList: some View {

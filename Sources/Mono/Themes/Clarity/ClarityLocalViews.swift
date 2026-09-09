@@ -117,7 +117,7 @@ struct ClarityLocalHomeView: View {
                     .rotationEffect(.degrees(-2.2))
                     .shadow(color: Color.black.opacity(0.10), radius: 18, y: 10)
                     .overlay(alignment: .bottomTrailing) {
-                        NavigationLink(destination: ClarityLocalMusicContent(isRoot: false).monoNavigationBackButton(iconColor: ClarityStyle.ink, title: String(localized: "tabbar_local_music")).clarityDetailChrome()) {
+                        NavigationLink(destination: ClarityLocalMusicContent(isRoot: false).monoNavigationBackButton(iconColor: ClarityStyle.ink).clarityDetailChrome()) {
                             MonoIcon(icon: .chevronRight, size: 16, color: ClarityStyle.ink, lineWidth: 1.6)
                                 .frame(width: 43, height: 43)
                                 .background(ClarityMembrane(shape: Circle(), strength: .strong))
@@ -134,7 +134,7 @@ struct ClarityLocalHomeView: View {
 
     private var quickAccess: some View {
         HStack(spacing: 0) {
-            localShortcut(.musicNoteList, "local_filter_all", ClarityLocalMusicContent(isRoot: false).monoNavigationBackButton(iconColor: ClarityStyle.ink, title: String(localized: "tabbar_local_music")).clarityDetailChrome())
+            localShortcut(.musicNoteList, "local_filter_all", ClarityLocalMusicContent(isRoot: false).monoNavigationBackButton(iconColor: ClarityStyle.ink).clarityDetailChrome())
             localShortcut(.liked, "local_filter_favorites", LocalMusicView(initialFilter: .favorites).clarityDetailChrome())
             localShortcut(.history, "local_filter_recent", LocalMusicView(initialFilter: .recent).clarityDetailChrome())
             localShortcut(.download, "local_filter_downloads", LocalMusicView(initialFilter: .downloads).clarityDetailChrome())

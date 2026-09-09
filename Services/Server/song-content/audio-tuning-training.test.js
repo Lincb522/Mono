@@ -645,7 +645,7 @@ test('training service persists a completed residual model', async () => {
   }
 })
 
-test('training refuses a model that is missing a band-profile branch', () => {
+test('training refuses a model missing a required 10-band profile branch', () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'mono-audio-training-coverage-'))
   try {
     const snapshots = Array.from({ length: 4 }, (_, index) => {
@@ -784,9 +784,9 @@ test('standard and spatial profiles learn different spatial outputs', async () =
     assert.equal(state.currentJob.state, 'completed')
     const model = service.modelArtifact(state.currentModel.id)
     assert.equal(model.metrics.standardProfileTrainingSamples
-      + model.metrics.standardProfileValidationSamples, 14)
+      + model.metrics.standardProfileValidationSamples + model.metrics.standardProfileCalibrationSamples, 14)
     assert.equal(model.metrics.spatialProfileTrainingSamples
-      + model.metrics.spatialProfileValidationSamples, 14)
+      + model.metrics.spatialProfileValidationSamples + model.metrics.spatialProfileCalibrationSamples, 14)
 
     for (const mode of ['tenBand', 'thirtyTwoBand']) {
       const standard = sample(`prediction-profile-standard-${mode}`, mode)
@@ -1014,7 +1014,8 @@ test('agent learning context changes the learned tuning for otherwise matching i
     assert.equal(model.metrics.targetMode, 'personalized')
     assert.equal(
       (model.metrics.learningConditionedTrainingSamples ?? 0)
-        + (model.metrics.learningConditionedValidationSamples ?? 0),
+        + (model.metrics.learningConditionedValidationSamples ?? 0)
+        + (model.metrics.learningConditionedCalibrationSamples ?? 0),
       24
     )
 
@@ -1105,7 +1106,8 @@ test('detailed device parameters change learned tuning for otherwise matching tr
     const model = service.modelArtifact(state.currentModel.id)
     assert.equal(
       (model.metrics.deviceConditionedTrainingSamples ?? 0)
-        + (model.metrics.deviceConditionedValidationSamples ?? 0),
+        + (model.metrics.deviceConditionedValidationSamples ?? 0)
+        + (model.metrics.deviceConditionedCalibrationSamples ?? 0),
       24
     )
 
@@ -1672,10 +1674,45 @@ test('every management route requires training.manage', () => {
       return permissionMiddleware
     }
   })
-  assert.equal(registrations.length, 7)
+  assert.equal(registrations.length, 8)
   assert.deepEqual(requestedPermissions, ['training.manage'])
   registrations.forEach(({ handlers }) => {
     assert.strictEqual(handlers[0], authMiddleware)
     assert.strictEqual(handlers[1], permissionMiddleware)
   })
+})
+
+
+test('training completes with only 10-band profiles and keeps absent 32-band outputs neutral', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'mono-ten-band-training-'))
+  let service
+  try {
+    const snapshots = Array.from({ length: 8 }, (_, i) => {
+      const value = sample(`ten-only-${i}`)
+      value.target.tuningProfile = i % 2 === 0 ? 'standard' : 'monoSpatialEnhancement'
+      return { aiEqualizer: { cachedProposals: {},
+        savedProposals: { [value.songIdentifier]: [{ id: value.id, proposal: value.target }] },
+        trainingSamples: { [value.id]: value } } }
+    })
+    service = createAudioTuningTrainingService({ directory: path.join(directory, 'training'),
+      cloudDatabasePath: createCloudDatabase(directory, snapshots), coreMLExporter: fakeCoreMLExporter, logger: { error() {} } })
+    service.updateSettings({ epochs: 1, hiddenUnits: 4, minimumSamples: 4 })
+    service.startTraining('fixture-admin')
+    let state = service.status()
+    for (let i = 0; i < 300 && state.currentJob?.isActive; i++) {
+      await new Promise(resolve => setTimeout(resolve, 10))
+      state = service.status()
+    }
+    assert.equal(state.currentJob.state, 'completed', state.currentJob.errorMessage)
+    assert.equal(state.currentModel.metrics.thirtyTwoBandTrainingSamples, 0)
+    assert.equal(state.currentModel.metrics.confidenceCalibration.branches['thirtyTwoBand:standard'].radiusDB, null)
+    const artifact = service.modelArtifact(state.currentModel.id).artifact
+    for (let i = 10; i < 42; i++) {
+      assert.ok(artifact.outputHeadWeights[i].every(value => value === 0))
+      assert.equal(artifact.outputHeadBias[i], 0)
+    }
+  } finally {
+    service?.close()
+    fs.rmSync(directory, { recursive: true, force: true })
+  }
 })

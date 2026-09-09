@@ -148,7 +148,7 @@ struct AIAgentTraceDeveloperView: View {
                     .foregroundStyle(.white.opacity(0.62))
                     .lineLimit(1)
 
-                Text("\(session.provider) · \(session.model) · \(session.startedAt.agentTraceDateText)")
+                Text("\(session.executionProvider) · \(session.executionModelDisplayName) · \(session.startedAt.agentTraceDateText)")
                     .font(.system(size: 10.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.34))
                     .lineLimit(1)
@@ -257,7 +257,7 @@ private struct AIAgentTraceDetailView: View {
 
                 VStack(spacing: 9) {
                     summaryLine(String(localized: "agent_trace_agent_id"), session.agentID)
-                    summaryLine(String(localized: "agent_trace_provider"), "\(session.provider) · \(session.model)")
+                    summaryLine(String(localized: "agent_trace_provider"), "\(session.executionProvider) · \(session.executionModelDisplayName)")
                     summaryLine(String(localized: "agent_trace_started"), session.startedAt.agentTraceDateText)
                     summaryLine(
                         String(localized: "agent_trace_events"),
@@ -542,8 +542,8 @@ private struct AIAgentTraceDetailView: View {
         let metadata = mergedMetadata(session)
         let rows: [(String, String?)] = [
             (String(localized: "agent_trace_agent_id"), session.agentID),
-            (String(localized: "agent_trace_provider"), session.provider),
-            (String(localized: "agent_trace_model"), session.model),
+            (String(localized: "agent_trace_provider"), session.executionProvider),
+            (String(localized: "agent_trace_model"), session.executionModelDisplayName),
             (String(localized: "agent_trace_scope"), metadata["scope"]),
             (String(localized: "agent_trace_attempt"), metadataValue(metadata, keys: ["attempt", "nextAttempt"])),
             (String(localized: "agent_trace_result"), metadata["result"])

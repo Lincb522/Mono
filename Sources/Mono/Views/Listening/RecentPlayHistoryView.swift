@@ -46,6 +46,64 @@ struct RecentPlayHistoryView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 0) {
+                        if MangaStyle.isActive {
+                            MangaPageHeader(
+                                eyebrow: "HISTORY",
+                                title: String(localized: "profile_recently_played"),
+                                subtitle: ""
+                            ) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous)
+                                        .fill(MangaStyle.mint)
+                                    MonoIcon(icon: .history, size: 23, color: MangaStyle.ink, lineWidth: 2)
+                                }
+                                .frame(width: 48, height: 48)
+                                .overlay(RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous).stroke(MangaStyle.strokeInk, lineWidth: MangaStyle.strokeWidth))
+                                .background(RoundedRectangle(cornerRadius: MangaStyle.cardRadius, style: .continuous).fill(MangaStyle.strokeInk).offset(x: MangaStyle.shadowOffset, y: MangaStyle.shadowOffset))
+                            }
+                        } else if MujiStyle.isActive {
+                            MujiPageHeader(
+                                eyebrow: String(localized: "profile_recently_played"),
+                                title: String(localized: "profile_recently_played"),
+                                subtitle: ""
+                            ) {
+                                MujiIconBadge(icon: .history, tint: MujiStyle.tea, size: 48)
+                            }
+                        } else if NeumorphicStyle.isActive {
+                            NeumorphicPageHeader(
+                                eyebrow: "HISTORY",
+                                title: String(localized: "profile_recently_played"),
+                                subtitle: ""
+                            ) {
+                                NeumorphicIconBadge(icon: .history, tint: NeumorphicStyle.warm, size: 48)
+                            }
+                        } else if CapsuleStyle.isActive {
+                            CapsulePageHeader(
+                                eyebrow: "HISTORY",
+                                title: String(localized: "profile_recently_played"),
+                                subtitle: ""
+                            ) {
+                                CapsuleIconBadge(icon: .history, tint: CapsuleStyle.cyan, size: 48)
+                            }
+                        } else if SequoiaStyle.isActive {
+                            SequoiaPageHeader(
+                                eyebrow: "HISTORY",
+                                title: String(localized: "profile_recently_played"),
+                                subtitle: ""
+                            ) {
+                                SequoiaIconBadge(icon: .history, tint: SequoiaStyle.accent, size: 48)
+                            }
+                        } else if SignalStyle.isActive {
+                            SignalNestedPageHeader(
+                                title: String(localized: "profile_recently_played"),
+                                eyebrow: "PLAYBACK LOG",
+                                icon: .history,
+                                module: .changelog
+                            )
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                        }
+
                         PlaylistSearchBar(
                             searchText: $recentSearch,
                             isSearching: $isRecentSearching,
@@ -103,10 +161,9 @@ struct RecentPlayHistoryView: View {
         .onReceive(playerManager.$history) { songs in
             if explicitSongs == nil { playbackHistory = songs }
         }
-        .navigationTitle(ThemedPageStyle.isActive ? "" : String(localized: "profile_recently_played"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "profile_recently_played"))
+        .monoNavigationBackButton()
         .toolbar {
             HStack {
                 if explicitSongs == nil {

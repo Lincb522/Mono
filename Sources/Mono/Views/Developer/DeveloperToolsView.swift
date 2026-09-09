@@ -107,7 +107,7 @@ private struct DeveloperDiagnosticPageModifier: ViewModifier {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar(.hidden, for: .tabBar)
-            .monoNavigationBackButton(iconColor: .white, title: title)
+            .monoNavigationBackButton(iconColor: .white)
             .modifier(DeveloperDiagnosticTabBarHiddenModifier())
     }
 }
@@ -298,6 +298,9 @@ struct DeveloperPopupCatalogView: View {
         case textInputAlert
         case secureInputAlert
         case changelog
+        case resonanceIntroduction
+        case resonanceUpdate
+        case resonanceFailure
         case greetingDaily
         case greetingSolarBirthday
         case greetingLunarBirthday
@@ -323,7 +326,8 @@ struct DeveloperPopupCatalogView: View {
             switch self {
             case .informationAlert, .confirmationAlert, .textInputAlert, .secureInputAlert:
                 return .alerts
-            case .changelog, .greetingDaily, .greetingSolarBirthday, .greetingLunarBirthday,
+            case .changelog, .resonanceIntroduction, .resonanceUpdate, .resonanceFailure,
+                 .greetingDaily, .greetingSolarBirthday, .greetingLunarBirthday,
                  .reportWeekly, .reportMonthly:
                 return .launch
             default:
@@ -342,6 +346,9 @@ struct DeveloperPopupCatalogView: View {
             case .textInputAlert: return .save
             case .secureInputAlert: return .lock
             case .changelog: return .history
+            case .resonanceIntroduction: return .waveform
+            case .resonanceUpdate: return .refresh
+            case .resonanceFailure: return .warning
             case .greetingDaily, .greetingSolarBirthday, .greetingLunarBirthday: return .emoji
             case .reportWeekly, .reportMonthly: return .chart
             case .musicQueue: return .musicNoteList
@@ -482,6 +489,15 @@ struct DeveloperPopupCatalogView: View {
 
         case .changelog:
             ChangelogManager.shared.presentPreview(previewRelease)
+
+        case .resonanceIntroduction:
+            AIResonanceUpdateStore.shared.presentPreview(.introduction)
+
+        case .resonanceUpdate:
+            AIResonanceUpdateStore.shared.presentPreview(.updated)
+
+        case .resonanceFailure:
+            AIResonanceUpdateStore.shared.presentPreview(.failed)
 
         case .greetingDaily:
             presentGreeting(.daily(

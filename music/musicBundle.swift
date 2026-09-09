@@ -21,6 +21,8 @@ struct musicBundle: WidgetBundle {
         NowPlayingWidget(theme: .soundwave)
         NowPlayingWidget(theme: .typewriter)
         NowPlayingWidget(theme: .lyrics)
+        NowPlayingWidget(theme: .lyricsDark)
+        NowPlayingWidget(theme: .lyricsCover)
         if #available(iOS 18, *) {
             PlayPauseControlWidget()
             NextTrackControlWidget()

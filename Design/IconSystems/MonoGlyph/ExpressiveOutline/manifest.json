@@ -1,0 +1,1759 @@
+{
+  "family": "MONO Glyph",
+  "style": "expressiveOutline",
+  "method": "reference and generated PNG artwork extraction",
+  "semanticCount": 233,
+  "assetCount": 466,
+  "output": {
+    "width": 128,
+    "height": 128,
+    "format": "png",
+    "background": "transparent",
+    "lightAppearanceInk": "#202020",
+    "darkAppearanceInk": "#F5F5F3"
+  },
+  "sources": [
+    {
+      "sheet": "00",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-00.png",
+      "sha256": "7d8dfd07fc0a1528a63ddf20bde5d5d1e72b2dbf590e88506af97a3cd39ea249",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "01",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-01.png",
+      "sha256": "03d7358e08f4097b7fd3a228d259b1a267d8759541133c7e7f6b33b493acf680",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "02",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-02.png",
+      "sha256": "fcd5fe3958415a50c0800abc88d1ce3b19b7a14f09750f1121d85048d31d0bdb",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "03",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-03.png",
+      "sha256": "87fdd1d3d883da288df1805627ace85d02fba8d7db520790d6ce49c2b5967f18",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "04",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-04.png",
+      "sha256": "a586a7dbda2e954a5b485aba809448e709ee4fab32cb14393d0f91b0de36b2ea",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "05",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-05.png",
+      "sha256": "a3cfbf7bd7c8c2578263425d81d9642c901bb8b6d8cd7e2019e71026c29cb6a4",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4,
+      "maxInternalGap": 32
+    },
+    {
+      "sheet": "06",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-06.png",
+      "sha256": "c6c796321ba51642f762d16f0d1e76eb59a0d81b99977fde7bb35512b98352f3",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "07",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-07.png",
+      "sha256": "768ed7daec5f5c59bd5ff318cf469beb59c157e7728b491f81053aeaae1b41f4",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "08",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-08.png",
+      "sha256": "6fbfb811e564401b58970dbbb2c9b99d0a95c3d67443b7f9d5bab3e772d9b828",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "09",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-09.png",
+      "sha256": "8b664557bb839559c3fa17a1f851e8788c72342c9dcfe5fd5035ba7fa3b8856f",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "10",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-10.png",
+      "sha256": "b875c3346f2e3bf3de88fe65b244c5186ae7bcf580af42893243d0adde130e35",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 4
+    },
+    {
+      "sheet": "11",
+      "path": "Design/IconSystems/MonoGlyph/ExpressiveOutline/sheet-11.png",
+      "sha256": "3afdc33e24d6175843a89b1933d7b1b01555580a4229410b72e116d656c6be08",
+      "width": 1254,
+      "height": 1254,
+      "columns": 5,
+      "rows": 3
+    }
+  ],
+  "slots": [
+    {
+      "semantic": "play",
+      "sheet": "00",
+      "cell": 1,
+      "light": "expressiveOutline_play.imageset/expressiveOutline_play.png",
+      "dark": "expressiveOutline_play.imageset/expressiveOutline_play_dark.png"
+    },
+    {
+      "semantic": "pause",
+      "sheet": "00",
+      "cell": 2,
+      "light": "expressiveOutline_pause.imageset/expressiveOutline_pause.png",
+      "dark": "expressiveOutline_pause.imageset/expressiveOutline_pause_dark.png"
+    },
+    {
+      "semantic": "next",
+      "sheet": "00",
+      "cell": 3,
+      "light": "expressiveOutline_next.imageset/expressiveOutline_next.png",
+      "dark": "expressiveOutline_next.imageset/expressiveOutline_next_dark.png"
+    },
+    {
+      "semantic": "previous",
+      "sheet": "00",
+      "cell": 4,
+      "light": "expressiveOutline_previous.imageset/expressiveOutline_previous.png",
+      "dark": "expressiveOutline_previous.imageset/expressiveOutline_previous_dark.png"
+    },
+    {
+      "semantic": "like",
+      "sheet": "00",
+      "cell": 5,
+      "light": "expressiveOutline_like.imageset/expressiveOutline_like.png",
+      "dark": "expressiveOutline_like.imageset/expressiveOutline_like_dark.png"
+    },
+    {
+      "semantic": "list",
+      "sheet": "00",
+      "cell": 6,
+      "light": "expressiveOutline_list.imageset/expressiveOutline_list.png",
+      "dark": "expressiveOutline_list.imageset/expressiveOutline_list_dark.png"
+    },
+    {
+      "semantic": "album",
+      "sheet": "00",
+      "cell": 7,
+      "light": "expressiveOutline_album.imageset/expressiveOutline_album.png",
+      "dark": "expressiveOutline_album.imageset/expressiveOutline_album_dark.png"
+    },
+    {
+      "semantic": "headphones",
+      "sheet": "00",
+      "cell": 8,
+      "light": "expressiveOutline_headphones.imageset/expressiveOutline_headphones.png",
+      "dark": "expressiveOutline_headphones.imageset/expressiveOutline_headphones_dark.png"
+    },
+    {
+      "semantic": "microphone",
+      "sheet": "00",
+      "cell": 9,
+      "light": "expressiveOutline_microphone.imageset/expressiveOutline_microphone.png",
+      "dark": "expressiveOutline_microphone.imageset/expressiveOutline_microphone_dark.png"
+    },
+    {
+      "semantic": "download",
+      "sheet": "00",
+      "cell": 10,
+      "light": "expressiveOutline_download.imageset/expressiveOutline_download.png",
+      "dark": "expressiveOutline_download.imageset/expressiveOutline_download_dark.png"
+    },
+    {
+      "semantic": "settings",
+      "sheet": "00",
+      "cell": 11,
+      "light": "expressiveOutline_settings.imageset/expressiveOutline_settings.png",
+      "dark": "expressiveOutline_settings.imageset/expressiveOutline_settings_dark.png"
+    },
+    {
+      "semantic": "equalizer",
+      "sheet": "00",
+      "cell": 12,
+      "light": "expressiveOutline_equalizer.imageset/expressiveOutline_equalizer.png",
+      "dark": "expressiveOutline_equalizer.imageset/expressiveOutline_equalizer_dark.png"
+    },
+    {
+      "semantic": "soundQuality",
+      "sheet": "00",
+      "cell": 13,
+      "light": "expressiveOutline_soundQuality.imageset/expressiveOutline_soundQuality.png",
+      "dark": "expressiveOutline_soundQuality.imageset/expressiveOutline_soundQuality_dark.png"
+    },
+    {
+      "semantic": "cloud",
+      "sheet": "00",
+      "cell": 14,
+      "light": "expressiveOutline_cloud.imageset/expressiveOutline_cloud.png",
+      "dark": "expressiveOutline_cloud.imageset/expressiveOutline_cloud_dark.png"
+    },
+    {
+      "semantic": "clock",
+      "sheet": "00",
+      "cell": 15,
+      "light": "expressiveOutline_clock.imageset/expressiveOutline_clock.png",
+      "dark": "expressiveOutline_clock.imageset/expressiveOutline_clock_dark.png"
+    },
+    {
+      "semantic": "magnifyingGlass",
+      "sheet": "00",
+      "cell": 16,
+      "light": "expressiveOutline_magnifyingGlass.imageset/expressiveOutline_magnifyingGlass.png",
+      "dark": "expressiveOutline_magnifyingGlass.imageset/expressiveOutline_magnifyingGlass_dark.png"
+    },
+    {
+      "semantic": "trash",
+      "sheet": "00",
+      "cell": 17,
+      "light": "expressiveOutline_trash.imageset/expressiveOutline_trash.png",
+      "dark": "expressiveOutline_trash.imageset/expressiveOutline_trash_dark.png"
+    },
+    {
+      "semantic": "share",
+      "sheet": "00",
+      "cell": 18,
+      "light": "expressiveOutline_share.imageset/expressiveOutline_share.png",
+      "dark": "expressiveOutline_share.imageset/expressiveOutline_share_dark.png"
+    },
+    {
+      "semantic": "comment",
+      "sheet": "00",
+      "cell": 19,
+      "light": "expressiveOutline_comment.imageset/expressiveOutline_comment.png",
+      "dark": "expressiveOutline_comment.imageset/expressiveOutline_comment_dark.png"
+    },
+    {
+      "semantic": "audioAgent",
+      "sheet": "00",
+      "cell": 20,
+      "light": "expressiveOutline_audioAgent.imageset/expressiveOutline_audioAgent.png",
+      "dark": "expressiveOutline_audioAgent.imageset/expressiveOutline_audioAgent_dark.png"
+    },
+    {
+      "semantic": "home",
+      "sheet": "01",
+      "cell": 1,
+      "light": "expressiveOutline_home.imageset/expressiveOutline_home.png",
+      "dark": "expressiveOutline_home.imageset/expressiveOutline_home_dark.png"
+    },
+    {
+      "semantic": "podcast",
+      "sheet": "01",
+      "cell": 2,
+      "light": "expressiveOutline_podcast.imageset/expressiveOutline_podcast.png",
+      "dark": "expressiveOutline_podcast.imageset/expressiveOutline_podcast_dark.png"
+    },
+    {
+      "semantic": "library",
+      "sheet": "01",
+      "cell": 3,
+      "light": "expressiveOutline_library.imageset/expressiveOutline_library.png",
+      "dark": "expressiveOutline_library.imageset/expressiveOutline_library_dark.png"
+    },
+    {
+      "semantic": "search",
+      "sheet": "01",
+      "cell": 4,
+      "light": "expressiveOutline_search.imageset/expressiveOutline_search.png",
+      "dark": "expressiveOutline_search.imageset/expressiveOutline_search_dark.png"
+    },
+    {
+      "semantic": "profile",
+      "sheet": "01",
+      "cell": 5,
+      "light": "expressiveOutline_profile.imageset/expressiveOutline_profile.png",
+      "dark": "expressiveOutline_profile.imageset/expressiveOutline_profile_dark.png"
+    },
+    {
+      "semantic": "homeFilled",
+      "sheet": "01",
+      "cell": 6,
+      "light": "expressiveOutline_homeFilled.imageset/expressiveOutline_homeFilled.png",
+      "dark": "expressiveOutline_homeFilled.imageset/expressiveOutline_homeFilled_dark.png"
+    },
+    {
+      "semantic": "podcastFilled",
+      "sheet": "01",
+      "cell": 7,
+      "light": "expressiveOutline_podcastFilled.imageset/expressiveOutline_podcastFilled.png",
+      "dark": "expressiveOutline_podcastFilled.imageset/expressiveOutline_podcastFilled_dark.png"
+    },
+    {
+      "semantic": "libraryFilled",
+      "sheet": "01",
+      "cell": 8,
+      "light": "expressiveOutline_libraryFilled.imageset/expressiveOutline_libraryFilled.png",
+      "dark": "expressiveOutline_libraryFilled.imageset/expressiveOutline_libraryFilled_dark.png"
+    },
+    {
+      "semantic": "profileFilled",
+      "sheet": "01",
+      "cell": 9,
+      "light": "expressiveOutline_profileFilled.imageset/expressiveOutline_profileFilled.png",
+      "dark": "expressiveOutline_profileFilled.imageset/expressiveOutline_profileFilled_dark.png"
+    },
+    {
+      "semantic": "stop",
+      "sheet": "01",
+      "cell": 10,
+      "light": "expressiveOutline_stop.imageset/expressiveOutline_stop.png",
+      "dark": "expressiveOutline_stop.imageset/expressiveOutline_stop_dark.png"
+    },
+    {
+      "semantic": "liked",
+      "sheet": "01",
+      "cell": 11,
+      "light": "expressiveOutline_liked.imageset/expressiveOutline_liked.png",
+      "dark": "expressiveOutline_liked.imageset/expressiveOutline_liked_dark.png"
+    },
+    {
+      "semantic": "repeatMode",
+      "sheet": "01",
+      "cell": 12,
+      "light": "expressiveOutline_repeatMode.imageset/expressiveOutline_repeatMode.png",
+      "dark": "expressiveOutline_repeatMode.imageset/expressiveOutline_repeatMode_dark.png"
+    },
+    {
+      "semantic": "repeatOne",
+      "sheet": "01",
+      "cell": 13,
+      "light": "expressiveOutline_repeatOne.imageset/expressiveOutline_repeatOne.png",
+      "dark": "expressiveOutline_repeatOne.imageset/expressiveOutline_repeatOne_dark.png"
+    },
+    {
+      "semantic": "shuffle",
+      "sheet": "01",
+      "cell": 14,
+      "light": "expressiveOutline_shuffle.imageset/expressiveOutline_shuffle.png",
+      "dark": "expressiveOutline_shuffle.imageset/expressiveOutline_shuffle_dark.png"
+    },
+    {
+      "semantic": "refresh",
+      "sheet": "01",
+      "cell": 15,
+      "light": "expressiveOutline_refresh.imageset/expressiveOutline_refresh.png",
+      "dark": "expressiveOutline_refresh.imageset/expressiveOutline_refresh_dark.png"
+    },
+    {
+      "semantic": "playCircle",
+      "sheet": "01",
+      "cell": 16,
+      "light": "expressiveOutline_playCircle.imageset/expressiveOutline_playCircle.png",
+      "dark": "expressiveOutline_playCircle.imageset/expressiveOutline_playCircle_dark.png"
+    },
+    {
+      "semantic": "playCircleFill",
+      "sheet": "01",
+      "cell": 17,
+      "light": "expressiveOutline_playCircleFill.imageset/expressiveOutline_playCircleFill.png",
+      "dark": "expressiveOutline_playCircleFill.imageset/expressiveOutline_playCircleFill_dark.png"
+    },
+    {
+      "semantic": "playNext",
+      "sheet": "01",
+      "cell": 18,
+      "light": "expressiveOutline_playNext.imageset/expressiveOutline_playNext.png",
+      "dark": "expressiveOutline_playNext.imageset/expressiveOutline_playNext_dark.png"
+    },
+    {
+      "semantic": "addToQueue",
+      "sheet": "01",
+      "cell": 19,
+      "light": "expressiveOutline_addToQueue.imageset/expressiveOutline_addToQueue.png",
+      "dark": "expressiveOutline_addToQueue.imageset/expressiveOutline_addToQueue_dark.png"
+    },
+    {
+      "semantic": "rewind15",
+      "sheet": "01",
+      "cell": 20,
+      "light": "expressiveOutline_rewind15.imageset/expressiveOutline_rewind15.png",
+      "dark": "expressiveOutline_rewind15.imageset/expressiveOutline_rewind15_dark.png"
+    },
+    {
+      "semantic": "forward15",
+      "sheet": "02",
+      "cell": 1,
+      "light": "expressiveOutline_forward15.imageset/expressiveOutline_forward15.png",
+      "dark": "expressiveOutline_forward15.imageset/expressiveOutline_forward15_dark.png"
+    },
+    {
+      "semantic": "skipBack",
+      "sheet": "02",
+      "cell": 2,
+      "light": "expressiveOutline_skipBack.imageset/expressiveOutline_skipBack.png",
+      "dark": "expressiveOutline_skipBack.imageset/expressiveOutline_skipBack_dark.png"
+    },
+    {
+      "semantic": "skipForward",
+      "sheet": "02",
+      "cell": 3,
+      "light": "expressiveOutline_skipForward.imageset/expressiveOutline_skipForward.png",
+      "dark": "expressiveOutline_skipForward.imageset/expressiveOutline_skipForward_dark.png"
+    },
+    {
+      "semantic": "add",
+      "sheet": "02",
+      "cell": 4,
+      "light": "expressiveOutline_add.imageset/expressiveOutline_add.png",
+      "dark": "expressiveOutline_add.imageset/expressiveOutline_add_dark.png"
+    },
+    {
+      "semantic": "close",
+      "sheet": "02",
+      "cell": 5,
+      "light": "expressiveOutline_close.imageset/expressiveOutline_close.png",
+      "dark": "expressiveOutline_close.imageset/expressiveOutline_close_dark.png"
+    },
+    {
+      "semantic": "xmark",
+      "sheet": "02",
+      "cell": 6,
+      "light": "expressiveOutline_xmark.imageset/expressiveOutline_xmark.png",
+      "dark": "expressiveOutline_xmark.imageset/expressiveOutline_xmark_dark.png"
+    },
+    {
+      "semantic": "checkmark",
+      "sheet": "02",
+      "cell": 7,
+      "light": "expressiveOutline_checkmark.imageset/expressiveOutline_checkmark.png",
+      "dark": "expressiveOutline_checkmark.imageset/expressiveOutline_checkmark_dark.png"
+    },
+    {
+      "semantic": "more",
+      "sheet": "02",
+      "cell": 8,
+      "light": "expressiveOutline_more.imageset/expressiveOutline_more.png",
+      "dark": "expressiveOutline_more.imageset/expressiveOutline_more_dark.png"
+    },
+    {
+      "semantic": "back",
+      "sheet": "02",
+      "cell": 9,
+      "light": "expressiveOutline_back.imageset/expressiveOutline_back.png",
+      "dark": "expressiveOutline_back.imageset/expressiveOutline_back_dark.png"
+    },
+    {
+      "semantic": "chevronRight",
+      "sheet": "02",
+      "cell": 10,
+      "light": "expressiveOutline_chevronRight.imageset/expressiveOutline_chevronRight.png",
+      "dark": "expressiveOutline_chevronRight.imageset/expressiveOutline_chevronRight_dark.png"
+    },
+    {
+      "semantic": "chevronLeft",
+      "sheet": "02",
+      "cell": 11,
+      "light": "expressiveOutline_chevronLeft.imageset/expressiveOutline_chevronLeft.png",
+      "dark": "expressiveOutline_chevronLeft.imageset/expressiveOutline_chevronLeft_dark.png"
+    },
+    {
+      "semantic": "chevronDown",
+      "sheet": "02",
+      "cell": 12,
+      "light": "expressiveOutline_chevronDown.imageset/expressiveOutline_chevronDown.png",
+      "dark": "expressiveOutline_chevronDown.imageset/expressiveOutline_chevronDown_dark.png"
+    },
+    {
+      "semantic": "chevronUp",
+      "sheet": "02",
+      "cell": 13,
+      "light": "expressiveOutline_chevronUp.imageset/expressiveOutline_chevronUp.png",
+      "dark": "expressiveOutline_chevronUp.imageset/expressiveOutline_chevronUp_dark.png"
+    },
+    {
+      "semantic": "playerDownload",
+      "sheet": "02",
+      "cell": 14,
+      "light": "expressiveOutline_playerDownload.imageset/expressiveOutline_playerDownload.png",
+      "dark": "expressiveOutline_playerDownload.imageset/expressiveOutline_playerDownload_dark.png"
+    },
+    {
+      "semantic": "arrowDownToLine",
+      "sheet": "02",
+      "cell": 15,
+      "light": "expressiveOutline_arrowDownToLine.imageset/expressiveOutline_arrowDownToLine.png",
+      "dark": "expressiveOutline_arrowDownToLine.imageset/expressiveOutline_arrowDownToLine_dark.png"
+    },
+    {
+      "semantic": "arrowDownCircle",
+      "sheet": "02",
+      "cell": 16,
+      "light": "expressiveOutline_arrowDownCircle.imageset/expressiveOutline_arrowDownCircle.png",
+      "dark": "expressiveOutline_arrowDownCircle.imageset/expressiveOutline_arrowDownCircle_dark.png"
+    },
+    {
+      "semantic": "send",
+      "sheet": "02",
+      "cell": 17,
+      "light": "expressiveOutline_send.imageset/expressiveOutline_send.png",
+      "dark": "expressiveOutline_send.imageset/expressiveOutline_send_dark.png"
+    },
+    {
+      "semantic": "copy",
+      "sheet": "02",
+      "cell": 18,
+      "light": "expressiveOutline_copy.imageset/expressiveOutline_copy.png",
+      "dark": "expressiveOutline_copy.imageset/expressiveOutline_copy_dark.png"
+    },
+    {
+      "semantic": "rename",
+      "sheet": "02",
+      "cell": 19,
+      "light": "expressiveOutline_rename.imageset/expressiveOutline_rename.png",
+      "dark": "expressiveOutline_rename.imageset/expressiveOutline_rename_dark.png"
+    },
+    {
+      "semantic": "link",
+      "sheet": "02",
+      "cell": 20,
+      "light": "expressiveOutline_link.imageset/expressiveOutline_link.png",
+      "dark": "expressiveOutline_link.imageset/expressiveOutline_link_dark.png"
+    },
+    {
+      "semantic": "filter",
+      "sheet": "03",
+      "cell": 1,
+      "light": "expressiveOutline_filter.imageset/expressiveOutline_filter.png",
+      "dark": "expressiveOutline_filter.imageset/expressiveOutline_filter_dark.png"
+    },
+    {
+      "semantic": "fullscreen",
+      "sheet": "03",
+      "cell": 2,
+      "light": "expressiveOutline_fullscreen.imageset/expressiveOutline_fullscreen.png",
+      "dark": "expressiveOutline_fullscreen.imageset/expressiveOutline_fullscreen_dark.png"
+    },
+    {
+      "semantic": "expandScreen",
+      "sheet": "03",
+      "cell": 3,
+      "light": "expressiveOutline_expandScreen.imageset/expressiveOutline_expandScreen.png",
+      "dark": "expressiveOutline_expandScreen.imageset/expressiveOutline_expandScreen_dark.png"
+    },
+    {
+      "semantic": "shrinkScreen",
+      "sheet": "03",
+      "cell": 4,
+      "light": "expressiveOutline_shrinkScreen.imageset/expressiveOutline_shrinkScreen.png",
+      "dark": "expressiveOutline_shrinkScreen.imageset/expressiveOutline_shrinkScreen_dark.png"
+    },
+    {
+      "semantic": "xmarkCircle",
+      "sheet": "03",
+      "cell": 5,
+      "light": "expressiveOutline_xmarkCircle.imageset/expressiveOutline_xmarkCircle.png",
+      "dark": "expressiveOutline_xmarkCircle.imageset/expressiveOutline_xmarkCircle_dark.png"
+    },
+    {
+      "semantic": "selectionCircle",
+      "sheet": "03",
+      "cell": 6,
+      "light": "expressiveOutline_selectionCircle.imageset/expressiveOutline_selectionCircle.png",
+      "dark": "expressiveOutline_selectionCircle.imageset/expressiveOutline_selectionCircle_dark.png"
+    },
+    {
+      "semantic": "heartSlash",
+      "sheet": "03",
+      "cell": 7,
+      "light": "expressiveOutline_heartSlash.imageset/expressiveOutline_heartSlash.png",
+      "dark": "expressiveOutline_heartSlash.imageset/expressiveOutline_heartSlash_dark.png"
+    },
+    {
+      "semantic": "musicNote",
+      "sheet": "03",
+      "cell": 8,
+      "light": "expressiveOutline_musicNote.imageset/expressiveOutline_musicNote.png",
+      "dark": "expressiveOutline_musicNote.imageset/expressiveOutline_musicNote_dark.png"
+    },
+    {
+      "semantic": "musicNoteList",
+      "sheet": "03",
+      "cell": 9,
+      "light": "expressiveOutline_musicNoteList.imageset/expressiveOutline_musicNoteList.png",
+      "dark": "expressiveOutline_musicNoteList.imageset/expressiveOutline_musicNoteList_dark.png"
+    },
+    {
+      "semantic": "micSlash",
+      "sheet": "03",
+      "cell": 10,
+      "light": "expressiveOutline_micSlash.imageset/expressiveOutline_micSlash.png",
+      "dark": "expressiveOutline_micSlash.imageset/expressiveOutline_micSlash_dark.png"
+    },
+    {
+      "semantic": "karaoke",
+      "sheet": "03",
+      "cell": 11,
+      "light": "expressiveOutline_karaoke.imageset/expressiveOutline_karaoke.png",
+      "dark": "expressiveOutline_karaoke.imageset/expressiveOutline_karaoke_dark.png"
+    },
+    {
+      "semantic": "translate",
+      "sheet": "03",
+      "cell": 12,
+      "light": "expressiveOutline_translate.imageset/expressiveOutline_translate.png",
+      "dark": "expressiveOutline_translate.imageset/expressiveOutline_translate_dark.png"
+    },
+    {
+      "semantic": "quote",
+      "sheet": "03",
+      "cell": 13,
+      "light": "expressiveOutline_quote.imageset/expressiveOutline_quote.png",
+      "dark": "expressiveOutline_quote.imageset/expressiveOutline_quote_dark.png"
+    },
+    {
+      "semantic": "hitokoto",
+      "sheet": "03",
+      "cell": 14,
+      "light": "expressiveOutline_hitokoto.imageset/expressiveOutline_hitokoto.png",
+      "dark": "expressiveOutline_hitokoto.imageset/expressiveOutline_hitokoto_dark.png"
+    },
+    {
+      "semantic": "radio",
+      "sheet": "03",
+      "cell": 15,
+      "light": "expressiveOutline_radio.imageset/expressiveOutline_radio.png",
+      "dark": "expressiveOutline_radio.imageset/expressiveOutline_radio_dark.png"
+    },
+    {
+      "semantic": "fm",
+      "sheet": "03",
+      "cell": 16,
+      "light": "expressiveOutline_fm.imageset/expressiveOutline_fm.png",
+      "dark": "expressiveOutline_fm.imageset/expressiveOutline_fm_dark.png"
+    },
+    {
+      "semantic": "fmMode",
+      "sheet": "03",
+      "cell": 17,
+      "light": "expressiveOutline_fmMode.imageset/expressiveOutline_fmMode.png",
+      "dark": "expressiveOutline_fmMode.imageset/expressiveOutline_fmMode_dark.png"
+    },
+    {
+      "semantic": "waveform",
+      "sheet": "03",
+      "cell": 18,
+      "light": "expressiveOutline_waveform.imageset/expressiveOutline_waveform.png",
+      "dark": "expressiveOutline_waveform.imageset/expressiveOutline_waveform_dark.png"
+    },
+    {
+      "semantic": "audioWave",
+      "sheet": "03",
+      "cell": 19,
+      "light": "expressiveOutline_audioWave.imageset/expressiveOutline_audioWave.png",
+      "dark": "expressiveOutline_audioWave.imageset/expressiveOutline_audioWave_dark.png"
+    },
+    {
+      "semantic": "mv",
+      "sheet": "03",
+      "cell": 20,
+      "light": "expressiveOutline_mv.imageset/expressiveOutline_mv.png",
+      "dark": "expressiveOutline_mv.imageset/expressiveOutline_mv_dark.png"
+    },
+    {
+      "semantic": "immersive",
+      "sheet": "04",
+      "cell": 1,
+      "light": "expressiveOutline_immersive.imageset/expressiveOutline_immersive.png",
+      "dark": "expressiveOutline_immersive.imageset/expressiveOutline_immersive_dark.png"
+    },
+    {
+      "semantic": "instrumentalLyrics",
+      "sheet": "04",
+      "cell": 2,
+      "light": "expressiveOutline_instrumentalLyrics.imageset/expressiveOutline_instrumentalLyrics.png",
+      "dark": "expressiveOutline_instrumentalLyrics.imageset/expressiveOutline_instrumentalLyrics_dark.png"
+    },
+    {
+      "semantic": "chart",
+      "sheet": "04",
+      "cell": 3,
+      "light": "expressiveOutline_chart.imageset/expressiveOutline_chart.png",
+      "dark": "expressiveOutline_chart.imageset/expressiveOutline_chart_dark.png"
+    },
+    {
+      "semantic": "emoji",
+      "sheet": "04",
+      "cell": 4,
+      "light": "expressiveOutline_emoji.imageset/expressiveOutline_emoji.png",
+      "dark": "expressiveOutline_emoji.imageset/expressiveOutline_emoji_dark.png"
+    },
+    {
+      "semantic": "personEmpty",
+      "sheet": "04",
+      "cell": 5,
+      "light": "expressiveOutline_personEmpty.imageset/expressiveOutline_personEmpty.png",
+      "dark": "expressiveOutline_personEmpty.imageset/expressiveOutline_personEmpty_dark.png"
+    },
+    {
+      "semantic": "personCircle",
+      "sheet": "04",
+      "cell": 6,
+      "light": "expressiveOutline_personCircle.imageset/expressiveOutline_personCircle.png",
+      "dark": "expressiveOutline_personCircle.imageset/expressiveOutline_personCircle_dark.png"
+    },
+    {
+      "semantic": "storage",
+      "sheet": "04",
+      "cell": 7,
+      "light": "expressiveOutline_storage.imageset/expressiveOutline_storage.png",
+      "dark": "expressiveOutline_storage.imageset/expressiveOutline_storage_dark.png"
+    },
+    {
+      "semantic": "save",
+      "sheet": "04",
+      "cell": 8,
+      "light": "expressiveOutline_save.imageset/expressiveOutline_save.png",
+      "dark": "expressiveOutline_save.imageset/expressiveOutline_save_dark.png"
+    },
+    {
+      "semantic": "history",
+      "sheet": "04",
+      "cell": 9,
+      "light": "expressiveOutline_history.imageset/expressiveOutline_history.png",
+      "dark": "expressiveOutline_history.imageset/expressiveOutline_history_dark.png"
+    },
+    {
+      "semantic": "bell",
+      "sheet": "04",
+      "cell": 10,
+      "light": "expressiveOutline_bell.imageset/expressiveOutline_bell.png",
+      "dark": "expressiveOutline_bell.imageset/expressiveOutline_bell_dark.png"
+    },
+    {
+      "semantic": "info",
+      "sheet": "04",
+      "cell": 11,
+      "light": "expressiveOutline_info.imageset/expressiveOutline_info.png",
+      "dark": "expressiveOutline_info.imageset/expressiveOutline_info_dark.png"
+    },
+    {
+      "semantic": "infoCircle",
+      "sheet": "04",
+      "cell": 12,
+      "light": "expressiveOutline_infoCircle.imageset/expressiveOutline_infoCircle.png",
+      "dark": "expressiveOutline_infoCircle.imageset/expressiveOutline_infoCircle_dark.png"
+    },
+    {
+      "semantic": "warning",
+      "sheet": "04",
+      "cell": 13,
+      "light": "expressiveOutline_warning.imageset/expressiveOutline_warning.png",
+      "dark": "expressiveOutline_warning.imageset/expressiveOutline_warning_dark.png"
+    },
+    {
+      "semantic": "lock",
+      "sheet": "04",
+      "cell": 14,
+      "light": "expressiveOutline_lock.imageset/expressiveOutline_lock.png",
+      "dark": "expressiveOutline_lock.imageset/expressiveOutline_lock_dark.png"
+    },
+    {
+      "semantic": "unlock",
+      "sheet": "04",
+      "cell": 15,
+      "light": "expressiveOutline_unlock.imageset/expressiveOutline_unlock.png",
+      "dark": "expressiveOutline_unlock.imageset/expressiveOutline_unlock_dark.png"
+    },
+    {
+      "semantic": "phone",
+      "sheet": "04",
+      "cell": 16,
+      "light": "expressiveOutline_phone.imageset/expressiveOutline_phone.png",
+      "dark": "expressiveOutline_phone.imageset/expressiveOutline_phone_dark.png"
+    },
+    {
+      "semantic": "qr",
+      "sheet": "04",
+      "cell": 17,
+      "light": "expressiveOutline_qr.imageset/expressiveOutline_qr.png",
+      "dark": "expressiveOutline_qr.imageset/expressiveOutline_qr_dark.png"
+    },
+    {
+      "semantic": "haptic",
+      "sheet": "04",
+      "cell": 18,
+      "light": "expressiveOutline_haptic.imageset/expressiveOutline_haptic.png",
+      "dark": "expressiveOutline_haptic.imageset/expressiveOutline_haptic_dark.png"
+    },
+    {
+      "semantic": "sparkle",
+      "sheet": "04",
+      "cell": 19,
+      "light": "expressiveOutline_sparkle.imageset/expressiveOutline_sparkle.png",
+      "dark": "expressiveOutline_sparkle.imageset/expressiveOutline_sparkle_dark.png"
+    },
+    {
+      "semantic": "sun",
+      "sheet": "04",
+      "cell": 20,
+      "light": "expressiveOutline_sun.imageset/expressiveOutline_sun.png",
+      "dark": "expressiveOutline_sun.imageset/expressiveOutline_sun_dark.png"
+    },
+    {
+      "semantic": "moon",
+      "sheet": "05",
+      "cell": 1,
+      "light": "expressiveOutline_moon.imageset/expressiveOutline_moon.png",
+      "dark": "expressiveOutline_moon.imageset/expressiveOutline_moon_dark.png"
+    },
+    {
+      "semantic": "halfCircle",
+      "sheet": "05",
+      "cell": 2,
+      "light": "expressiveOutline_halfCircle.imageset/expressiveOutline_halfCircle.png",
+      "dark": "expressiveOutline_halfCircle.imageset/expressiveOutline_halfCircle_dark.png"
+    },
+    {
+      "semantic": "gift",
+      "sheet": "05",
+      "cell": 3,
+      "light": "expressiveOutline_gift.imageset/expressiveOutline_gift.png",
+      "dark": "expressiveOutline_gift.imageset/expressiveOutline_gift_dark.png"
+    },
+    {
+      "semantic": "maintenance",
+      "sheet": "05",
+      "cell": 4,
+      "light": "expressiveOutline_maintenance.imageset/expressiveOutline_maintenance.png",
+      "dark": "expressiveOutline_maintenance.imageset/expressiveOutline_maintenance_dark.png"
+    },
+    {
+      "semantic": "policyDocument",
+      "sheet": "05",
+      "cell": 5,
+      "light": "expressiveOutline_policyDocument.imageset/expressiveOutline_policyDocument.png",
+      "dark": "expressiveOutline_policyDocument.imageset/expressiveOutline_policyDocument_dark.png"
+    },
+    {
+      "semantic": "trendUp",
+      "sheet": "05",
+      "cell": 6,
+      "light": "expressiveOutline_trendUp.imageset/expressiveOutline_trendUp.png",
+      "dark": "expressiveOutline_trendUp.imageset/expressiveOutline_trendUp_dark.png"
+    },
+    {
+      "semantic": "trendDown",
+      "sheet": "05",
+      "cell": 7,
+      "light": "expressiveOutline_trendDown.imageset/expressiveOutline_trendDown.png",
+      "dark": "expressiveOutline_trendDown.imageset/expressiveOutline_trendDown_dark.png"
+    },
+    {
+      "semantic": "logInfo",
+      "sheet": "05",
+      "cell": 8,
+      "light": "expressiveOutline_logInfo.imageset/expressiveOutline_logInfo.png",
+      "dark": "expressiveOutline_logInfo.imageset/expressiveOutline_logInfo_dark.png"
+    },
+    {
+      "semantic": "logDebug",
+      "sheet": "05",
+      "cell": 9,
+      "light": "expressiveOutline_logDebug.imageset/expressiveOutline_logDebug.png",
+      "dark": "expressiveOutline_logDebug.imageset/expressiveOutline_logDebug_dark.png"
+    },
+    {
+      "semantic": "logError",
+      "sheet": "05",
+      "cell": 10,
+      "light": "expressiveOutline_logError.imageset/expressiveOutline_logError.png",
+      "dark": "expressiveOutline_logError.imageset/expressiveOutline_logError_dark.png"
+    },
+    {
+      "semantic": "logNetwork",
+      "sheet": "05",
+      "cell": 11,
+      "light": "expressiveOutline_logNetwork.imageset/expressiveOutline_logNetwork.png",
+      "dark": "expressiveOutline_logNetwork.imageset/expressiveOutline_logNetwork_dark.png"
+    },
+    {
+      "semantic": "logSuccess",
+      "sheet": "05",
+      "cell": 12,
+      "light": "expressiveOutline_logSuccess.imageset/expressiveOutline_logSuccess.png",
+      "dark": "expressiveOutline_logSuccess.imageset/expressiveOutline_logSuccess_dark.png"
+    },
+    {
+      "semantic": "gestureTap",
+      "sheet": "05",
+      "cell": 13,
+      "light": "expressiveOutline_gestureTap.imageset/expressiveOutline_gestureTap.png",
+      "dark": "expressiveOutline_gestureTap.imageset/expressiveOutline_gestureTap_dark.png"
+    },
+    {
+      "semantic": "gestureSwipeHorizontal",
+      "sheet": "05",
+      "cell": 14,
+      "light": "expressiveOutline_gestureSwipeHorizontal.imageset/expressiveOutline_gestureSwipeHorizontal.png",
+      "dark": "expressiveOutline_gestureSwipeHorizontal.imageset/expressiveOutline_gestureSwipeHorizontal_dark.png"
+    },
+    {
+      "semantic": "gridSquare",
+      "sheet": "05",
+      "cell": 15,
+      "light": "expressiveOutline_gridSquare.imageset/expressiveOutline_gridSquare.png",
+      "dark": "expressiveOutline_gridSquare.imageset/expressiveOutline_gridSquare_dark.png"
+    },
+    {
+      "semantic": "layers",
+      "sheet": "05",
+      "cell": 16,
+      "light": "expressiveOutline_layers.imageset/expressiveOutline_layers.png",
+      "dark": "expressiveOutline_layers.imageset/expressiveOutline_layers_dark.png"
+    },
+    {
+      "semantic": "playerTheme",
+      "sheet": "05",
+      "cell": 17,
+      "light": "expressiveOutline_playerTheme.imageset/expressiveOutline_playerTheme.png",
+      "dark": "expressiveOutline_playerTheme.imageset/expressiveOutline_playerTheme_dark.png"
+    },
+    {
+      "semantic": "tabBar",
+      "sheet": "05",
+      "cell": 18,
+      "light": "expressiveOutline_tabBar.imageset/expressiveOutline_tabBar.png",
+      "dark": "expressiveOutline_tabBar.imageset/expressiveOutline_tabBar_dark.png"
+    },
+    {
+      "semantic": "systemTabBar",
+      "sheet": "05",
+      "cell": 19,
+      "light": "expressiveOutline_systemTabBar.imageset/expressiveOutline_systemTabBar.png",
+      "dark": "expressiveOutline_systemTabBar.imageset/expressiveOutline_systemTabBar_dark.png"
+    },
+    {
+      "semantic": "minimalBar",
+      "sheet": "05",
+      "cell": 20,
+      "light": "expressiveOutline_minimalBar.imageset/expressiveOutline_minimalBar.png",
+      "dark": "expressiveOutline_minimalBar.imageset/expressiveOutline_minimalBar_dark.png"
+    },
+    {
+      "semantic": "floatingBall",
+      "sheet": "06",
+      "cell": 1,
+      "light": "expressiveOutline_floatingBall.imageset/expressiveOutline_floatingBall.png",
+      "dark": "expressiveOutline_floatingBall.imageset/expressiveOutline_floatingBall_dark.png"
+    },
+    {
+      "semantic": "floatingBarStyle",
+      "sheet": "06",
+      "cell": 2,
+      "light": "expressiveOutline_floatingBarStyle.imageset/expressiveOutline_floatingBarStyle.png",
+      "dark": "expressiveOutline_floatingBarStyle.imageset/expressiveOutline_floatingBarStyle_dark.png"
+    },
+    {
+      "semantic": "interfaceIconSet",
+      "sheet": "06",
+      "cell": 3,
+      "light": "expressiveOutline_interfaceIconSet.imageset/expressiveOutline_interfaceIconSet.png",
+      "dark": "expressiveOutline_interfaceIconSet.imageset/expressiveOutline_interfaceIconSet_dark.png"
+    },
+    {
+      "semantic": "themeStyle",
+      "sheet": "06",
+      "cell": 4,
+      "light": "expressiveOutline_themeStyle.imageset/expressiveOutline_themeStyle.png",
+      "dark": "expressiveOutline_themeStyle.imageset/expressiveOutline_themeStyle_dark.png"
+    },
+    {
+      "semantic": "appearanceMode",
+      "sheet": "06",
+      "cell": 5,
+      "light": "expressiveOutline_appearanceMode.imageset/expressiveOutline_appearanceMode.png",
+      "dark": "expressiveOutline_appearanceMode.imageset/expressiveOutline_appearanceMode_dark.png"
+    },
+    {
+      "semantic": "colorEngine",
+      "sheet": "06",
+      "cell": 6,
+      "light": "expressiveOutline_colorEngine.imageset/expressiveOutline_colorEngine.png",
+      "dark": "expressiveOutline_colorEngine.imageset/expressiveOutline_colorEngine_dark.png"
+    },
+    {
+      "semantic": "gradientStyle",
+      "sheet": "06",
+      "cell": 7,
+      "light": "expressiveOutline_gradientStyle.imageset/expressiveOutline_gradientStyle.png",
+      "dark": "expressiveOutline_gradientStyle.imageset/expressiveOutline_gradientStyle_dark.png"
+    },
+    {
+      "semantic": "backgroundImage",
+      "sheet": "06",
+      "cell": 8,
+      "light": "expressiveOutline_backgroundImage.imageset/expressiveOutline_backgroundImage.png",
+      "dark": "expressiveOutline_backgroundImage.imageset/expressiveOutline_backgroundImage_dark.png"
+    },
+    {
+      "semantic": "backgroundGlobal",
+      "sheet": "06",
+      "cell": 9,
+      "light": "expressiveOutline_backgroundGlobal.imageset/expressiveOutline_backgroundGlobal.png",
+      "dark": "expressiveOutline_backgroundGlobal.imageset/expressiveOutline_backgroundGlobal_dark.png"
+    },
+    {
+      "semantic": "backgroundPlayer",
+      "sheet": "06",
+      "cell": 10,
+      "light": "expressiveOutline_backgroundPlayer.imageset/expressiveOutline_backgroundPlayer.png",
+      "dark": "expressiveOutline_backgroundPlayer.imageset/expressiveOutline_backgroundPlayer_dark.png"
+    },
+    {
+      "semantic": "backgroundPlaylist",
+      "sheet": "06",
+      "cell": 11,
+      "light": "expressiveOutline_backgroundPlaylist.imageset/expressiveOutline_backgroundPlaylist.png",
+      "dark": "expressiveOutline_backgroundPlaylist.imageset/expressiveOutline_backgroundPlaylist_dark.png"
+    },
+    {
+      "semantic": "fluidBackground",
+      "sheet": "06",
+      "cell": 12,
+      "light": "expressiveOutline_fluidBackground.imageset/expressiveOutline_fluidBackground.png",
+      "dark": "expressiveOutline_fluidBackground.imageset/expressiveOutline_fluidBackground_dark.png"
+    },
+    {
+      "semantic": "liquidGlass",
+      "sheet": "06",
+      "cell": 13,
+      "light": "expressiveOutline_liquidGlass.imageset/expressiveOutline_liquidGlass.png",
+      "dark": "expressiveOutline_liquidGlass.imageset/expressiveOutline_liquidGlass_dark.png"
+    },
+    {
+      "semantic": "appBrand",
+      "sheet": "06",
+      "cell": 14,
+      "light": "expressiveOutline_appBrand.imageset/expressiveOutline_appBrand.png",
+      "dark": "expressiveOutline_appBrand.imageset/expressiveOutline_appBrand_dark.png"
+    },
+    {
+      "semantic": "catMusic",
+      "sheet": "06",
+      "cell": 15,
+      "light": "expressiveOutline_catMusic.imageset/expressiveOutline_catMusic.png",
+      "dark": "expressiveOutline_catMusic.imageset/expressiveOutline_catMusic_dark.png"
+    },
+    {
+      "semantic": "catLife",
+      "sheet": "06",
+      "cell": 16,
+      "light": "expressiveOutline_catLife.imageset/expressiveOutline_catLife.png",
+      "dark": "expressiveOutline_catLife.imageset/expressiveOutline_catLife_dark.png"
+    },
+    {
+      "semantic": "catEmotion",
+      "sheet": "06",
+      "cell": 17,
+      "light": "expressiveOutline_catEmotion.imageset/expressiveOutline_catEmotion.png",
+      "dark": "expressiveOutline_catEmotion.imageset/expressiveOutline_catEmotion_dark.png"
+    },
+    {
+      "semantic": "catCreate",
+      "sheet": "06",
+      "cell": 18,
+      "light": "expressiveOutline_catCreate.imageset/expressiveOutline_catCreate.png",
+      "dark": "expressiveOutline_catCreate.imageset/expressiveOutline_catCreate_dark.png"
+    },
+    {
+      "semantic": "catAcg",
+      "sheet": "06",
+      "cell": 19,
+      "light": "expressiveOutline_catAcg.imageset/expressiveOutline_catAcg.png",
+      "dark": "expressiveOutline_catAcg.imageset/expressiveOutline_catAcg_dark.png"
+    },
+    {
+      "semantic": "catEntertain",
+      "sheet": "06",
+      "cell": 20,
+      "light": "expressiveOutline_catEntertain.imageset/expressiveOutline_catEntertain.png",
+      "dark": "expressiveOutline_catEntertain.imageset/expressiveOutline_catEntertain_dark.png"
+    },
+    {
+      "semantic": "catTalkshow",
+      "sheet": "07",
+      "cell": 1,
+      "light": "expressiveOutline_catTalkshow.imageset/expressiveOutline_catTalkshow.png",
+      "dark": "expressiveOutline_catTalkshow.imageset/expressiveOutline_catTalkshow_dark.png"
+    },
+    {
+      "semantic": "catBook",
+      "sheet": "07",
+      "cell": 2,
+      "light": "expressiveOutline_catBook.imageset/expressiveOutline_catBook.png",
+      "dark": "expressiveOutline_catBook.imageset/expressiveOutline_catBook_dark.png"
+    },
+    {
+      "semantic": "catKnowledge",
+      "sheet": "07",
+      "cell": 3,
+      "light": "expressiveOutline_catKnowledge.imageset/expressiveOutline_catKnowledge.png",
+      "dark": "expressiveOutline_catKnowledge.imageset/expressiveOutline_catKnowledge_dark.png"
+    },
+    {
+      "semantic": "catBusiness",
+      "sheet": "07",
+      "cell": 4,
+      "light": "expressiveOutline_catBusiness.imageset/expressiveOutline_catBusiness.png",
+      "dark": "expressiveOutline_catBusiness.imageset/expressiveOutline_catBusiness_dark.png"
+    },
+    {
+      "semantic": "catHistory",
+      "sheet": "07",
+      "cell": 5,
+      "light": "expressiveOutline_catHistory.imageset/expressiveOutline_catHistory.png",
+      "dark": "expressiveOutline_catHistory.imageset/expressiveOutline_catHistory_dark.png"
+    },
+    {
+      "semantic": "catNews",
+      "sheet": "07",
+      "cell": 6,
+      "light": "expressiveOutline_catNews.imageset/expressiveOutline_catNews.png",
+      "dark": "expressiveOutline_catNews.imageset/expressiveOutline_catNews_dark.png"
+    },
+    {
+      "semantic": "catParenting",
+      "sheet": "07",
+      "cell": 7,
+      "light": "expressiveOutline_catParenting.imageset/expressiveOutline_catParenting.png",
+      "dark": "expressiveOutline_catParenting.imageset/expressiveOutline_catParenting_dark.png"
+    },
+    {
+      "semantic": "catTravel",
+      "sheet": "07",
+      "cell": 8,
+      "light": "expressiveOutline_catTravel.imageset/expressiveOutline_catTravel.png",
+      "dark": "expressiveOutline_catTravel.imageset/expressiveOutline_catTravel_dark.png"
+    },
+    {
+      "semantic": "catCrosstalk",
+      "sheet": "07",
+      "cell": 9,
+      "light": "expressiveOutline_catCrosstalk.imageset/expressiveOutline_catCrosstalk.png",
+      "dark": "expressiveOutline_catCrosstalk.imageset/expressiveOutline_catCrosstalk_dark.png"
+    },
+    {
+      "semantic": "catFood",
+      "sheet": "07",
+      "cell": 10,
+      "light": "expressiveOutline_catFood.imageset/expressiveOutline_catFood.png",
+      "dark": "expressiveOutline_catFood.imageset/expressiveOutline_catFood_dark.png"
+    },
+    {
+      "semantic": "catTech",
+      "sheet": "07",
+      "cell": 11,
+      "light": "expressiveOutline_catTech.imageset/expressiveOutline_catTech.png",
+      "dark": "expressiveOutline_catTech.imageset/expressiveOutline_catTech_dark.png"
+    },
+    {
+      "semantic": "catDefault",
+      "sheet": "07",
+      "cell": 12,
+      "light": "expressiveOutline_catDefault.imageset/expressiveOutline_catDefault.png",
+      "dark": "expressiveOutline_catDefault.imageset/expressiveOutline_catDefault_dark.png"
+    },
+    {
+      "semantic": "catPodcast",
+      "sheet": "07",
+      "cell": 13,
+      "light": "expressiveOutline_catPodcast.imageset/expressiveOutline_catPodcast.png",
+      "dark": "expressiveOutline_catPodcast.imageset/expressiveOutline_catPodcast_dark.png"
+    },
+    {
+      "semantic": "catElectronic",
+      "sheet": "07",
+      "cell": 14,
+      "light": "expressiveOutline_catElectronic.imageset/expressiveOutline_catElectronic.png",
+      "dark": "expressiveOutline_catElectronic.imageset/expressiveOutline_catElectronic_dark.png"
+    },
+    {
+      "semantic": "catStar",
+      "sheet": "07",
+      "cell": 15,
+      "light": "expressiveOutline_catStar.imageset/expressiveOutline_catStar.png",
+      "dark": "expressiveOutline_catStar.imageset/expressiveOutline_catStar_dark.png"
+    },
+    {
+      "semantic": "catDrama",
+      "sheet": "07",
+      "cell": 16,
+      "light": "expressiveOutline_catDrama.imageset/expressiveOutline_catDrama.png",
+      "dark": "expressiveOutline_catDrama.imageset/expressiveOutline_catDrama_dark.png"
+    },
+    {
+      "semantic": "catStory",
+      "sheet": "07",
+      "cell": 17,
+      "light": "expressiveOutline_catStory.imageset/expressiveOutline_catStory.png",
+      "dark": "expressiveOutline_catStory.imageset/expressiveOutline_catStory_dark.png"
+    },
+    {
+      "semantic": "catOther",
+      "sheet": "07",
+      "cell": 18,
+      "light": "expressiveOutline_catOther.imageset/expressiveOutline_catOther.png",
+      "dark": "expressiveOutline_catOther.imageset/expressiveOutline_catOther_dark.png"
+    },
+    {
+      "semantic": "catPublish",
+      "sheet": "07",
+      "cell": 19,
+      "light": "expressiveOutline_catPublish.imageset/expressiveOutline_catPublish.png",
+      "dark": "expressiveOutline_catPublish.imageset/expressiveOutline_catPublish_dark.png"
+    },
+    {
+      "semantic": "volumeMute",
+      "sheet": "07",
+      "cell": 20,
+      "light": "expressiveOutline_volumeMute.imageset/expressiveOutline_volumeMute.png",
+      "dark": "expressiveOutline_volumeMute.imageset/expressiveOutline_volumeMute_dark.png"
+    },
+    {
+      "semantic": "volumeLow",
+      "sheet": "08",
+      "cell": 1,
+      "light": "expressiveOutline_volumeLow.imageset/expressiveOutline_volumeLow.png",
+      "dark": "expressiveOutline_volumeLow.imageset/expressiveOutline_volumeLow_dark.png"
+    },
+    {
+      "semantic": "volumeMedium",
+      "sheet": "08",
+      "cell": 2,
+      "light": "expressiveOutline_volumeMedium.imageset/expressiveOutline_volumeMedium.png",
+      "dark": "expressiveOutline_volumeMedium.imageset/expressiveOutline_volumeMedium_dark.png"
+    },
+    {
+      "semantic": "volumeHigh",
+      "sheet": "08",
+      "cell": 3,
+      "light": "expressiveOutline_volumeHigh.imageset/expressiveOutline_volumeHigh.png",
+      "dark": "expressiveOutline_volumeHigh.imageset/expressiveOutline_volumeHigh_dark.png"
+    },
+    {
+      "semantic": "soundCenter",
+      "sheet": "08",
+      "cell": 4,
+      "light": "expressiveOutline_soundCenter.imageset/expressiveOutline_soundCenter.png",
+      "dark": "expressiveOutline_soundCenter.imageset/expressiveOutline_soundCenter_dark.png"
+    },
+    {
+      "semantic": "soundWorkspaceAI",
+      "sheet": "08",
+      "cell": 5,
+      "light": "expressiveOutline_soundWorkspaceAI.imageset/expressiveOutline_soundWorkspaceAI.png",
+      "dark": "expressiveOutline_soundWorkspaceAI.imageset/expressiveOutline_soundWorkspaceAI_dark.png"
+    },
+    {
+      "semantic": "soundWorkspaceCustomEQ",
+      "sheet": "08",
+      "cell": 6,
+      "light": "expressiveOutline_soundWorkspaceCustomEQ.imageset/expressiveOutline_soundWorkspaceCustomEQ.png",
+      "dark": "expressiveOutline_soundWorkspaceCustomEQ.imageset/expressiveOutline_soundWorkspaceCustomEQ_dark.png"
+    },
+    {
+      "semantic": "soundWorkspaceEnhancement",
+      "sheet": "08",
+      "cell": 7,
+      "light": "expressiveOutline_soundWorkspaceEnhancement.imageset/expressiveOutline_soundWorkspaceEnhancement.png",
+      "dark": "expressiveOutline_soundWorkspaceEnhancement.imageset/expressiveOutline_soundWorkspaceEnhancement_dark.png"
+    },
+    {
+      "semantic": "soundWorkspaceOutput",
+      "sheet": "08",
+      "cell": 8,
+      "light": "expressiveOutline_soundWorkspaceOutput.imageset/expressiveOutline_soundWorkspaceOutput.png",
+      "dark": "expressiveOutline_soundWorkspaceOutput.imageset/expressiveOutline_soundWorkspaceOutput_dark.png"
+    },
+    {
+      "semantic": "gameMode",
+      "sheet": "08",
+      "cell": 9,
+      "light": "expressiveOutline_gameMode.imageset/expressiveOutline_gameMode.png",
+      "dark": "expressiveOutline_gameMode.imageset/expressiveOutline_gameMode_dark.png"
+    },
+    {
+      "semantic": "gameModePower",
+      "sheet": "08",
+      "cell": 10,
+      "light": "expressiveOutline_gameModePower.imageset/expressiveOutline_gameModePower.png",
+      "dark": "expressiveOutline_gameModePower.imageset/expressiveOutline_gameModePower_dark.png"
+    },
+    {
+      "semantic": "gamePresetFPS",
+      "sheet": "08",
+      "cell": 11,
+      "light": "expressiveOutline_gamePresetFPS.imageset/expressiveOutline_gamePresetFPS.png",
+      "dark": "expressiveOutline_gamePresetFPS.imageset/expressiveOutline_gamePresetFPS_dark.png"
+    },
+    {
+      "semantic": "gamePresetRPG",
+      "sheet": "08",
+      "cell": 12,
+      "light": "expressiveOutline_gamePresetRPG.imageset/expressiveOutline_gamePresetRPG.png",
+      "dark": "expressiveOutline_gamePresetRPG.imageset/expressiveOutline_gamePresetRPG_dark.png"
+    },
+    {
+      "semantic": "gamePresetRhythm",
+      "sheet": "08",
+      "cell": 13,
+      "light": "expressiveOutline_gamePresetRhythm.imageset/expressiveOutline_gamePresetRhythm.png",
+      "dark": "expressiveOutline_gamePresetRhythm.imageset/expressiveOutline_gamePresetRhythm_dark.png"
+    },
+    {
+      "semantic": "gameVoicePriority",
+      "sheet": "08",
+      "cell": 14,
+      "light": "expressiveOutline_gameVoicePriority.imageset/expressiveOutline_gameVoicePriority.png",
+      "dark": "expressiveOutline_gameVoicePriority.imageset/expressiveOutline_gameVoicePriority_dark.png"
+    },
+    {
+      "semantic": "gameLowerQuality",
+      "sheet": "08",
+      "cell": 15,
+      "light": "expressiveOutline_gameLowerQuality.imageset/expressiveOutline_gameLowerQuality.png",
+      "dark": "expressiveOutline_gameLowerQuality.imageset/expressiveOutline_gameLowerQuality_dark.png"
+    },
+    {
+      "semantic": "gameAutoExit",
+      "sheet": "08",
+      "cell": 16,
+      "light": "expressiveOutline_gameAutoExit.imageset/expressiveOutline_gameAutoExit.png",
+      "dark": "expressiveOutline_gameAutoExit.imageset/expressiveOutline_gameAutoExit_dark.png"
+    },
+    {
+      "semantic": "gameSilentNowPlaying",
+      "sheet": "08",
+      "cell": 17,
+      "light": "expressiveOutline_gameSilentNowPlaying.imageset/expressiveOutline_gameSilentNowPlaying.png",
+      "dark": "expressiveOutline_gameSilentNowPlaying.imageset/expressiveOutline_gameSilentNowPlaying_dark.png"
+    },
+    {
+      "semantic": "gameMinimalNowPlaying",
+      "sheet": "08",
+      "cell": 18,
+      "light": "expressiveOutline_gameMinimalNowPlaying.imageset/expressiveOutline_gameMinimalNowPlaying.png",
+      "dark": "expressiveOutline_gameMinimalNowPlaying.imageset/expressiveOutline_gameMinimalNowPlaying_dark.png"
+    },
+    {
+      "semantic": "gamePreferredQuality",
+      "sheet": "08",
+      "cell": 19,
+      "light": "expressiveOutline_gamePreferredQuality.imageset/expressiveOutline_gamePreferredQuality.png",
+      "dark": "expressiveOutline_gamePreferredQuality.imageset/expressiveOutline_gamePreferredQuality_dark.png"
+    },
+    {
+      "semantic": "gameAutoPlaylist",
+      "sheet": "08",
+      "cell": 20,
+      "light": "expressiveOutline_gameAutoPlaylist.imageset/expressiveOutline_gameAutoPlaylist.png",
+      "dark": "expressiveOutline_gameAutoPlaylist.imageset/expressiveOutline_gameAutoPlaylist_dark.png"
+    },
+    {
+      "semantic": "agentAutoTuning",
+      "sheet": "09",
+      "cell": 1,
+      "light": "expressiveOutline_agentAutoTuning.imageset/expressiveOutline_agentAutoTuning.png",
+      "dark": "expressiveOutline_agentAutoTuning.imageset/expressiveOutline_agentAutoTuning_dark.png"
+    },
+    {
+      "semantic": "agentAdaptiveLearning",
+      "sheet": "09",
+      "cell": 2,
+      "light": "expressiveOutline_agentAdaptiveLearning.imageset/expressiveOutline_agentAdaptiveLearning.png",
+      "dark": "expressiveOutline_agentAdaptiveLearning.imageset/expressiveOutline_agentAdaptiveLearning_dark.png"
+    },
+    {
+      "semantic": "agentPlayerStatus",
+      "sheet": "09",
+      "cell": 3,
+      "light": "expressiveOutline_agentPlayerStatus.imageset/expressiveOutline_agentPlayerStatus.png",
+      "dark": "expressiveOutline_agentPlayerStatus.imageset/expressiveOutline_agentPlayerStatus_dark.png"
+    },
+    {
+      "semantic": "agentSkillMeasurement",
+      "sheet": "09",
+      "cell": 4,
+      "light": "expressiveOutline_agentSkillMeasurement.imageset/expressiveOutline_agentSkillMeasurement.png",
+      "dark": "expressiveOutline_agentSkillMeasurement.imageset/expressiveOutline_agentSkillMeasurement_dark.png"
+    },
+    {
+      "semantic": "agentSkillDeviceCoordination",
+      "sheet": "09",
+      "cell": 5,
+      "light": "expressiveOutline_agentSkillDeviceCoordination.imageset/expressiveOutline_agentSkillDeviceCoordination.png",
+      "dark": "expressiveOutline_agentSkillDeviceCoordination.imageset/expressiveOutline_agentSkillDeviceCoordination_dark.png"
+    },
+    {
+      "semantic": "agentSkillHeadroomGuard",
+      "sheet": "09",
+      "cell": 6,
+      "light": "expressiveOutline_agentSkillHeadroomGuard.imageset/expressiveOutline_agentSkillHeadroomGuard.png",
+      "dark": "expressiveOutline_agentSkillHeadroomGuard.imageset/expressiveOutline_agentSkillHeadroomGuard_dark.png"
+    },
+    {
+      "semantic": "agentSkillPhaseGuard",
+      "sheet": "09",
+      "cell": 7,
+      "light": "expressiveOutline_agentSkillPhaseGuard.imageset/expressiveOutline_agentSkillPhaseGuard.png",
+      "dark": "expressiveOutline_agentSkillPhaseGuard.imageset/expressiveOutline_agentSkillPhaseGuard_dark.png"
+    },
+    {
+      "semantic": "agentSkillOutputValidation",
+      "sheet": "09",
+      "cell": 8,
+      "light": "expressiveOutline_agentSkillOutputValidation.imageset/expressiveOutline_agentSkillOutputValidation.png",
+      "dark": "expressiveOutline_agentSkillOutputValidation.imageset/expressiveOutline_agentSkillOutputValidation_dark.png"
+    },
+    {
+      "semantic": "agentSkillArtistReference",
+      "sheet": "09",
+      "cell": 9,
+      "light": "expressiveOutline_agentSkillArtistReference.imageset/expressiveOutline_agentSkillArtistReference.png",
+      "dark": "expressiveOutline_agentSkillArtistReference.imageset/expressiveOutline_agentSkillArtistReference_dark.png"
+    },
+    {
+      "semantic": "agentSkillVocalReference",
+      "sheet": "09",
+      "cell": 10,
+      "light": "expressiveOutline_agentSkillVocalReference.imageset/expressiveOutline_agentSkillVocalReference.png",
+      "dark": "expressiveOutline_agentSkillVocalReference.imageset/expressiveOutline_agentSkillVocalReference_dark.png"
+    },
+    {
+      "semantic": "agentCustomSkill",
+      "sheet": "09",
+      "cell": 11,
+      "light": "expressiveOutline_agentCustomSkill.imageset/expressiveOutline_agentCustomSkill.png",
+      "dark": "expressiveOutline_agentCustomSkill.imageset/expressiveOutline_agentCustomSkill_dark.png"
+    },
+    {
+      "semantic": "agentManagedSkill",
+      "sheet": "09",
+      "cell": 12,
+      "light": "expressiveOutline_agentManagedSkill.imageset/expressiveOutline_agentManagedSkill.png",
+      "dark": "expressiveOutline_agentManagedSkill.imageset/expressiveOutline_agentManagedSkill_dark.png"
+    },
+    {
+      "semantic": "agentAddCustomSkill",
+      "sheet": "09",
+      "cell": 13,
+      "light": "expressiveOutline_agentAddCustomSkill.imageset/expressiveOutline_agentAddCustomSkill.png",
+      "dark": "expressiveOutline_agentAddCustomSkill.imageset/expressiveOutline_agentAddCustomSkill_dark.png"
+    },
+    {
+      "semantic": "agentEditCustomSkill",
+      "sheet": "09",
+      "cell": 14,
+      "light": "expressiveOutline_agentEditCustomSkill.imageset/expressiveOutline_agentEditCustomSkill.png",
+      "dark": "expressiveOutline_agentEditCustomSkill.imageset/expressiveOutline_agentEditCustomSkill_dark.png"
+    },
+    {
+      "semantic": "aiTuningWorkspace",
+      "sheet": "09",
+      "cell": 15,
+      "light": "expressiveOutline_aiTuningWorkspace.imageset/expressiveOutline_aiTuningWorkspace.png",
+      "dark": "expressiveOutline_aiTuningWorkspace.imageset/expressiveOutline_aiTuningWorkspace_dark.png"
+    },
+    {
+      "semantic": "aiMeasurementWorkspace",
+      "sheet": "09",
+      "cell": 16,
+      "light": "expressiveOutline_aiMeasurementWorkspace.imageset/expressiveOutline_aiMeasurementWorkspace.png",
+      "dark": "expressiveOutline_aiMeasurementWorkspace.imageset/expressiveOutline_aiMeasurementWorkspace_dark.png"
+    },
+    {
+      "semantic": "aiResultWorkspace",
+      "sheet": "09",
+      "cell": 17,
+      "light": "expressiveOutline_aiResultWorkspace.imageset/expressiveOutline_aiResultWorkspace.png",
+      "dark": "expressiveOutline_aiResultWorkspace.imageset/expressiveOutline_aiResultWorkspace_dark.png"
+    },
+    {
+      "semantic": "aiHistoryWorkspace",
+      "sheet": "09",
+      "cell": 18,
+      "light": "expressiveOutline_aiHistoryWorkspace.imageset/expressiveOutline_aiHistoryWorkspace.png",
+      "dark": "expressiveOutline_aiHistoryWorkspace.imageset/expressiveOutline_aiHistoryWorkspace_dark.png"
+    },
+    {
+      "semantic": "agentAnalyze",
+      "sheet": "09",
+      "cell": 19,
+      "light": "expressiveOutline_agentAnalyze.imageset/expressiveOutline_agentAnalyze.png",
+      "dark": "expressiveOutline_agentAnalyze.imageset/expressiveOutline_agentAnalyze_dark.png"
+    },
+    {
+      "semantic": "agentStopAnalysis",
+      "sheet": "09",
+      "cell": 20,
+      "light": "expressiveOutline_agentStopAnalysis.imageset/expressiveOutline_agentStopAnalysis.png",
+      "dark": "expressiveOutline_agentStopAnalysis.imageset/expressiveOutline_agentStopAnalysis_dark.png"
+    },
+    {
+      "semantic": "agentReanalyze",
+      "sheet": "10",
+      "cell": 1,
+      "light": "expressiveOutline_agentReanalyze.imageset/expressiveOutline_agentReanalyze.png",
+      "dark": "expressiveOutline_agentReanalyze.imageset/expressiveOutline_agentReanalyze_dark.png"
+    },
+    {
+      "semantic": "agentApplySavedProposal",
+      "sheet": "10",
+      "cell": 2,
+      "light": "expressiveOutline_agentApplySavedProposal.imageset/expressiveOutline_agentApplySavedProposal.png",
+      "dark": "expressiveOutline_agentApplySavedProposal.imageset/expressiveOutline_agentApplySavedProposal_dark.png"
+    },
+    {
+      "semantic": "learningEnabled",
+      "sheet": "10",
+      "cell": 3,
+      "light": "expressiveOutline_learningEnabled.imageset/expressiveOutline_learningEnabled.png",
+      "dark": "expressiveOutline_learningEnabled.imageset/expressiveOutline_learningEnabled_dark.png"
+    },
+    {
+      "semantic": "learningStrength",
+      "sheet": "10",
+      "cell": 4,
+      "light": "expressiveOutline_learningStrength.imageset/expressiveOutline_learningStrength.png",
+      "dark": "expressiveOutline_learningStrength.imageset/expressiveOutline_learningStrength_dark.png"
+    },
+    {
+      "semantic": "learningRetention",
+      "sheet": "10",
+      "cell": 5,
+      "light": "expressiveOutline_learningRetention.imageset/expressiveOutline_learningRetention.png",
+      "dark": "expressiveOutline_learningRetention.imageset/expressiveOutline_learningRetention_dark.png"
+    },
+    {
+      "semantic": "learningSourceFeedback",
+      "sheet": "10",
+      "cell": 6,
+      "light": "expressiveOutline_learningSourceFeedback.imageset/expressiveOutline_learningSourceFeedback.png",
+      "dark": "expressiveOutline_learningSourceFeedback.imageset/expressiveOutline_learningSourceFeedback_dark.png"
+    },
+    {
+      "semantic": "learningSourceListening",
+      "sheet": "10",
+      "cell": 7,
+      "light": "expressiveOutline_learningSourceListening.imageset/expressiveOutline_learningSourceListening.png",
+      "dark": "expressiveOutline_learningSourceListening.imageset/expressiveOutline_learningSourceListening_dark.png"
+    },
+    {
+      "semantic": "learningSourceAdjustments",
+      "sheet": "10",
+      "cell": 8,
+      "light": "expressiveOutline_learningSourceAdjustments.imageset/expressiveOutline_learningSourceAdjustments.png",
+      "dark": "expressiveOutline_learningSourceAdjustments.imageset/expressiveOutline_learningSourceAdjustments_dark.png"
+    },
+    {
+      "semantic": "learningLocalStorage",
+      "sheet": "10",
+      "cell": 9,
+      "light": "expressiveOutline_learningLocalStorage.imageset/expressiveOutline_learningLocalStorage.png",
+      "dark": "expressiveOutline_learningLocalStorage.imageset/expressiveOutline_learningLocalStorage_dark.png"
+    },
+    {
+      "semantic": "learningFeedbackPositive",
+      "sheet": "10",
+      "cell": 10,
+      "light": "expressiveOutline_learningFeedbackPositive.imageset/expressiveOutline_learningFeedbackPositive.png",
+      "dark": "expressiveOutline_learningFeedbackPositive.imageset/expressiveOutline_learningFeedbackPositive_dark.png"
+    },
+    {
+      "semantic": "learningFeedbackNegative",
+      "sheet": "10",
+      "cell": 11,
+      "light": "expressiveOutline_learningFeedbackNegative.imageset/expressiveOutline_learningFeedbackNegative.png",
+      "dark": "expressiveOutline_learningFeedbackNegative.imageset/expressiveOutline_learningFeedbackNegative_dark.png"
+    },
+    {
+      "semantic": "learningFeedbackRetained",
+      "sheet": "10",
+      "cell": 12,
+      "light": "expressiveOutline_learningFeedbackRetained.imageset/expressiveOutline_learningFeedbackRetained.png",
+      "dark": "expressiveOutline_learningFeedbackRetained.imageset/expressiveOutline_learningFeedbackRetained_dark.png"
+    },
+    {
+      "semantic": "learningFeedbackReset",
+      "sheet": "10",
+      "cell": 13,
+      "light": "expressiveOutline_learningFeedbackReset.imageset/expressiveOutline_learningFeedbackReset.png",
+      "dark": "expressiveOutline_learningFeedbackReset.imageset/expressiveOutline_learningFeedbackReset_dark.png"
+    },
+    {
+      "semantic": "learningFeedbackRegenerated",
+      "sheet": "10",
+      "cell": 14,
+      "light": "expressiveOutline_learningFeedbackRegenerated.imageset/expressiveOutline_learningFeedbackRegenerated.png",
+      "dark": "expressiveOutline_learningFeedbackRegenerated.imageset/expressiveOutline_learningFeedbackRegenerated_dark.png"
+    },
+    {
+      "semantic": "learningFeedbackManualEQ",
+      "sheet": "10",
+      "cell": 15,
+      "light": "expressiveOutline_learningFeedbackManualEQ.imageset/expressiveOutline_learningFeedbackManualEQ.png",
+      "dark": "expressiveOutline_learningFeedbackManualEQ.imageset/expressiveOutline_learningFeedbackManualEQ_dark.png"
+    },
+    {
+      "semantic": "agentTraceRoot",
+      "sheet": "10",
+      "cell": 16,
+      "light": "expressiveOutline_agentTraceRoot.imageset/expressiveOutline_agentTraceRoot.png",
+      "dark": "expressiveOutline_agentTraceRoot.imageset/expressiveOutline_agentTraceRoot_dark.png"
+    },
+    {
+      "semantic": "agentTraceOverview",
+      "sheet": "10",
+      "cell": 17,
+      "light": "expressiveOutline_agentTraceOverview.imageset/expressiveOutline_agentTraceOverview.png",
+      "dark": "expressiveOutline_agentTraceOverview.imageset/expressiveOutline_agentTraceOverview_dark.png"
+    },
+    {
+      "semantic": "agentExecutionChain",
+      "sheet": "10",
+      "cell": 18,
+      "light": "expressiveOutline_agentExecutionChain.imageset/expressiveOutline_agentExecutionChain.png",
+      "dark": "expressiveOutline_agentExecutionChain.imageset/expressiveOutline_agentExecutionChain_dark.png"
+    },
+    {
+      "semantic": "agentCurrentSkills",
+      "sheet": "10",
+      "cell": 19,
+      "light": "expressiveOutline_agentCurrentSkills.imageset/expressiveOutline_agentCurrentSkills.png",
+      "dark": "expressiveOutline_agentCurrentSkills.imageset/expressiveOutline_agentCurrentSkills_dark.png"
+    },
+    {
+      "semantic": "agentToolContract",
+      "sheet": "10",
+      "cell": 20,
+      "light": "expressiveOutline_agentToolContract.imageset/expressiveOutline_agentToolContract.png",
+      "dark": "expressiveOutline_agentToolContract.imageset/expressiveOutline_agentToolContract_dark.png"
+    },
+    {
+      "semantic": "agentRuntimeResult",
+      "sheet": "11",
+      "cell": 1,
+      "light": "expressiveOutline_agentRuntimeResult.imageset/expressiveOutline_agentRuntimeResult.png",
+      "dark": "expressiveOutline_agentRuntimeResult.imageset/expressiveOutline_agentRuntimeResult_dark.png"
+    },
+    {
+      "semantic": "agentRuntimeIdentity",
+      "sheet": "11",
+      "cell": 2,
+      "light": "expressiveOutline_agentRuntimeIdentity.imageset/expressiveOutline_agentRuntimeIdentity.png",
+      "dark": "expressiveOutline_agentRuntimeIdentity.imageset/expressiveOutline_agentRuntimeIdentity_dark.png"
+    },
+    {
+      "semantic": "agentRawRecords",
+      "sheet": "11",
+      "cell": 3,
+      "light": "expressiveOutline_agentRawRecords.imageset/expressiveOutline_agentRawRecords.png",
+      "dark": "expressiveOutline_agentRawRecords.imageset/expressiveOutline_agentRawRecords_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageConfiguration",
+      "sheet": "11",
+      "cell": 4,
+      "light": "expressiveOutline_agentTraceStageConfiguration.imageset/expressiveOutline_agentTraceStageConfiguration.png",
+      "dark": "expressiveOutline_agentTraceStageConfiguration.imageset/expressiveOutline_agentTraceStageConfiguration_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageSkills",
+      "sheet": "11",
+      "cell": 5,
+      "light": "expressiveOutline_agentTraceStageSkills.imageset/expressiveOutline_agentTraceStageSkills.png",
+      "dark": "expressiveOutline_agentTraceStageSkills.imageset/expressiveOutline_agentTraceStageSkills_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageMeasurement",
+      "sheet": "11",
+      "cell": 6,
+      "light": "expressiveOutline_agentTraceStageMeasurement.imageset/expressiveOutline_agentTraceStageMeasurement.png",
+      "dark": "expressiveOutline_agentTraceStageMeasurement.imageset/expressiveOutline_agentTraceStageMeasurement_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageModel",
+      "sheet": "11",
+      "cell": 7,
+      "light": "expressiveOutline_agentTraceStageModel.imageset/expressiveOutline_agentTraceStageModel.png",
+      "dark": "expressiveOutline_agentTraceStageModel.imageset/expressiveOutline_agentTraceStageModel_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageTool",
+      "sheet": "11",
+      "cell": 8,
+      "light": "expressiveOutline_agentTraceStageTool.imageset/expressiveOutline_agentTraceStageTool.png",
+      "dark": "expressiveOutline_agentTraceStageTool.imageset/expressiveOutline_agentTraceStageTool_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageValidation",
+      "sheet": "11",
+      "cell": 9,
+      "light": "expressiveOutline_agentTraceStageValidation.imageset/expressiveOutline_agentTraceStageValidation.png",
+      "dark": "expressiveOutline_agentTraceStageValidation.imageset/expressiveOutline_agentTraceStageValidation_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageApplication",
+      "sheet": "11",
+      "cell": 10,
+      "light": "expressiveOutline_agentTraceStageApplication.imageset/expressiveOutline_agentTraceStageApplication.png",
+      "dark": "expressiveOutline_agentTraceStageApplication.imageset/expressiveOutline_agentTraceStageApplication_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageCompilation",
+      "sheet": "11",
+      "cell": 11,
+      "light": "expressiveOutline_agentTraceStageCompilation.imageset/expressiveOutline_agentTraceStageCompilation.png",
+      "dark": "expressiveOutline_agentTraceStageCompilation.imageset/expressiveOutline_agentTraceStageCompilation_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageFallback",
+      "sheet": "11",
+      "cell": 12,
+      "light": "expressiveOutline_agentTraceStageFallback.imageset/expressiveOutline_agentTraceStageFallback.png",
+      "dark": "expressiveOutline_agentTraceStageFallback.imageset/expressiveOutline_agentTraceStageFallback_dark.png"
+    },
+    {
+      "semantic": "agentTraceStageCompletion",
+      "sheet": "11",
+      "cell": 13,
+      "light": "expressiveOutline_agentTraceStageCompletion.imageset/expressiveOutline_agentTraceStageCompletion.png",
+      "dark": "expressiveOutline_agentTraceStageCompletion.imageset/expressiveOutline_agentTraceStageCompletion_dark.png"
+    }
+  ]
+}

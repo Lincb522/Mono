@@ -81,3 +81,80 @@
 2026-09-03 已部署单模型四分支训练增强。训练器现在把 `10 段/标准`、`10 段/空间增强`、`32 段/标准`、`32 段/空间增强` 作为一个模型内的独立条件分支，训练开始前要求四个分支均有样本；验证拆分保留曲目隔离的同时保证每个已观测分支留在训练集。历史方案继续作为真实群体先验参与完整 MLP 优化，并保留频段与空间模式条件，不伪造历史上不存在的音频测量输入。部署时云端共有 5,852 条可训练方案，其中完整样本 8 条、历史方案 5,844 条；四分支数量依次为 4,949、550、250、103。生产恢复点位于 `/www/backup/token-admin-before-audio-training-profile-20260903T025007Z`，包含部署前训练器、测试及三份一致性 SQLite 备份，备份数据库 `quick_check` 均为 `ok`；新训练器和测试 SHA-256 分别为 `504f91dd1d8a5823a917fe62219dc88195aea7eaa04d6f0fd5be4109459e2c6a` 和 `b7b04275ff5ebd13f83f809b444b0f0b84037eb8e359d6c5707de83444fa0b92`。本地与安装目录远端训练测试均为 22 项全部通过；部署后 `recovered-token-admin.service` 为 `active/running`、不稳定重启为 0，公网首页和管理页返回 200，受保护训练入口未授权返回 401，三份生产 SQLite `quick_check` 均为 `ok`，服务日志无 warning/error。当前无活跃训练任务，正式发布模型仍为 schema 1 的 `mono-audio-base-20260902201947-2fdb2c39`，本次未启动训练、未生成或发布新模型；按需求未运行 Xcode 构建。
 
 2026-09-03 已部署训练器优化并重训、发布新模型。审计发现已发布的 `874351d7` 训练集里 40% 完整样本是端侧模型自己生成的方案、目标为单一账号的个性化目标、32 段先验因输出归一化只用完整样本统计而被裁成平线、544/636 项输入 σ<0.2。训练器改为：排除 `trainedCoreMLModel`/`appleIntelligenceLocalCompiler`/`appleIntelligence` 来源的样本与方案；默认 `population` 目标模式（学习上下文置零，个人偏好留给端侧 Agent），可切回 `personalized`；`manualEqualizer` 反馈改为“用户最终曲线 − 听到的曲线”增量叠加到群体目标；输出尺度按全部训练目标统计；输入归一化 one-hot 透传、条件特征只缩放不居中、其余居中并给 σ 下限；监督/历史两组分层 minibatch 按 `priorWeight` 混合，账号 `1/√n` 衰减、每曲目一票、历史方案按分支等分并带入方案强度；Momentum SGD + weight decay + 梯度裁剪 + 早停保留最优轮；8 维意图瓶颈训练后折叠回输出层，Core ML 契约不变；训练移入 `worker_threads`。设置表自动新增 `prior_weight`、`weight_decay`、`early_stopping_patience`、`intent_units`、`target_mode`。导出器新增 `mono.input_mean`、`mono.complete_account_count`、`mono.target_mode`、`mono.quality_warnings` 元数据，端侧据此按分支覆盖度在群体先验与歌曲修正之间混合。恢复点 `/www/backup/token-admin-before-audio-training-optimize-20260903T155043Z`（训练器、测试、导出器、训练库一致性备份，`quick_check` 为 `ok`）；新训练器与导出器 SHA-256 为 `b5f367dc860b76801ffc700faa244cb5c41f308766015ba1882d5608793072fb`、`7f94e24fd84a361aafe744b92ec62e6506d38b11522ceac398193d769bf3b6a8`。服务器 Node 22 上训练测试 29 项通过，本地 song-content 59 项通过，Xcode `Mono` iOS 构建成功。部署后云端扫描 5,996 条可训练（完整 49 条、历史 5,947 条，排除自生成样本 33 条、方案 9 条，完整样本账号 2 个）；训练 11 轮早停（最佳第 3 轮）、2,046 步、训练损失 0.8335→0.2374、18 条留出完整样本验证损失 0.7802→0.0618，生成并发布 `mono-resonance-s1-schema6-20260903155241-add880c9`（Core ML 1,741,285 字节，SHA-256 `59099c17e60b701bfc44a75449ef2ba5122b7a454c71d027c7d91edbd68ccdaa`），10 段/标准先验 preamp -6.10、增益与 5,947 条历史方案均值一致，32 段先验有完整曲线，质量提示为三个分支缺少留出完整样本。服务为 `active`、不稳定重启 0，公网训练入口未授权 401、首页与管理页 200，两份 SQLite `quick_check` 为 `ok`。开源仓库 `Lincb522/mono-resonance` 同步了新训练算法、导出器元数据与文档，撤回旧预览权重并发布 `add880c9`（MIT 身份重导出，Core ML 与 JSON 最大误差 4.2e-4），提交 `4b08ad1`，CI 通过。App 侧改动（跳过自生成样本、手动 EQ 曲线回写、端侧先验混合与回退计数、开发者页新设置）需安装新版后生效。
+
+2026-09-09 10:56（北京时间）已部署共鸣 S2 模型选择与用户分发接口。服务器继续使用 `new-server` 上的 `recovered-token-admin.service`、原目录 `/www/wwwroot/token-admin` 与监听端口 `127.0.0.1:3388`。更新 `song-content-integration.js`、`song-content/audio-tuning-training.js`；本地 `token-admin/ai-remote-config.js` 部署为新文件 `ai-remote-config-s2.js`，仅将现有 `server.js` 的配置模块引用切换至该文件。原混淆 `ai-remote-config.js` 保留且 SHA-256 仍为 `f7bbcf29c06920a5843464221bd9785759716116d1639509c9c2c4f18c86cf6c`；没有更改 Nginx、证书、端口或站点静态资源。
+
+新增 `audio_training_published_models` 发布历史表，首次启动将原发布指针迁入可选目录。当前已发布的 `mono-resonance-s2-schema7-20260908120520-93813299`（feature schema 7 / target schema 4，Core ML 157,376 字节）已进入目录；先在一致性数据库副本上验证了迁移与生产模型制品的大小/SHA-256。管理模型列表要求完整训练权限，普通用户下载要求有效 App Token、设备标识及当前启用的分发模型；部署代码不会自动修改原 AI 服务配置或选定新的分发模型。
+
+部署前恢复点：`/www/backup/token-admin-before-s2-distribution-20260909T025101Z`，包含原入口、原配置模块、集成模块、训练模块及一致性训练数据库备份。暂存、校验与回滚脚本在 `/www/backup/mono-s2-staging-20260909T025101Z`；需要回滚代码时执行 `python3 /www/backup/mono-s2-staging-20260909T025101Z/deploy.py --rollback`。回滚保留新增的兼容表与线上后续数据，不恢复数据库快照覆盖新数据。
+
+验证：本地 Node 26 与服务器 Node 22 的相关测试均为 45 项通过；17 组模拟旧接口场景与线上混淆模块及新模块一致。公网首页和后台入口为 200，新模型列表及 Core ML 下载入口由部署前的 404 变为未认证 401，既有公开 AI 配置入口仍为 401。服务切换后 PID 为 `1540180`；10:57:46 检查仍为 `active/running`、自动重启 0，四份生产 SQLite `quick_check` 均为 `ok`，没有活动训练任务；启动日志只有一条 Node SQLite 实验特性提示，没有匹配到服务错误。三个部署模块与入口文件哈希均匹配，原混淆模块哈希不变。
+
+本次没有运行 Xcode 构建、上传 App 或启动训练；新增手机端服务选择界面需包含该改动的 App 版本。真实用户登录后的线上配置发布、获准下载和端侧 Core ML 推理链路尚未验证。
+
+
+## 2026-09-09 共鸣置信度校准服务端部署
+
+2026-09-09 12:26:13（北京时间）已将置信度校准训练模块和 Core ML 导出脚本部署到 `new-server:/www/wwwroot/token-admin`，并重启现有 `recovered-token-admin.service`。仅更新 `song-content/audio-tuning-training.js`、`song-content/scripts/export-audio-training-coreml.py`；入口、AI 配置模块、站点资源和依赖保持原哈希。
+
+新训练流程按歌曲隔离选模与校准数据，为 10/32 段、标准/空间四个分支生成独立校准记录，随 Core ML 元数据分发。新模型发布要求有效校准；数据不足或歌曲身份不明确时返回明确的 `MODEL_CONFIDENCE_NOT_CALIBRATED`，保留当前发布状态。现有已发布模型继续可用，不因部署代码自动改变置信度。
+
+服务器 Node 22 环境的 57 项回归全部通过。用服务器现有 `audio-training-runtime` Python 环境验证了四个分支的合成训练与 Core ML 导出，导出校准元数据与训练结果一致。在生产训练数据库副本上验证现有两个发布模型可读取、完整制品校验通过，以及未校准模型重新发布被拒绝且发布状态不变。生产数据未用于新训练，生产发布操作未被调用。
+
+切换后进程为 `1547352`，服务为 `active/running`，自动重启为 0。公网首页与后台入口为 200，AI 配置、模型列表与下载入口未认证响应为 401。四份生产 SQLite `quick_check` 均为 `ok`，16 个既有模型制品的大小及 SHA-256 保持一致，现有两个发布目录项及当前模型 `mono-resonance-s2-schema7-20260909033347-ea0b31ed` 未变。启动检查没有错误标记，只有一条 Node SQLite 实验特性提示。
+
+备份：`/www/backup/token-admin-before-confidence-20260909T042119Z`，包含两个旧代码文件及一致性训练数据库副本。暂存与回滚脚本：`/www/backup/mono-confidence-staging-20260909T042119Z`；需要回滚代码时执行 `python3 /www/backup/mono-confidence-staging-20260909T042119Z/deploy.py --rollback`，不会用旧数据库覆盖线上新数据。
+
+完整部署证据保存在本机 `/tmp/mono-confidence-deploy-20260909T042119Z/` 与远端暂存目录。本次没有重新训练或发布真实模型、修改 AI 分发配置、运行 Xcode 构建或上传 App；手机端置信度展示和 Agent 记录修复需随新 App 安装。真实账号鉴权后的生产下载与新模型端侧推理尚未验证。
+
+
+## 2026-09-09 共鸣模型自动说明、更新日志与发布规则部署
+
+2026-09-09 13:43:04（北京时间）已将三个服务端文件部署到 `new-server:/www/wwwroot/token-admin`：`song-content/audio-tuning-training.js`、新增的 `song-content/audio-training-release-notes.js`、`ai-remote-config-s2.js`。原混淆 `ai-remote-config.js`、服务入口、站点资源、样本模块与 Core ML 导出脚本保留原哈希。
+
+本次按最终需求允许未校准模型发布，取代同日 12:26 部署的校准发布门槛；继续校验权限、确认操作及模型制品完整性。训练以 10 段分支为必要条件，32 段为可选分支，各分支校准状态独立，不补写虚假校准。发布时按模型真实样本、训练指标、分支状态及上一发布模型自动生成说明和详细更新日志，不接受客户端手填内容；重试发布保留已自动生成的内容。列表和 AI 配置下发发布时间、摘要及简版日志，配置 ETag 随模型发布元数据更新，模型下载使用可读文件名。
+
+服务器 Node 22.23.1 上 61 项回归全部通过。使用生产训练数据库与模型文件的独立副本，验证未校准 `3e890c07-b459-42c0-8bb9-48a12e74e707` 发布成功、自动说明与发布预览一致、旧客户端手填内容被忽略，以及关闭重开服务后重复发布日志稳定。实际 0c07 数据生成摘要为“方案样本 7,511 条，较上一发布版增加 7 条。当前各分支尚未校准。”，未篡改既有校准结果。制品为 158,551 字节，下载名 `Mono-Resonance-S2_2026-09-09_04-43-09.908UTC.mlmodel`。
+
+部署后进程 `1554735` 为 `active/running`，自动重启为 0；公网首页与后台入口返回 200，配置、模型目录及下载入口未认证返回 401。四份 SQLite `quick_check` 均为 `ok`，发布表新增字段已就绪，18 个既有制品大小及 SHA-256 不变，19 个模型及两个发布目录项不变，启动日志未发现错误标记。当前实际发布仍为 `ea0b31ed-5772-4f98-b86f-b8fe86ef9a41`；本次没有调用生产模型发布或修改用户分发选择。
+
+备份位于 `/www/backup/token-admin-before-auto-release-20260909T053926Z`，包含旧代码、缺省文件清单和一致性训练数据库副本。部署及回滚脚本位于 `/www/backup/mono-auto-release-staging-20260909T053926Z`；回滚命令为 `python3 /www/backup/mono-auto-release-staging-20260909T053926Z/deploy.py --rollback`，仅恢复代码（含移除本次新增模块），不会恢复旧数据库。
+
+完整证据位于本机 `/tmp/mono-auto-release-deploy-20260909T053926Z/` 及远端暂存目录。本次未运行 Xcode 构建、安装或上传 App；客户端选择框、说明展示及发布界面需包含相应改动的 App。真实账号鉴权后的生产发布、下载及手机端自动下载/推理仍未验证。
+
+
+## 2026-09-09 14:31:23 共鸣模型能力说明与旧发布日志转换
+
+已部署 `song-content/audio-training-release-notes.js` 和 `song-content/audio-tuning-training.js` 到 `new-server:/www/wwwroot/token-admin`。自动更新日志现根据模型具备的 10/32 段分支、个性化听感、设备适配及独立置信度证据生成面向用户的能力说明，不再输出样本数量或训练损失报告。能力变化只按可核实的前后状态描述；缺少比较依据时描述当前支持的能力，不推断听感提升。32 段仍为可选分支，未校准模型仍可发布。
+
+服务启动时已将三条既有发布记录转换为第 2 版能力日志，保留全部原发布时间、模型记录和制品。当前发布模型为 `3e890c07-b459-42c0-8bb9-48a12e74e707`，发布于北京时间 2026-09-09 13:53:15；该发布在此次部署前已完成。模型下载名继续为 `Mono-Resonance-S2_2026-09-09_04-43-09.908UTC.mlmodel`。
+
+服务器 Node 22.23.1 的 66 项回归全部通过。生产数据库与实际模型文件的服务器内独立副本验证通过：三条旧日志转换、重复启动幂等、未校准 0c07 重复发布、手填日志忽略、说明预览一致，以及校准数据和原制品不变。上线后服务 PID `1560317` 为 `active/running`，自动重启为 0；四份 SQLite `quick_check` 为 `ok`，19 个模型记录和 18 个模型制品哈希未变，启动日志错误标记为 0。公网首页、后台入口返回 200；未认证的 AI 配置、模型目录和下载入口返回 401。
+
+部署前备份：`/www/backup/token-admin-before-capability-notes-20260909T062902Z`，包含两个旧模块和一致性训练库备份。回滚命令：`python3 /www/backup/mono-capability-notes-staging-20260909T062902Z/deploy.py --rollback`，仅恢复代码，不用旧数据库覆盖后续数据。入口、AI 配置模块（含原混淆文件）、样本模块、导出脚本、站点资源及分发选择未修改。
+
+完整证据：本机 `/tmp/mono-capability-notes-deploy-20260909T062902Z/`、服务器 `/www/backup/mono-capability-notes-staging-20260909T062902Z/`。本次只更新服务代码及既有发布说明，没有重新训练或发布真实模型。App 代码中的版本与 Beta 名称、简写时间、声音中心小字号版本行、更新日志标签、实际置信度展示修复与上一轮通过局部回归的版本哈希一致，需新版 App 生效；按用户要求未运行 Xcode 构建或上传 App。真实账号鉴权后的生产下载和手机界面、端侧推理本次未验证。
+
+
+## 2026-09-09 15:22:01 完整下发面向用户的模型更新日志
+
+已部署 `song-content/audio-tuning-training.js` 与 `ai-remote-config-s2.js` 到 `new-server:/www/wwwroot/token-admin`。日志继续使用现有简短、面向用户的能力说明；移除前三行和 420 字符截断，模型目录与普通用户 AI 配置均完整返回所有条目，兼容字段 `changelog` 同样包含完整内容。配置保留 `notes`，已有 ETag 逻辑会使旧的截断响应缓存失效。自动说明生成器和已保存的日志没有改写，不需要重新发布模型。
+
+服务器 Node 22.23.1 上相关回归 67 项全部通过；本地针对分发和完整文本的 12 项回归及中英文 Swift 解码回归通过。在生产数据库和实际模型文件的服务器内独立副本上，四个已发布模型均完整下发日志；合成认证的公开配置路径验证了旧 ETag 返回更新内容、新 ETag 返回 304、重复启动稳定，以及发布时间、模型记录和制品不变。该隔离验证没有使用真实用户凭据或读取生产 AI 服务配置。
+
+上线后服务 PID `1564935` 为 `active/running`，自动重启为 0；四份生产 SQLite `quick_check` 均为 `ok`，20 个模型记录、19 个既有模型制品、四条发布目录的时间及日志保持不变。部署模块哈希匹配，入口、原混淆配置模块、集成模块、样本模块、导出器及日志生成器哈希未变。公网首页和后台入口返回 200，受保护的 AI 配置、模型目录与下载入口未认证返回 401；启动检查未发现错误标记，仅有一条 Node SQLite 实验特性提示。
+
+部署前备份：`/www/backup/token-admin-before-full-changelog-20260909T071900Z`。回滚命令：`python3 /www/backup/mono-full-changelog-staging-20260909T071900Z/deploy.py --rollback`，仅恢复两个代码文件，不恢复旧数据库。完整证据位于本机 `/tmp/mono-full-model-changelog-20260909-151637/` 与远端暂存目录。本次没有启动训练、发布模型或修改分发选择；按要求未运行 Xcode 构建。真实用户认证后的线上完整响应及手机界面本次未验证。
+
+
+## 2026-09-09 16:23:14 共鸣模型自动更新分发部署
+
+已将 `song-content/audio-tuning-training.js` 与 `ai-remote-config-s2.js` 部署到 `new-server:/www/wwwroot/token-admin`。已启用共鸣分发的配置会跟进下一次发布的新模型，下载接口使用同一分发结果验证模型 ID 和 SHA。显式选择保留至下一次模型发布；关闭的服务或分发不会被自动启用。现有完整更新日志与 ETag 缓存失效逻辑继续生效。本次未修改生产 AI 配置或发布模型。
+
+服务器 Node 22.23.1 上 68 项回归全部通过。使用生产训练库及模型文件的服务器内独立副本，验证了自动跟进、最近手动选择保留、关闭分发保持、完整日志和 304 响应，以及持久配置与模型数据不变；未使用真实用户凭据。
+
+上线后服务 `recovered-token-admin.service` 的 PID 为 `1570549`，状态为 `active/running`，自动重启为 0。部署文件哈希匹配，原混淆 `ai-remote-config.js`、服务入口及其他依赖保持原哈希；四份 SQLite `quick_check` 为 `ok`，20 个模型记录、19 个模型制品及四条发布记录保持一致。启动日志检查没有错误标记，仅有一条 Node SQLite 实验特性提示。公网首页和后台入口返回 200，未认证的配置、目录与模型下载返回 401。真实账号鉴权后的生产响应和手机端更新流程仍未验证。
+
+备份：`/www/backup/token-admin-before-resonance-auto-update-20260909T082012Z`。回滚命令：`python3 /www/backup/mono-resonance-auto-update-staging-20260909T082012Z/deploy.py --rollback`，仅恢复两个代码模块，不恢复旧数据库。完整证据位于本机 `/tmp/mono-resonance-auto-update-deploy-20260909T082012Z/` 和远端 `/www/backup/mono-resonance-auto-update-staging-20260909T082012Z/`。
+
+本次为服务端部署，未运行 App 构建、安装或上传；模型内置、启用弹窗、更新日志弹窗和界面文案需随包含这些修改的 App 生效。

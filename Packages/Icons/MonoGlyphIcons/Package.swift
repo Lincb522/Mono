@@ -8,7 +8,7 @@ let package = Package(
     targets: [
         .target(
             name: "MonoGlyphIcons",
-            resources: [.process("icons.xcassets")]
+            resources: [.process("icons.xcassets"), .process("expressiveOutline.xcassets")]
         )
     ]
 )

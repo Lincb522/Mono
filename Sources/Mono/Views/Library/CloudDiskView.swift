@@ -116,6 +116,18 @@ struct CloudDiskView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
+                if SignalStyle.isActive {
+                    SignalNestedPageHeader(
+                        title: String(localized: "cloud_title"),
+                        eyebrow: "CLOUD LIBRARY",
+                        icon: .cloud,
+                        module: .cloud
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 14)
+                }
+
                 if isLoading && songs.isEmpty {
                     Spacer()
                     MonoLoadingView(text: MinimalWhiteStyle.isActive ? nil : "LOADING")
@@ -132,7 +144,7 @@ struct CloudDiskView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "cloud_title"))
+        .monoNavigationBackButton()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

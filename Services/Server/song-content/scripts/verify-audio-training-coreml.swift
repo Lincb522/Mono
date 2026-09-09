@@ -10,10 +10,11 @@ struct PredictionCase: Decodable {
 enum VerificationError: Error {
     case arguments
     case outputShape
+    case calibrationMetadata
     case mismatch(test: Int, index: Int, expected: Double, actual: Double)
 }
 
-guard CommandLine.arguments.count == 3 else { throw VerificationError.arguments }
+guard (3...4).contains(CommandLine.arguments.count) else { throw VerificationError.arguments }
 let modelURL = URL(fileURLWithPath: CommandLine.arguments[1])
 let casesURL = URL(fileURLWithPath: CommandLine.arguments[2])
 let cases = try JSONDecoder().decode([PredictionCase].self, from: Data(contentsOf: casesURL))
@@ -22,6 +23,15 @@ defer { try? FileManager.default.removeItem(at: compiled) }
 let configuration = MLModelConfiguration()
 configuration.computeUnits = .cpuOnly
 let model = try MLModel(contentsOf: compiled, configuration: configuration)
+if CommandLine.arguments.count == 4 {
+    let expectedData = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[3]))
+    let expected = try JSONSerialization.jsonObject(with: expectedData) as? NSDictionary
+    let metadata = model.modelDescription.metadata[.creatorDefinedKey] as? [String: String]
+    guard let raw = metadata?["mono.confidence_calibration"], let data = raw.data(using: .utf8),
+          let actual = try JSONSerialization.jsonObject(with: data) as? NSDictionary,
+          let expected, actual == expected else { throw VerificationError.calibrationMetadata }
+    print("Core ML runtime: calibration metadata preserved")
+}
 var maximumError = 0.0
 for (testIndex, test) in cases.enumerated() {
     let input = try MLMultiArray(shape: [NSNumber(value: test.input.count)], dataType: .float32)

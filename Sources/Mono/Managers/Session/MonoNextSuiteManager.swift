@@ -97,6 +97,17 @@ final class MonoNextSuiteManager: ObservableObject {
             store.setEnabledFeatures(enabledFeatures)
             return
         }
+        if feature == .spatialLive {
+            var configuration = enabled ? spatialConfiguration : .init()
+            if enabled, configuration.mode == .off {
+                configuration.mode = .fixedStage
+                configuration.stageWidth = 1.12
+                configuration.stageDepth = 0.28
+                configuration.ambience = 0.10
+            }
+            setSpatialConfiguration(configuration, enabled: enabled)
+            return
+        }
         if enabled {
             enabledFeatures.insert(feature)
         } else {
@@ -104,19 +115,6 @@ final class MonoNextSuiteManager: ObservableObject {
         }
         store.setEnabledFeatures(enabledFeatures)
 
-        if feature == .spatialLive {
-            if enabled, spatialConfiguration.mode == .off {
-                captureSpatialBase()
-                var configuration = spatialConfiguration
-                configuration.mode = .fixedStage
-                configuration.stageWidth = 1.12
-                configuration.stageDepth = 0.28
-                configuration.ambience = 0.10
-                setSpatialConfiguration(configuration)
-            } else if !enabled {
-                setSpatialConfiguration(.init())
-            }
-        }
         if feature == .session, !enabled {
             MonoSessionManager.shared.leaveRoom()
         }
@@ -128,14 +126,29 @@ final class MonoNextSuiteManager: ObservableObject {
         }
     }
 
-    func setSpatialConfiguration(_ configuration: MonoSpatialLiveConfiguration) {
+    func setSpatialConfiguration(
+        _ configuration: MonoSpatialLiveConfiguration,
+        enabled: Bool? = nil
+    ) {
         var normalized = configuration
         normalized.stageWidth = min(1.8, max(0.7, normalized.stageWidth))
         normalized.stageDepth = min(1, max(0, normalized.stageDepth))
         normalized.centerFocus = min(1, max(0, normalized.centerFocus))
         normalized.ambience = min(0.6, max(0, normalized.ambience))
-        spatialConfiguration = normalized
-        store.setSpatialConfiguration(normalized)
+        // AirPods applies/restores one complete spatial state, without briefly
+        // installing the generic preset between the feature and profile writes.
+        if let enabled, enabled != isEnabled(.spatialLive) {
+            if enabled {
+                enabledFeatures.insert(.spatialLive)
+            } else {
+                enabledFeatures.remove(.spatialLive)
+            }
+            store.setEnabledFeatures(enabledFeatures)
+        }
+        if spatialConfiguration != normalized {
+            spatialConfiguration = normalized
+            store.setSpatialConfiguration(normalized)
+        }
         applySpatialConfigurationIfNeeded()
         configureHeadTracking()
     }
@@ -284,6 +297,9 @@ final class MonoNextSuiteManager: ObservableObject {
     }
 
     private func applySpatialConfigurationIfNeeded() {
+        if EQManager.shared.isAuditioningReference {
+            EQManager.shared.stopLoudnessMatchedReferenceAudition()
+        }
         guard isEnabled(.spatialLive), spatialConfiguration.mode != .off else {
             restoreSpatialBaseIfNeeded()
             return
@@ -293,13 +309,14 @@ final class MonoNextSuiteManager: ObservableObject {
         guard let spatialBase else { return }
         let resolved = resolvedSpatial(from: spatialBase)
         player.audioEffects.applyMonoTuning(
-            EQManager.shared.effectiveMonoEffectTuningForCurrentOutput(),
+            EQManager.shared.isEnabled ? EQManager.shared.effectiveMonoEffectTuningForCurrentOutput() : .neutral,
             bassGain: player.audioEffects.bassGain,
             trebleGain: player.audioEffects.trebleGain,
             surroundLevel: resolved.surroundLevel,
             reverbLevel: resolved.reverbLevel,
             stereoWidth: resolved.stereoWidth
         )
+        EQManager.shared.updateSafetyLimiter()
         AppLogger.debug(
             "[MonoSpatial] DSP committed mode=\(spatialConfiguration.mode.rawValue) requestedWidth=\(String(format: "%.3f", spatialConfiguration.stageWidth)) requestedDepth=\(String(format: "%.3f", spatialConfiguration.stageDepth)) committedSurround=\(String(format: "%.3f", player.audioEffects.surroundLevel)) committedReverb=\(String(format: "%.3f", player.audioEffects.reverbLevel)) committedWidth=\(String(format: "%.3f", player.audioEffects.stereoWidth))",
             step: "mono-spatial.dsp-commit",
@@ -342,17 +359,21 @@ final class MonoNextSuiteManager: ObservableObject {
     }
 
     private func restoreSpatialBaseIfNeeded() {
+        if EQManager.shared.isAuditioningReference {
+            EQManager.shared.stopLoudnessMatchedReferenceAudition()
+        }
         let player = PlayerManager.shared
         player.streamPlayer.outputPan = 0
         guard let spatialBase else { return }
         player.audioEffects.applyMonoTuning(
-            EQManager.shared.effectiveMonoEffectTuningForCurrentOutput(),
+            EQManager.shared.isEnabled ? EQManager.shared.effectiveMonoEffectTuningForCurrentOutput() : .neutral,
             bassGain: player.audioEffects.bassGain,
             trebleGain: player.audioEffects.trebleGain,
             surroundLevel: spatialBase.surroundLevel,
             reverbLevel: spatialBase.reverbLevel,
             stereoWidth: spatialBase.stereoWidth
         )
+        EQManager.shared.updateSafetyLimiter()
         self.spatialBase = nil
     }
 
@@ -361,14 +382,25 @@ final class MonoNextSuiteManager: ObservableObject {
 
         let wantsHeadTracking = isEnabled(.spatialLive)
             && spatialConfiguration.mode == .headTracked
+        let route = AVAudioSession.sharedInstance().currentRoute
+        let systemSpatialEnabled = route.outputs.contains { $0.isSpatialAudioEnabled }
         let authorization = CMHeadphoneMotionManager.authorizationStatus()
         let authorizationAllowsTracking = authorization != .denied
             && authorization != .restricted
 
         let shouldTrack = wantsHeadTracking
+            // The port flag does not distinguish fixed from tracked system
+            // spatial audio. Let either system mode own directional processing.
+            && !systemSpatialEnabled
             && authorizationAllowsTracking
             && headphoneMotionManager.isDeviceMotionAvailable
         guard shouldTrack else {
+            if headTrackingSessionStarted, systemSpatialEnabled {
+                AppLogger.info(
+                    "[MonoSpatial] Mono head tracking stopped because system spatial audio is enabled",
+                    step: "mono-spatial.system-spatial"
+                )
+            }
             stopHeadTrackingMotion()
             return
         }
@@ -390,8 +422,6 @@ final class MonoNextSuiteManager: ObservableObject {
         headTrackingSessionID &+= 1
         let sessionID = headTrackingSessionID
         headTrackingSessionStarted = true
-        let route = AVAudioSession.sharedInstance().currentRoute
-        let systemSpatialEnabled = route.outputs.contains { $0.isSpatialAudioEnabled }
         let outputNames = route.outputs.map(\.portName).joined(separator: ",")
         AppLogger.info(
             "[MonoSpatial] Head tracking started output=\(outputNames) systemSpatial=\(systemSpatialEnabled)",

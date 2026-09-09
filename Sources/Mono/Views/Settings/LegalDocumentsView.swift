@@ -155,7 +155,7 @@ enum MonoLegalDocument: String, CaseIterable, Identifiable {
                     title: "AI 功能",
                     paragraphs: [
                         "使用智能调音或听歌报告 AI 分析时，Mono 会向配置的 AI 服务发送歌曲信息、必要的歌词片段、输出设备类型、音频测量特征、调音设置或聚合听歌统计。",
-                        "智能调音发送的是频谱、响度、动态、节奏和声场等数值特征，不上传采样得到的原始音频。AI 服务由 DengDeng AI 或开发者配置的兼容服务提供。"
+                        "调音服务可选择内置大模型、AI 接口或自研共鸣 S2 模型。共鸣 S2 在首次调音时下载模型并在本地运行；使用内置大模型或 AI 接口时，会向所选服务发送频谱、响度、动态、节奏和声场等数值特征，不上传采样得到的原始音频。"
                     ]
                 ),
                 MonoLegalSection(
@@ -316,6 +316,13 @@ struct LegalDocumentsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "legal_center_title"),
+                        eyebrow: "MONO",
+                        icon: .infoCircle,
+                        signalModule: .legal
+                    )
+
                     VStack(alignment: .leading, spacing: 0) {
                         Text(String(localized: "legal_center_date"))
                             .font(.system(size: 11.5, weight: .semibold, design: .monospaced))
@@ -355,7 +362,7 @@ struct LegalDocumentsView: View {
             .coordinateSpace(name: SettingsPageLayout.scrollCoordinateSpace)
             .themeRenderScrollLayer()
         }
-        .asideSettingsDetailChrome(String(localized: "legal_center_title"))
+        .asideSettingsDetailChrome()
         .compatFontDesign(nil)
     }
 
@@ -424,6 +431,13 @@ struct LegalDocumentDetailView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    SettingsScrollablePageHeader(
+                        title: document.title,
+                        eyebrow: "MONO",
+                        icon: document.icon,
+                        signalModule: .legal
+                    )
+
                     VStack(alignment: .leading, spacing: 0) {
                         Text(document.effectiveDate)
                             .font(.system(size: 11.5, weight: .semibold, design: .monospaced))
@@ -507,7 +521,7 @@ struct LegalDocumentDetailView: View {
             .coordinateSpace(name: SettingsPageLayout.scrollCoordinateSpace)
             .themeRenderScrollLayer()
         }
-        .asideSettingsDetailChrome(document.title)
+        .asideSettingsDetailChrome()
         .compatFontDesign(nil)
     }
 

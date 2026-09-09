@@ -390,6 +390,8 @@ extension View {
 
 struct SettingsSwitchToggleStyle: ToggleStyle {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.developerDiagnosticStyle) private var developerDiagnosticStyle
+    @Environment(\.isEnabled) private var isEnabled
 
     private var offTrackColor: Color {
         if MinimalWhiteStyle.isActive { return MinimalWhiteStyle.controlGlassFill }
@@ -459,7 +461,24 @@ struct SettingsSwitchToggleStyle: ToggleStyle {
         CGSize(width: 52, height: 32)
     }
 
+    @ViewBuilder
     func makeBody(configuration: Configuration) -> some View {
+        if ElasticSettingsSwitch.isActiveForCurrentTheme && !developerDiagnosticStyle {
+            Button {
+                configuration.isOn.toggle()
+            } label: {
+                ElasticSettingsSwitch(isOn: configuration.isOn)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(ElasticSettingsSwitchButtonStyle())
+            .opacity(isEnabled ? 1 : 0.5)
+        } else {
+            themedSwitch(configuration: configuration)
+        }
+    }
+
+    private func themedSwitch(configuration: Configuration) -> some View {
         Button {
             configuration.isOn.toggle()
         } label: {
@@ -498,13 +517,28 @@ struct SettingsToggleRow: View {
     var isEnabled: Bool = true
     @Environment(\.developerDiagnosticStyle) private var developerDiagnosticStyle
 
+    private var usesElasticSwitch: Bool {
+        ElasticSettingsSwitch.isActiveForCurrentTheme && !developerDiagnosticStyle
+    }
+
     var body: some View {
-        Button {
-            isOn.toggle()
-        } label: {
-            rowLabel
+        Group {
+            if usesElasticSwitch {
+                Toggle(isOn: $isOn) {
+                    rowLabel
+                }
+                .toggleStyle(ElasticSettingsRowToggleStyle())
+                .accessibilityLabel(Text(title))
+                .accessibilityHint(Text(subtitle ?? ""))
+            } else {
+                Button {
+                    isOn.toggle()
+                } label: {
+                    rowLabel
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.42)
     }
@@ -538,6 +572,8 @@ struct SettingsToggleRow: View {
                     .labelsHidden()
                     .tint(.cyan)
                     .allowsHitTesting(false)
+            } else if usesElasticSwitch {
+                ElasticSettingsSwitch(isOn: isOn)
             } else {
                 Toggle("", isOn: .constant(isOn))
                     .labelsHidden()

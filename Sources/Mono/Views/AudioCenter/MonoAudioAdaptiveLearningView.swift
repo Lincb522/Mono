@@ -49,11 +49,10 @@ struct MonoAudioAdaptiveLearningView: View {
         .background { learningBackdrop }
         .compatFontDesign(nil)
         .environment(\.colorScheme, .dark)
-        .navigationTitle(String(localized: "audio_agent_learning_settings_title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "audio_agent_learning_settings_title"))
+        .monoNavigationBackButton(iconColor: .white)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -633,11 +632,10 @@ private struct MonoAudioLearningRecordDetailView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .compatFontDesign(nil)
         .environment(\.colorScheme, .dark)
-        .navigationTitle(String(localized: "audio_agent_learning_record_detail_title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "audio_agent_learning_record_detail_title"))
+        .monoNavigationBackButton(iconColor: .white)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

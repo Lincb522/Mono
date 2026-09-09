@@ -64,7 +64,7 @@ struct MonoAudioAgentSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "audio_agent_settings_title"))
+        .monoNavigationBackButton(iconColor: .white)
         .onAppear(perform: refreshAccent)
         .onChange(of: player.currentSong?.id) { _, _ in refreshAccent() }
         .task {
@@ -131,9 +131,9 @@ struct MonoAudioAgentSettingsView: View {
 
             HStack(spacing: 6) {
                 Circle()
-                    .fill(agent.automaticConfigurationEnabled ? accent : .white.opacity(0.28))
+                    .fill(agent.isAutomaticTuningActive ? accent : .white.opacity(0.28))
                     .frame(width: 6, height: 6)
-                Text(agent.automaticConfigurationEnabled
+                Text(agent.isAutomaticTuningActive
                      ? String(localized: "audio_agent_active")
                      : String(localized: "settings_off"))
                     .font(.system(size: 11, weight: .bold, design: .rounded))
@@ -168,9 +168,13 @@ struct MonoAudioAgentSettingsView: View {
                 artwork: .agentAutoTuning,
                 title: String(localized: "ai_auto_tuning"),
                 detail: String(localized: "audio_agent_auto_detail"),
-                isOn: $agent.automaticConfigurationEnabled,
+                isOn: Binding(
+                    get: { agent.isAutomaticTuningActive },
+                    set: { agent.automaticConfigurationEnabled = $0 }
+                ),
                 layout: layout
             )
+            .disabled(!agent.tuningServiceStore.settings.isEnabled)
             rowDivider
             NavigationLink {
                 MonoAudioAdaptiveLearningView(accent: accent)
@@ -725,18 +729,10 @@ private struct MonoAudioCustomSkillEditorView: View {
         .background { editorBackdrop }
         .compatFontDesign(nil)
         .environment(\.colorScheme, .dark)
-        .navigationTitle(skillID == nil
-                         ? String(localized: "audio_agent_add_custom_skill")
-                         : String(localized: "audio_agent_edit_custom_skill"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .monoNavigationBackButton(
-            iconColor: .white,
-            title: skillID == nil
-                ? String(localized: "audio_agent_add_custom_skill")
-                : String(localized: "audio_agent_edit_custom_skill")
-        )
+        .monoNavigationBackButton(iconColor: .white)
     }
 
     private func editorField<Content: View>(

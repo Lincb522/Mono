@@ -68,10 +68,7 @@ extension EQManager {
             : 0
         let toneControlBoost = max(bassKnob, trebleKnob)
         // 使用效果器当前值，兼容用户在任何预设上手动叠加环绕或混响。
-        let spatialHeadroom = max(
-            effects.surroundLevel * 0.7,
-            effects.reverbLevel * 4.5
-        )
+        let spatialHeadroom = effects.estimatedSpatialPeakBoostDB
         let effectiveTuning = effectiveMonoEffectTuningForCurrentOutput()
         let enhancementHeadroom = (effectiveTuning.subboostEnabled ? effectiveTuning.subboostGainDB * 0.45 : 0)
             + (effectiveTuning.virtualBassEnabled ? effectiveTuning.virtualBassStrength * 0.25 : 0)
@@ -84,13 +81,17 @@ extension EQManager {
             + spatialHeadroom
             + enhancementHeadroom
         
-        // 按完整级联曲线的峰值做前级补偿，而不是只看最高的单个滑块。
-        // 额外保留 0.25 dB 余量，避免母带接近 0 dBFS 时频段叠加触发硬削波。
-        // Lossy Bluetooth encoding can create inter-sample peaks even when the
-        // decoded Float32 samples stay below 0 dBFS. Reserve a little more room
-        // before the final limiter on that route without flattening the curve.
+        // The AI trim includes the final ceiling as well as the estimated
+        // cascade peak. Bluetooth retains additional inter-sample headroom.
         let safetyMargin: Float = currentOutputKind == .bluetooth ? 0.75 : 0.35
-        let safetyTrim: Float = peakGain > 0.1 ? -(peakGain + safetyMargin) : 0
+        let routeSafeCeiling: Float = currentOutputKind == .bluetooth ? -1.5 : -1
+        let limiterCeiling = effectiveTuning.finalLimiterEnabled
+            ? min(effectiveTuning.finalLimiterCeilingDB, routeSafeCeiling)
+            : routeSafeCeiling
+        let aiManaged = isAIManagedPresetActive
+        let safetyTrim: Float = peakGain > 0.1
+            ? -(peakGain + safetyMargin) + (aiManaged ? limiterCeiling : 0)
+            : 0
         let presetTrim: Float
         if currentPreset?.id == "custom" || currentPreset == nil {
             presetTrim = customPresetPreampDB
@@ -119,47 +120,23 @@ extension EQManager {
             || peakGain > 0.1
             || abs(trackLoudnessGainDB) > 0.05
 
-        // AI 安全前级负责给完整处理链留余量，最终输出先补回这部分固定损失。
-        // 蓝牙路线的有损编码会产生 inter-sample peak，补偿上限压到 +6 dB，
-        // 留出真正的 ISP 余量而不是全部推给限幅器兜底。
+        // Positive track normalization may use unused headroom, but must not
+        // cancel the AI safety trim and make the limiter do sustained compression.
         let makeupCeiling: Float = currentOutputKind == .bluetooth ? 6 : 9
-        let aiOutputGainCompensation: Float = isAIManagedPresetActive
-            ? min(makeupCeiling, max(0, -newPreamp))
-            : 0
-        let loudnessOutputGain = max(0, trackLoudnessGainDB)
+        let availableOutputHeadroom = aiManaged
+            ? max(0, safetyTrim - newPreamp)
+            : makeupCeiling
         let combinedOutputGain = min(
             makeupCeiling,
-            aiOutputGainCompensation + loudnessOutputGain
+            availableOutputHeadroom,
+            max(0, trackLoudnessGainDB)
         )
-        // 宽频削减和动态处理仍可能让主观响度略低。额外补偿保持在约 1 dB，
-        // 与固定前级补偿合计不超过 makeupCeiling，并在 AudioRepairEngine 内平滑推入。
-        let perceivedCurveLoss = max(0, -perceivedBoost)
-        let dynamicsMakeup: Float = isDynamicEQEnabled || isMultibandDynamicsEnabled
-            ? 0.16
-            : (effectiveTuning.compressorEnabled ? 0.12 : 0)
-        let deviceMakeup: Float
-        switch currentOutputKind {
-        case .builtInSpeaker: deviceMakeup = 0.42
-        case .bluetooth: deviceMakeup = 0.35
-        case .car: deviceMakeup = 0.30
-        case .wired, .airPlay, .usb, .other: deviceMakeup = 0.28
-        }
-        let requestedPerceptualMakeup = isAIManagedPresetActive
-            ? min(1.05, deviceMakeup + min(0.5, perceivedCurveLoss * 0.38) + dynamicsMakeup)
-            : 0
-        let aiPerceptualMakeup = min(
-            requestedPerceptualMakeup,
-            max(0, makeupCeiling - combinedOutputGain)
-        )
-        let routeSafeCeiling: Float = currentOutputKind == .bluetooth ? -1.5 : -1
         repair.configureOutputSafety(
             limiterEnabled: shouldLimit,
-            ceilingDB: shouldLimit && effectiveTuning.finalLimiterEnabled
-                ? min(effectiveTuning.finalLimiterCeilingDB, routeSafeCeiling)
-                : routeSafeCeiling,
+            ceilingDB: limiterCeiling,
             transitionProtectionEnabled: false,
             outputGainDB: combinedOutputGain,
-            perceptualMakeupDB: aiPerceptualMakeup
+            perceptualMakeupDB: 0
         )
         isSafetyLimiterActive = shouldLimit
     }
@@ -325,18 +302,21 @@ extension EQManager {
             preampDB = 0
             player.equalizer.setPreampDB(0)
         }
-        if isSafetyLimiterActive {
-            player.audioRepair.configureOutputSafety(
-                limiterEnabled: false,
-                transitionProtectionEnabled: false
-            )
-            isSafetyLimiterActive = false
-        } else {
-            player.audioRepair.configureOutputSafety(
-                limiterEnabled: false,
-                transitionProtectionEnabled: false
-            )
-        }
+        // Spatial Live can run while the EQ is bypassed. Its final safety
+        // stays in the repair stage without re-enabling the user's EQ curve.
+        let spatialHeadroom = player.audioEffects.estimatedSpatialPeakBoostDB
+        let needsSpatialSafety = spatialHeadroom > 0.1 && !isAuditioningReference
+        let bluetooth = currentOutputKind == .bluetooth
+        let ceiling: Float = bluetooth ? -1.5 : -1
+        let margin: Float = bluetooth ? 0.75 : 0.35
+        player.audioRepair.configureOutputSafety(
+            limiterEnabled: needsSpatialSafety,
+            ceilingDB: ceiling,
+            transitionProtectionEnabled: false,
+            outputGainDB: needsSpatialSafety ? max(-18, -spatialHeadroom - margin + ceiling) : 0,
+            perceptualMakeupDB: 0
+        )
+        isSafetyLimiterActive = needsSpatialSafety
         player.audioEffects.setLimiterEnabled(false)
     }
     

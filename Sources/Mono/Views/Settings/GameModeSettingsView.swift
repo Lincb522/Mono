@@ -23,6 +23,14 @@ struct GameModeSettingsView: View {
 
             ScrollView {
                 VStack(spacing: 24) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "game_mode_settings_title"),
+                        eyebrow: String(localized: "settings_eyebrow_game_mode"),
+                        icon: .playCircle,
+                        artwork: .gameMode,
+                        signalModule: .game
+                    )
+
                     VStack(spacing: 24) {
                         powerConsole
 
@@ -64,7 +72,7 @@ struct GameModeSettingsView: View {
             .onChange(of: settings.gameModeSilentNowPlaying) { _, _ in refreshMatchedPreset() }
             .onChange(of: settings.gameModeAutoExit) { _, _ in refreshMatchedPreset() }
         }
-        .asideSettingsDetailChrome(String(localized: "game_mode_settings_title"))
+        .asideSettingsDetailChrome()
         .confirmationDialog(
             String(localized: "game_mode_preferred_quality_title"),
             isPresented: $showQualityDialog,

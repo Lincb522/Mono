@@ -80,8 +80,8 @@ final class PlaybackSessionArchive: @unchecked Sendable {
         }
     }
 
-    func saveSnapshot(
-        _ data: Data,
+    func saveSnapshot<Value: Encodable & Sendable>(
+        encoding value: Value,
         reason: String,
         identity: String?,
         queueCount: Int,
@@ -89,6 +89,13 @@ final class PlaybackSessionArchive: @unchecked Sendable {
     ) {
         let operation: @Sendable () -> Void = { [weak self] in
             guard let self else { return }
+            let data: Data
+            do {
+                data = try JSONEncoder().encode(value)
+            } catch {
+                AppLogger.error("[PlaybackSessionArchive] Snapshot encoding failed; previous snapshot retained", step: "storage.playback-snapshot-encode-failed")
+                return
+            }
             let fileManager = FileManager.default
             try? fileManager.createDirectory(
                 at: self.directoryURL,

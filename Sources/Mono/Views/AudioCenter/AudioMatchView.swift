@@ -261,7 +261,7 @@ struct AudioMatchView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "audio_match_title"))
+        .monoNavigationBackButton()
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $showSongDetail) {
             if let song = selectedSongForDetail {

@@ -8,7 +8,7 @@ import Foundation
 
 extension PlayerManager {
 
-    enum PlayMode: String, Codable {
+    enum PlayMode: String, Codable, Sendable {
         case sequence
         case loopSingle
         case shuffle
@@ -41,7 +41,7 @@ extension PlayerManager {
         }
     }
 
-    enum QueueExhaustionBehavior: String, Codable {
+    enum QueueExhaustionBehavior: String, Codable, Sendable {
         case loop
         case stopAtEnd
     }
@@ -55,7 +55,7 @@ extension PlayerManager {
 
     // MARK: - 播放源类型
 
-    enum PlaySource: Codable, Equatable {
+    enum PlaySource: Codable, Equatable, Sendable {
         case normal
         case fm
         case podcast(radioId: Int)
@@ -122,7 +122,7 @@ extension PlayerManager {
 
     // MARK: - 持久化状态模型
 
-    struct PlayerState: Codable {
+    struct PlayerState: Codable, Sendable {
         let currentSong: Song?
         let mode: PlayMode
         let history: [Song]

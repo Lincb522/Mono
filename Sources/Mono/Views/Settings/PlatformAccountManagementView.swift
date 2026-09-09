@@ -21,6 +21,13 @@ struct PlatformAccountManagementView: View {
 
             ScrollView {
                 VStack(spacing: SettingsPageLayout.sectionSpacing) {
+                    SettingsScrollablePageHeader(
+                        title: String(localized: "platform_account_management"),
+                        eyebrow: String(localized: "settings_eyebrow_accounts"),
+                        icon: .personCircle,
+                        signalModule: .accounts
+                    )
+
                     SettingsSection(title: String(localized: "login_identity_section")) {
                         ForEach(
                             Array(LoginIdentityManager.supportedSources.enumerated()),
@@ -109,7 +116,7 @@ struct PlatformAccountManagementView: View {
             .scrollIndicators(.hidden)
             .refreshable { await refreshAccounts() }
         }
-        .asideSettingsDetailChrome(String(localized: "platform_account_management"))
+        .asideSettingsDetailChrome()
         .task { await refreshAccounts() }
         .onReceive(HomeViewModel.shared.$userProfile.removeDuplicates()) {
             userProfile = $0

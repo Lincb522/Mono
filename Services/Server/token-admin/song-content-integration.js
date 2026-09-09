@@ -165,11 +165,17 @@ function installTokenSongContent({
       || path.join(dataDirectory, 'audio-training-runtime', 'bin', 'python'),
     logger
   })
+  app.locals ||= {}
+  app.locals.audioTrainingDistribution = {
+    service: audioTrainingService,
+    authorize: resolvedAuthorize('training.manage')
+  }
   installAudioTuningTrainingRoutes({
     app,
     service: audioTrainingService,
     authMiddleware,
     authorize: resolvedAuthorize,
+    resolvePublicToken,
     audit: (entry) => service.store.appendAudit(entry),
     logger
   })

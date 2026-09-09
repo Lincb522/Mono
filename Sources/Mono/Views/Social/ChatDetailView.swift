@@ -89,7 +89,7 @@ struct ChatDetailView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: nickname)
+        .monoNavigationBackButton()
         .onAppear { viewModel.fetchHistory(uid: userId) }
     }
 

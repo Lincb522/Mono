@@ -14,6 +14,18 @@ struct KCMAccountView: View {
 
     var body: some View {
         List {
+            if SignalStyle.isActive {
+                SignalNestedPageHeader(
+                    title: "KCM 账号",
+                    eyebrow: "ACCOUNT NODE",
+                    icon: .personCircle,
+                    module: .accounts
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
             Section("账号") {
                 accountRow
             }
@@ -72,9 +84,8 @@ struct KCMAccountView: View {
         .scrollContentBackground(.hidden)
         .claritySettingsListStyle()
         .background(ThemedPageBackground())
-        .navigationTitle(SignalStyle.isActive ? "" : "KCM 账号")
         .navigationBarTitleDisplayMode(.inline)
-        .monoNavigationBackButton(title: "KCM 账号")
+        .monoNavigationBackButton()
         .task { await refreshAccount() }
         .refreshable { await refreshAccount() }
         .confirmationDialog("退出 KCM 登录？", isPresented: $showLogoutConfirmation) {

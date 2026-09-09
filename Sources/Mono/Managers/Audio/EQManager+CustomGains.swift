@@ -10,6 +10,7 @@ extension EQManager {
         guard customGains.indices.contains(index) else { return }
         let clampedGain = EQBandGain.clamped(gain)
         guard abs(customGains[index] - clampedGain) > 0.001 else { return }
+        if userInitiated { stopLoudnessMatchedReferenceAudition() }
         let previousGains = customGains
         customGains[index] = clampedGain
         if isEnabled {

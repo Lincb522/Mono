@@ -71,6 +71,9 @@ struct AIEqualizerLearningArchive: Codable, Sendable {
 
 @MainActor
 final class AIEqualizerLearningStore {
+    nonisolated private static let writeQueue = DispatchQueue(
+        label: "com.monologue.ai-learning-archive", qos: .utility
+    )
     private static let schemaVersion = 1
     private static let fileName = "MonoAudioAgentLearning-v1.json"
     private static let maximumEntries = 320
@@ -462,15 +465,22 @@ final class AIEqualizerLearningStore {
             )
             return
         }
-        do {
-            let data = try JSONEncoder().encode(archive)
-            try data.write(to: storageURL, options: .atomic)
-        } catch {
-            AppLogger.error(
-                "[AIEqualizerAgent] Learning persistence failed evidence=\(archive.episodes.count) error=\(error.localizedDescription)",
-                step: "ai-tuning.learning-save-failed"
-            )
+        let snapshot = archive
+        Self.writeQueue.async {
+            do {
+                let data = try JSONEncoder().encode(snapshot)
+                try data.write(to: storageURL, options: .atomic)
+            } catch {
+                AppLogger.error(
+                    "[AIEqualizerAgent] Learning persistence failed evidence=\(snapshot.episodes.count) domain=\((error as NSError).domain) code=\((error as NSError).code)",
+                    step: "ai-tuning.learning-save-failed"
+                )
+            }
         }
+    }
+
+    nonisolated static func waitForPendingWrites() {
+        writeQueue.sync {}
     }
 
     private static func feedbackWeight(_ feedback: AIEqualizerLearningFeedback) -> Float {

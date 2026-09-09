@@ -24,6 +24,7 @@ struct AudioTrainingDeveloperView: View {
     @State private var showsModelDetails = false
     @State private var showsRuntimeSettings = false
     @State private var showsTestCases = false
+    @State private var showsPublicationDetails = false
 
     var body: some View {
         ZStack {
@@ -321,15 +322,21 @@ struct AudioTrainingDeveloperView: View {
             VStack(alignment: .leading, spacing: 0) {
             expandedInfoRow(
                 icon: .cloud,
-                title: String(localized: "audio_training_cloud_model"),
-                value: store.status?.currentModel?.version
+                title: String(localized: "audio_training_latest_trained_model"),
+                value: store.status?.currentModel?.displayName
                     ?? String(localized: "audio_training_no_model")
+            )
+            divider
+            expandedInfoRow(
+                icon: .cloud,
+                title: String(localized: "audio_training_published_model"),
+                value: store.status?.publishedModel?.displayName ?? String(localized: "audio_training_no_published_model")
             )
             divider
             infoRow(
                 icon: .play,
                 title: String(localized: "audio_training_active_model"),
-                value: store.activeInstalledModel?.version
+                value: store.activeInstalledModel.map { AudioTrainingModelPresentation.name(version: $0.version) }
                     ?? String(localized: "audio_training_no_active_model")
             )
 
@@ -356,6 +363,22 @@ struct AudioTrainingDeveloperView: View {
                 )
                 .padding(.horizontal, 16)
                 .padding(.bottom, 14)
+
+                if let error = store.publicationError {
+                    Text(error)
+                        .font(.callout)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(16)
+                }
+                if let message = store.publicationMessage {
+                    Text(message)
+                        .font(.callout)
+                        .foregroundStyle(.green)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(16)
+                }
+                publicationDescription
 
                 adaptiveActionPair {
                     trainingActionButton(
@@ -1123,6 +1146,15 @@ struct AudioTrainingDeveloperView: View {
         }
         append("excludedSamples", icon: .stop, title: String(localized: "audio_training_model_self_generated_excluded"), value: excludedSamples)
         append("targetMode", icon: .chart, title: String(localized: "audio_training_target_mode"), value: metrics?.targetMode.map(targetModeTitle))
+        if let calibration = metrics?.confidenceCalibration {
+            let text = ["tenBand:standard", "tenBand:monoSpatialEnhancement", "thirtyTwoBand:standard", "thirtyTwoBand:monoSpatialEnhancement"].map { branch in
+                let strength = Float(calibration.branches[branch]?.trackCorrectionStrength ?? 0)
+                let evidence = calibration.evidence(for: branch, trackCorrectionStrength: strength)
+                return String(format: String(localized: "audio_training_branch_calibration_format"),
+                              trainingBranchTitle(branch), evidence?.displayText ?? String(localized: "audio_training_confidence_uncalibrated"))
+            }.joined(separator: "\n")
+            append("branchCalibration", icon: .chart, title: String(localized: "audio_training_branch_calibration"), value: text, usesExpandedLayout: true)
+        }
         if let validation = metrics?.branchValidation {
             let text = validation.keys.sorted().map { branch in
                 guard let result = validation[branch],
@@ -1207,9 +1239,7 @@ struct AudioTrainingDeveloperView: View {
         guard let branchSamples = store.status?.dataset.branchSamples else { return [] }
         return [
             "tenBand:standard",
-            "tenBand:monoSpatialEnhancement",
-            "thirtyTwoBand:standard",
-            "thirtyTwoBand:monoSpatialEnhancement"
+            "tenBand:monoSpatialEnhancement"
         ].filter { (branchSamples[$0] ?? 0) < 1 }
     }
 
@@ -1373,7 +1403,7 @@ struct AudioTrainingDeveloperView: View {
             result.profileName,
             result.bandCount,
             modelMode,
-            String(localized: "audio_training_confidence_uncalibrated"),
+            result.finalProposal.confidenceDisplayText,
             result.modelOutputStrength * 100,
             result.preampDB,
             result.elapsedMilliseconds,
@@ -1595,14 +1625,39 @@ struct AudioTrainingDeveloperView: View {
         )
     }
 
+    @ViewBuilder
+    private var publicationDescription: some View {
+        if let preview = store.status?.currentModel?.releasePreview {
+            Text(preview.summary)
+                .font(.callout)
+                .foregroundStyle(.white.opacity(0.75))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(16)
+            trainingDisclosure(
+                title: String(localized: "audio_training_release_notes_detailed"),
+                isExpanded: $showsPublicationDetails
+            ) {
+                Text(preview.notes)
+                    .font(.callout)
+                    .foregroundStyle(.white.opacity(0.75))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+                    .padding(16)
+            }
+        }
+    }
+
     private func confirmPublish() {
+        guard let model = store.status?.currentModel else { return }
+        let summary = model.releasePreview?.summary ?? String(localized: "audio_training_release_generated_on_publish")
         AlertManager.shared.show(
             title: String(localized: "audio_training_publish_confirm_title"),
-            message: String(localized: "audio_training_publish_confirm_message"),
+            message: String(format: String(localized: "audio_training_publish_release_confirm"), model.displayName, summary),
             primaryButtonTitle: String(localized: "audio_training_publish"),
             secondaryButtonTitle: String(localized: "dev_mode_cancel"),
             primaryAction: {
-                Task { await store.publishCurrentModel() }
+                Task { await store.publishModel(id: model.id) }
             }
         )
     }

@@ -19,6 +19,7 @@ class EQManager: ObservableObject {
     @Published var currentOutputName: String = ""
     @Published var adaptiveGains: [Float] = Array(repeating: 0, count: 10)
     @Published var isAuditioningReference = false
+    var referenceEffectSnapshot: AudioEffectsState?
     @Published var trackLoudnessGainDB: Float = 0
     @Published var isHearingCorrectionEnabled = false
     @Published var hearingLeftGains: [Float] = Array(repeating: 0, count: 10)
@@ -129,6 +130,7 @@ class EQManager: ObservableObject {
             guard !isRestoring else { return }
             if !isEnabled {
                 isAuditioningReference = false
+                referenceEffectSnapshot = nil
                 PlayerManager.shared.equalizer.setProcessingEnabled(false)
                 PlayerManager.shared.equalizer.reset()
                 PlayerManager.shared.audioEffects.applyMonoTuning(
@@ -163,7 +165,7 @@ class EQManager: ObservableObject {
     @Published var currentPreset: EQPreset? = nil {
         didSet {
             guard !isRestoring else { return }
-            isAuditioningReference = false
+            stopLoudnessMatchedReferenceAudition()
             if isEnabled, let preset = currentPreset {
                 applyPresetCurve(preset)
                 applyProfessionalConfiguration()

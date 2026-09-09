@@ -85,6 +85,36 @@ struct AIAgentTraceSession: Identifiable, Codable, Hashable, Sendable {
     var failureMessage: String?
     var events: [AIAgentTraceEvent]
 
+    /// Resolve actual execution from durable events, including histories whose
+    /// initial configuration named a remote model before local inference won.
+    private var executionIdentity: (provider: String, model: String) {
+        let records: Set<String> = [
+            "local-coreml-inference", "cached-tuning-result", "remote-model-request",
+            "remote-model-output-decoded", "remote-model-failure"
+        ]
+        for event in events.reversed() {
+            guard records.contains(event.metadata["recordType"] ?? "")
+                || ((event.stage == .compilation || event.stage == .application) && event.level == .success),
+                  let name = event.metadata["model"], !name.isEmpty else { continue }
+            let isLocal = event.metadata["modelSource"] == "on-device-coreml"
+                || name.hasPrefix("mono-resonance-") || name.hasPrefix("mono-audio-")
+            return (isLocal ? "Core ML" : event.metadata["provider"] ?? provider, name)
+        }
+        let isLocal = model.hasPrefix("mono-resonance-") || model.hasPrefix("mono-audio-")
+        return (isLocal ? "Core ML" : provider, isLocal ? String(model.split(separator: ":").first ?? "") : model)
+    }
+
+    var executionProvider: String { executionIdentity.provider }
+    var executionModel: String { executionIdentity.model }
+    var executionModelDisplayName: String {
+        let name = executionModel
+        if name.hasPrefix("mono-resonance-s2-") { return "共鸣 S2 · \(name)" }
+        if name.hasPrefix("mono-resonance-") || name.hasPrefix("mono-audio-") {
+            return "共鸣 S1 · \(name)"
+        }
+        return name
+    }
+
     var duration: TimeInterval {
         (completedAt ?? updatedAt).timeIntervalSince(startedAt)
     }

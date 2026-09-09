@@ -62,21 +62,7 @@ struct DailyRecommendView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "daily_recommend"))
-        .toolbar {
-            if settings.globalThemeId == .default, !viewModel.songs.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        if let first = viewModel.songs.first {
-                            PlayerManager.shared.playReplacingContext(song: first, in: viewModel.songs)
-                        }
-                    } label: {
-                        DefaultHeaderActionLabel(icon: .play, title: String(localized: "artist_play_all"))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
+        .monoNavigationBackButton()
         .navigationDestination(isPresented: $showArtistDetail) {
             if let artistId = selectedArtistId {
                 ArtistDetailView(artistId: artistId)
@@ -132,9 +118,7 @@ struct DailyRecommendView: View {
     @ViewBuilder
     private var headerSection: some View {
         Group {
-            if settings.globalThemeId == .default {
-                compactDailyHeader
-            } else if MinimalWhiteStyle.isActive {
+            if MinimalWhiteStyle.isActive {
                 minimalWhiteHeaderSection
             } else if MangaStyle.isActive {
                 mangaHeaderSection
@@ -433,77 +417,6 @@ struct DailyRecommendView: View {
         .padding(.vertical, 7)
         .background(tint.opacity(0.13), in: Capsule())
         .overlay(Capsule().stroke(tint.opacity(0.22), lineWidth: 0.7))
-    }
-
-    private var compactDailyHeader: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 16) {
-                    compactDailyDate
-                    Spacer(minLength: 0)
-                    compactDailyActions
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    compactDailyDate
-                    compactDailyActions
-                }
-            }
-            .padding(.horizontal, DeviceLayout.viewHorizontalPadding)
-            .padding(.vertical, 8)
-
-            attachedStylePanel
-        }
-    }
-
-    private var compactDailyDate: some View {
-        Text(Date(), format: .dateTime.month().day())
-            .font(.headline)
-            .foregroundStyle(Theme.secondaryText)
-            .fixedSize()
-    }
-
-    private var compactDailyActions: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 16) {
-                compactDailyStyleButton
-                compactDailyHistoryButton
-            }
-            VStack(alignment: .leading, spacing: 0) {
-                compactDailyStyleButton
-                compactDailyHistoryButton
-            }
-        }
-    }
-
-    private var compactDailyStyleButton: some View {
-        Button(action: toggleStyleMenu) {
-            HStack(spacing: 6) {
-                Text(dailyStyleChipTitle)
-                    .lineLimit(2)
-                MonoIcon(icon: .chevronRight, size: 12, color: Theme.secondaryText)
-                    .rotationEffect(.degrees(viewModel.showStyleMenu ? -90 : 90))
-            }
-            .font(.subheadline)
-            .foregroundStyle(Theme.secondaryText)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var compactDailyHistoryButton: some View {
-        Button { viewModel.loadHistoryDates() } label: {
-            HStack(spacing: 6) {
-                MonoIcon(icon: .history, size: 16, color: Theme.secondaryText)
-                Text(LocalizedStringKey("daily_history"))
-            }
-            .font(.subheadline)
-            .foregroundStyle(Theme.secondaryText)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 
     private var defaultHeaderSection: some View {

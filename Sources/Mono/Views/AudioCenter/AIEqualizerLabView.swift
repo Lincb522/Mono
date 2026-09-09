@@ -5,6 +5,7 @@ import FFmpegSwiftSDK
 struct AIEqualizerLabView: View {
     let isEmbedded: Bool
     @ObservedObject var player = CurrentSongPresentationModel.shared
+    @ObservedObject var tuningServiceStore = AITuningServiceStore.shared
     @StateObject var agent = AIEqualizerAgent.shared
     @StateObject var eqManager = EQManager.shared
     @StateObject var coverColors = CoverColorExtractor()

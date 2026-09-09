@@ -21,6 +21,8 @@ final class AIProviderConfigurationStore: ObservableObject {
         static let remoteAPIKey = "ai.eq.remote.api-key"
         static let remoteLastFetchedAt = "ai.eq.remote.last-fetched-at"
         static let distributionEnabled = "ai.eq.remote.distribution-enabled"
+        static let resonanceEnabled = "ai.eq.remote.resonance-enabled"
+        static let resonanceModelID = "ai.eq.remote.resonance-model-id"
         static let tokenAdminCredential = "ai.eq.remote.token-admin-credential"
     }
 
@@ -40,6 +42,11 @@ final class AIProviderConfigurationStore: ObservableObject {
     @Published var hourlyRequestLimit: Int { didSet { saveIfReady() } }
     @Published var minimumRequestInterval: Double { didSet { saveIfReady() } }
     @Published var distributionEnabled: Bool { didSet { saveIfReady() } }
+    @Published var resonanceEnabled: Bool { didSet { saveIfReady() } }
+    @Published var resonanceModelID: String { didSet { saveIfReady() } }
+    @Published private(set) var publishedResonanceModels: [AudioTrainingModelInstallDescriptor] = []
+    @Published private(set) var isLoadingResonanceModels = false
+    @Published private(set) var resonanceModelsError: String?
     @Published var tokenAdminCredential: String { didSet { saveAdminCredentialIfReady() } }
     @Published private(set) var remoteConfiguration: AIRemoteAIConfiguration?
     @Published private(set) var publishedConfiguration: AIAdminProviderConfiguration?
@@ -51,6 +58,7 @@ final class AIProviderConfigurationStore: ObservableObject {
     private var isReady = false
     private var isLoadingAPIKey = false
     private var isLoadingAdminCredential = false
+    private var remoteRefreshTask: Task<Void, Never>?
 
     private init() {
         let defaults = UserDefaults.standard
@@ -92,6 +100,10 @@ final class AIProviderConfigurationStore: ObservableObject {
         distributionEnabled = defaults.object(forKey: Keys.distributionEnabled) as? Bool
             ?? initialRemoteConfiguration?.enabled
             ?? true
+        resonanceEnabled = defaults.object(forKey: Keys.resonanceEnabled) as? Bool
+            ?? initialRemoteConfiguration?.resonance?.enabled ?? false
+        resonanceModelID = defaults.string(forKey: Keys.resonanceModelID)
+            ?? initialRemoteConfiguration?.resonance?.model?.id ?? ""
         tokenAdminCredential = initialAdminCredential
         remoteConfiguration = initialRemoteConfiguration
         publishedConfiguration = nil
@@ -129,12 +141,30 @@ final class AIProviderConfigurationStore: ObservableObject {
             )
         }
         return try AIProviderRequestContext.resolve(personal: AIPersonalProviderStore.shared.settings) {
-            AIProviderRequestContext(
-                configuration: requestConfiguration,
-                apiKey: requestAPIKey,
-                usageLimits: usageLimits,
-                persistsDiscoveredModel: !isUsingRemoteConfiguration
-            )
+            builtInRequestContext()
+        }
+    }
+
+    private func builtInRequestContext() -> AIProviderRequestContext {
+        AIProviderRequestContext(
+            configuration: requestConfiguration,
+            apiKey: requestAPIKey,
+            usageLimits: usageLimits,
+            persistsDiscoveredModel: !isUsingRemoteConfiguration
+        )
+    }
+
+    func tuningRequestContext(service: AITuningService) throws -> AIProviderRequestContext {
+        switch service {
+        case .builtIn:
+            return builtInRequestContext()
+        case .custom:
+            var personal = AIPersonalProviderStore.shared.settings
+            personal.isEnabled = true
+            return try AIProviderRequestContext.resolve(personal: personal) { builtInRequestContext() }
+        case .resonance:
+            // Resonance requires a verified local model and cannot silently use a cloud provider.
+            throw AIResonanceDistributionError.modelUnavailable
         }
     }
 
@@ -194,6 +224,27 @@ final class AIProviderConfigurationStore: ObservableObject {
         remoteConfiguration?.revision
     }
 
+    func distributedResonanceModel() throws -> AudioTrainingModelInstallDescriptor? {
+        guard let selection = activeRemoteConfiguration?.resonance,
+              selection.enabled else { return nil }
+        guard let model = selection.model else { throw AIResonanceDistributionError.modelUnavailable }
+        try model.validateDistribution()
+        return model
+    }
+
+    func resonanceDownloadRequest(for model: AudioTrainingModelInstallDescriptor) throws -> URLRequest {
+        try model.validateDistribution()
+        guard let token = SecureConfig.apiToken?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !token.isEmpty else { throw AIResonanceDistributionError.modelUnavailable }
+        guard let url = Self.tokenAdminURL(path: "/_admin/api/public/audio-training/models/\(model.id)/coreml") else {
+            throw AIProviderRemoteConfigurationError.invalidEndpoint
+        }
+        var request = URLRequest(url: url)
+        request.setValue(token, forHTTPHeaderField: "X-Api-Token")
+        request.setValue(DeviceIdentifier.uuid, forHTTPHeaderField: "X-Device-ID")
+        return request
+    }
+
     /// AI 请求优先使用现有云端快照或本地配置，配置更新在后台完成，
     /// 避免分发服务短暂不可达时阻塞真正的模型请求。
     func refreshRemoteConfigurationInBackgroundIfNeeded(force: Bool = false) {
@@ -203,6 +254,17 @@ final class AIProviderConfigurationStore: ObservableObject {
     }
 
     func refreshRemoteConfigurationIfNeeded(force: Bool = false) async {
+        if let remoteRefreshTask {
+            await remoteRefreshTask.value
+            return
+        }
+        let task = Task { await self.performRemoteConfigurationRefresh(force: force) }
+        remoteRefreshTask = task
+        await task.value
+        remoteRefreshTask = nil
+    }
+
+    private func performRemoteConfigurationRefresh(force: Bool) async {
         guard let token = SecureConfig.apiToken?.trimmingCharacters(in: .whitespacesAndNewlines),
               !token.isEmpty else {
             return
@@ -225,10 +287,11 @@ final class AIProviderConfigurationStore: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 20
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue(token, forHTTPHeaderField: "X-Api-Token")
         request.setValue(DeviceIdentifier.uuid, forHTTPHeaderField: "X-Device-ID")
         if let revision = remoteConfiguration?.revision, !revision.isEmpty {
-            request.setValue("\"\(revision)\"", forHTTPHeaderField: "If-None-Match")
+            request.setValue(remoteConfigurationETag ?? "\"\(revision)\"", forHTTPHeaderField: "If-None-Match")
         }
 
         do {
@@ -250,6 +313,7 @@ final class AIProviderConfigurationStore: ObservableObject {
             decoder.dateDecodingStrategy = .iso8601
             let value = try decoder.decode(AIRemoteAIConfiguration.self, from: data)
             remoteConfiguration = value
+            remoteConfigurationETag = http.value(forHTTPHeaderField: "ETag")
             persistRemoteConfiguration(value)
             persistRemoteFetchDate(Date())
         } catch {
@@ -266,6 +330,9 @@ final class AIProviderConfigurationStore: ObservableObject {
     }
 
     func publishDraftConfiguration() async throws {
+        if resonanceEnabled, resonanceModelID.isEmpty {
+            throw AIResonanceDistributionError.modelUnavailable
+        }
         let expectedRevision: String?
         if let revision = remoteConfiguration?.revision, revision != "unpublished" {
             expectedRevision = revision
@@ -277,7 +344,8 @@ final class AIProviderConfigurationStore: ObservableObject {
             expectedRevision: expectedRevision,
             configuration: configuration,
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            usageLimits: draftUsageLimits
+            usageLimits: draftUsageLimits,
+            resonance: AIResonanceConfigurationUpdate(enabled: resonanceEnabled, modelID: resonanceModelID)
         )
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -329,6 +397,8 @@ final class AIProviderConfigurationStore: ObservableObject {
         hourlyRequestLimit = 20
         minimumRequestInterval = 15
         distributionEnabled = true
+        resonanceEnabled = false
+        resonanceModelID = ""
     }
 
     private func saveIfReady() {
@@ -344,6 +414,8 @@ final class AIProviderConfigurationStore: ObservableObject {
         defaults.set(min(1_000, max(0, hourlyRequestLimit)), forKey: Keys.hourlyRequestLimit)
         defaults.set(min(3_600, max(0, minimumRequestInterval)), forKey: Keys.minimumRequestInterval)
         defaults.set(distributionEnabled, forKey: Keys.distributionEnabled)
+        defaults.set(resonanceEnabled, forKey: Keys.resonanceEnabled)
+        defaults.set(resonanceModelID, forKey: Keys.resonanceModelID)
     }
 
     private var activeRemoteConfiguration: AIRemoteAIConfiguration? {
@@ -360,6 +432,9 @@ final class AIProviderConfigurationStore: ObservableObject {
         method: String,
         body: Data?
     ) async throws -> AIAdminProviderConfiguration {
+        guard AppConfig.DeveloperAccess.hasFullTools else {
+            throw AudioTrainingAdminError.fullAccessRequired
+        }
         let credential = tokenAdminCredential.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !credential.isEmpty else {
             throw AIProviderRemoteConfigurationError.missingAdminCredential
@@ -414,6 +489,8 @@ final class AIProviderConfigurationStore: ObservableObject {
         hourlyRequestLimit = value.usageLimits.hourlyRequestLimit
         minimumRequestInterval = value.usageLimits.minimumRequestInterval
         distributionEnabled = value.enabled
+        resonanceEnabled = value.resonance?.enabled ?? false
+        resonanceModelID = value.resonance?.model?.id ?? ""
     }
 
     private func updateCachedRemoteConfiguration(from value: AIAdminProviderConfiguration) {
@@ -429,11 +506,54 @@ final class AIProviderConfigurationStore: ObservableObject {
             apiKey: value.apiKey,
             usageLimits: value.usageLimits,
             revision: value.revision,
-            updatedAt: value.updatedAt
+            updatedAt: value.updatedAt,
+            resonance: value.resonance
         )
         remoteConfiguration = remote
+        remoteConfigurationETag = nil
         persistRemoteConfiguration(remote)
         persistRemoteFetchDate(Date())
+    }
+
+    private var resonanceModelRequestID = UUID()
+    private var remoteConfigurationETag: String?
+
+    func fetchPublishedResonanceModels() async {
+        guard AppConfig.DeveloperAccess.hasFullTools else { return }
+        let requestID = UUID()
+        resonanceModelRequestID = requestID
+        isLoadingResonanceModels = true
+        resonanceModelsError = nil
+        defer {
+            if resonanceModelRequestID == requestID { isLoadingResonanceModels = false }
+        }
+        do {
+            let credential = tokenAdminCredential.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !credential.isEmpty else { throw AIProviderRemoteConfigurationError.missingAdminCredential }
+            guard let url = Self.tokenAdminURL(path: "/_admin/api/audio-training/models") else {
+                throw AIProviderRemoteConfigurationError.invalidEndpoint
+            }
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 30
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.setValue(credential, forHTTPHeaderField: "X-Admin-Token")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            try Task.checkCancellation()
+            guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+            guard (200...299).contains(http.statusCode) else {
+                throw Self.remoteError(from: data, statusCode: http.statusCode)
+            }
+            let list = try JSONDecoder().decode(AIResonanceModelList.self, from: data)
+            for model in list.models { try model.validateDistribution() }
+            guard resonanceModelRequestID == requestID else { return }
+            publishedResonanceModels = list.models
+            resonanceModelsError = nil
+        } catch is CancellationError {
+            return
+        } catch {
+            guard resonanceModelRequestID == requestID else { return }
+            resonanceModelsError = error.localizedDescription
+        }
     }
 
     private func saveAdminCredentialIfReady() {

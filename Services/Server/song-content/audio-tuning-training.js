@@ -4,6 +4,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { Worker, isMainThread, parentPort, workerData } = require('node:worker_threads')
 const { isSelfGeneratedProposal, manualGainDelta, hasHumanCorrection } = require('./audio-training-samples')
+const { RELEASE_NOTES_VERSION, generateReleaseNotes } = require('./audio-training-release-notes')
 
 const ACTIVE_STATES = new Set(['queued', 'collecting', 'training', 'validating'])
 const FEATURE_SCHEMA_VERSION = 7
@@ -21,15 +22,21 @@ const SUPPORTED_SAMPLE_SCHEMA_VERSIONS = new Set([1, 2, 3, 4])
 const TARGET_MODES = new Set(['population', 'personalized', 'joint'])
 const MINIMUM_NORMALIZATION_SAMPLES = 8
 const MINIMUM_SELECTION_VALIDATION_SAMPLES = 16
+const MINIMUM_CALIBRATION_TRACKS = 32
+const CALIBRATION_COVERAGE = 0.9
+const CALIBRATION_METHOD = 'split-conformal-track-max-v1'
+const CALIBRATION_NUMERICAL_MARGIN_DB = 0.001
 const MANUAL_GAIN_DELTA_LIMIT_DB = 12
 const GRADIENT_CLIP_NORM = 5
 const MOMENTUM = 0.9
-const REQUIRED_TRAINING_BRANCHES = [
+const ALL_TRAINING_BRANCHES = [
   'tenBand:standard',
   'tenBand:monoSpatialEnhancement',
   'thirtyTwoBand:standard',
   'thirtyTwoBand:monoSpatialEnhancement'
 ]
+
+const REQUIRED_TRAINING_BRANCHES = ALL_TRAINING_BRANCHES.filter(branch => branch.startsWith('tenBand:'))
 
 const genreFeatureValues = [
   'electronic', 'hiphop', 'rock', 'acoustic', 'ballad', 'pop'
@@ -322,8 +329,22 @@ function createAudioTuningTrainingService({
       byte_count INTEGER NOT NULL,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS audio_training_published_models (
+      model_id TEXT PRIMARY KEY REFERENCES audio_training_models(id),
+      published_at TEXT NOT NULL
+    );
+    INSERT OR IGNORE INTO audio_training_published_models (model_id, published_at)
+      SELECT model_id, published_at FROM audio_training_model_publication;
   `)
+  const publicationColumns = new Set(database.prepare('PRAGMA table_info(audio_training_published_models)').all().map(row => row.name))
+  for (const column of ['release_summary', 'release_notes']) {
+    if (!publicationColumns.has(column)) database.exec(`ALTER TABLE audio_training_published_models ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`)
+  }
+  if (!publicationColumns.has('release_generator_version')) {
+    database.exec('ALTER TABLE audio_training_published_models ADD COLUMN release_generator_version INTEGER NOT NULL DEFAULT 0')
+  }
   migrateSettingsTable(database)
+  migrateReleaseNotes(database)
   const defaults = normalizeSettings({})
   database.prepare(`INSERT OR IGNORE INTO audio_training_settings
     (singleton, epochs, hidden_units, learning_rate, validation_percent, minimum_samples,
@@ -386,7 +407,8 @@ function createAudioTuningTrainingService({
       settings: settings(),
       dataset: inspectDataset(),
       currentJob: hydrateJob(statements.selectLatestJob.get()),
-      currentModel: hydrateStoredModel(statements.selectLatestModel.get())
+      currentModel: hydrateStoredModel(statements.selectLatestModel.get()),
+      publishedModel: hydrateStoredModel(statements.selectPublishedModel.get())
     }
   }
 
@@ -435,8 +457,69 @@ function createAudioTuningTrainingService({
     if (!model) throw trainingError('TRAINING_MODEL_NOT_FOUND', '训练模型不存在。', 404)
     await ensureCoreMLArtifact(modelId)
     const now = new Date().toISOString()
-    statements.publishModel.run(modelId, cleanActor(actorId), now)
+    database.exec('BEGIN IMMEDIATE')
+    try {
+      const release = releaseNotesForModel(model)
+      statements.publishModel.run(modelId, cleanActor(actorId), now)
+      statements.recordPublication.run(modelId, now, release.summary, release.notes, RELEASE_NOTES_VERSION)
+      database.exec('COMMIT')
+    } catch (error) {
+      database.exec('ROLLBACK')
+      throw error
+    }
     return hydrateStoredModel(statements.selectPublishedModel.get())
+  }
+
+  function publishedModels() {
+    return statements.selectPublishedModels.all().flatMap((row) => {
+      const artifact = statements.selectArtifact.get(row.id)
+      if (row.feature_schema_version !== 7 || row.target_schema_version !== 4
+        || !row.version.startsWith('mono-resonance-s2-')
+        || artifact?.format !== CORE_ML_ARTIFACT_FORMAT) return []
+      const metrics = parseJSON(row.metrics_json, {})
+      const count = (value) => Math.max(0, Math.trunc(Number(value) || 0))
+      const sum = (name) => count(metrics[`${name}TrainingSamples`]) + count(metrics[`${name}ValidationSamples`])
+      const branchKeys = new Set([
+        ...Object.keys(metrics.completeBranchTrainingSamples || {}),
+        ...Object.keys(metrics.completeBranchValidationSamples || {})
+      ])
+      return [{
+        id: row.id, version: row.version, createdAt: row.created_at,
+        fileName: modelDownloadFileName(row.created_at, row.version), release: hydrateModelRelease(row),
+        sha256: artifact.sha256, byteCount: artifact.byte_count,
+        featureSchemaVersion: row.feature_schema_version, targetSchemaVersion: row.target_schema_version,
+        completeSampleCount: sum('complete'), legacySampleCount: sum('legacy'),
+        learningConditionedSampleCount: sum('learningConditioned'),
+        deviceConditionedSampleCount: sum('deviceConditioned'),
+        completeAccountCount: count(metrics.completeAccountCount),
+        completeBranchSampleCounts: Object.fromEntries([...branchKeys].map((key) => [key,
+          count(metrics.completeBranchTrainingSamples?.[key]) + count(metrics.completeBranchValidationSamples?.[key])])),
+        completeBranchAccountCounts: metrics.completeBranchAccounts || {},
+        qualityWarnings: metrics.qualityWarnings || []
+      }]
+    })
+  }
+
+  function distributedModel(configuration) {
+    const selected = configuration?.resonance?.model
+    if (!selected) return null
+    const models = publishedModels()
+    const current = models.find(model => model.id === selected.id)
+    if (!current) return null
+    const latest = models[0]
+    const selectedAt = Date.parse(configuration.updatedAt || current.release?.publishedAt)
+    // A deliberate selection remains in effect until the next model publication.
+    if (configuration.enabled === true && configuration.resonance.enabled === true
+      && latest && Date.parse(latest.release?.publishedAt) > selectedAt) return latest
+    return current
+  }
+
+  function publishedCoreMLArtifact(modelId) {
+    const descriptor = publishedModels().find((model) => model.id === modelId)
+    if (!descriptor) throw trainingError('MODEL_NOT_PUBLISHED', '请选择已发布的共鸣 S2 模型。', 404)
+    const artifact = resolveStoredCoreMLArtifact(statements.selectArtifact.get(modelId), modelsDirectory)
+    if (!artifact) throw trainingError('MODEL_ARTIFACT_UNAVAILABLE', '模型文件不可用，请重新发布模型后重试。', 503)
+    return { ...artifact, model: descriptor, fileName: descriptor.fileName }
   }
 
   function modelArtifact(modelId) {
@@ -448,6 +531,15 @@ function createAudioTuningTrainingService({
     }
   }
 
+  function releaseNotesForModel(row) {
+    const saved = statements.selectPublication.get(row.id)
+    if (saved?.release_generator_version === RELEASE_NOTES_VERSION && saved.release_summary && saved.release_notes) {
+      return { summary: saved.release_summary, notes: saved.release_notes }
+    }
+    const previous = statements.selectReleaseBaseline.get(row.id)
+    return generateReleaseNotes(hydrateModel(row), hydrateModel(previous))
+  }
+
   function hydrateStoredModel(row) {
     const model = hydrateModel(row)
     if (!model) return null
@@ -457,6 +549,9 @@ function createAudioTuningTrainingService({
     )
     return {
       ...model,
+      fileName: modelDownloadFileName(row.created_at, row.version),
+      release: hydrateModelRelease(statements.selectPublication.get(model.id)),
+      releasePreview: releaseNotesForModel(row),
       coreMLArtifact: coreMLArtifact
         ? {
             format: coreMLArtifact.format,
@@ -475,7 +570,7 @@ function createAudioTuningTrainingService({
     if (existing) {
       return {
         ...existing,
-        fileName: `${safeFileComponent(row.version)}.mlmodel`,
+        fileName: modelDownloadFileName(row.created_at, row.version),
         model: hydrateStoredModel(row)
       }
     }
@@ -523,7 +618,7 @@ function createAudioTuningTrainingService({
         )
       }
       assertRequiredTrainingBranches(collected.stats.branchSamples)
-      const split = splitExamples(collected.examples, configuration.validationPercent)
+      const split = splitCalibrationExamples(collected.examples, configuration.validationPercent)
       const trainingBranches = new Set(split.training.map(trainingBranchKey))
       const missingTrainingBranches = REQUIRED_TRAINING_BRANCHES.filter(
         (branch) => !trainingBranches.has(branch)
@@ -545,6 +640,7 @@ function createAudioTuningTrainingService({
       const trained = await trainTinyModel({
         training: split.training,
         validation: split.validation,
+        calibration: split.calibration,
         settings: configuration,
         isCancelled: () => run?.cancelled === true,
         onEpoch: ({ epoch, trainingLoss, validationLoss }) => {
@@ -579,6 +675,13 @@ function createAudioTuningTrainingService({
         preferenceTrainingAccuracy: trained.preferenceTraining.accuracy,
         preferenceValidationAccuracy: trained.preferenceValidation.accuracy,
         branchValidation: trained.branchValidation,
+        confidenceCalibration: trained.confidenceCalibration,
+        calibrationSamples: split.calibration.length,
+        excludedUnresolvedTrackSamples: split.excludedUnresolvedTrackSamples,
+        standardProfileCalibrationSamples: split.calibration.filter(item => item.tuningProfile === 'standard').length,
+        spatialProfileCalibrationSamples: split.calibration.filter(item => item.tuningProfile === 'monoSpatialEnhancement').length,
+        learningConditionedCalibrationSamples: split.calibration.filter(item => item.learningConditioned).length,
+        deviceConditionedCalibrationSamples: split.calibration.filter(item => item.deviceConditioned).length,
         conditionValidation: trained.conditionValidation,
         architecture: MODEL_ARCHITECTURE,
         selectionValidationTracks: trained.selectionValidationTracks,
@@ -605,7 +708,7 @@ function createAudioTuningTrainingService({
         ).length,
         completeBranchTrainingSamples: branchCounts(completeTraining),
         completeBranchValidationSamples: branchCounts(completeValidation),
-        completeBranchAccounts: Object.fromEntries(REQUIRED_TRAINING_BRANCHES.map((branch) => [
+        completeBranchAccounts: Object.fromEntries(ALL_TRAINING_BRANCHES.map((branch) => [
           branch,
           new Set(
             [...completeTraining, ...completeValidation]
@@ -729,6 +832,7 @@ function createAudioTuningTrainingService({
         targetNames,
         inputNormalization: trained.inputNormalization,
         outputNormalization: trained.outputNormalization,
+        confidenceCalibration: trained.confidenceCalibration,
         hiddenActivation: 'tanh',
         hiddenWeights: trained.hiddenWeights,
         hiddenBias: trained.hiddenBias,
@@ -858,6 +962,9 @@ function createAudioTuningTrainingService({
     modelArtifact,
     ensureCoreMLArtifact,
     publishModel,
+    publishedModels,
+    distributedModel,
+    publishedCoreMLArtifact,
     settings,
     startTraining,
     status,
@@ -894,8 +1001,8 @@ function collectDataset(cloudDatabasePath, {
     thirtyTwoBandSamples: 0,
     standardProfileSamples: 0,
     spatialProfileSamples: 0,
-    branchSamples: Object.fromEntries(REQUIRED_TRAINING_BRANCHES.map((branch) => [branch, 0])),
-    completeBranchSamples: Object.fromEntries(REQUIRED_TRAINING_BRANCHES.map((branch) => [branch, 0])),
+    branchSamples: Object.fromEntries(ALL_TRAINING_BRANCHES.map((branch) => [branch, 0])),
+    completeBranchSamples: Object.fromEntries(ALL_TRAINING_BRANCHES.map((branch) => [branch, 0])),
     targetMode: resolvedTargetMode,
     datasetFingerprint: null
   }
@@ -950,10 +1057,10 @@ function collectDataset(cloudDatabasePath, {
   let standardProfileSamples = 0
   let spatialProfileSamples = 0
   const branchSamples = Object.fromEntries(
-    REQUIRED_TRAINING_BRANCHES.map((branch) => [branch, 0])
+    ALL_TRAINING_BRANCHES.map((branch) => [branch, 0])
   )
   const completeBranchSamples = Object.fromEntries(
-    REQUIRED_TRAINING_BRANCHES.map((branch) => [branch, 0])
+    ALL_TRAINING_BRANCHES.map((branch) => [branch, 0])
   )
   const distinctTrackGroups = new Set()
 
@@ -1423,7 +1530,7 @@ function assertRequiredTrainingBranches(branchSamples) {
   if (missing.length === 0) return
   throw trainingError(
     'INSUFFICIENT_BRANCH_COVERAGE',
-    `训练数据缺少分支：${missing.join(', ')}。每个 10/32 段与标准/空间组合都至少需要一个方案。`,
+    `训练数据缺少分支：${missing.join(', ')}。10 段标准与空间分支各需要至少一个方案；32 段有样本时自动参与训练。`,
     422
   )
 }
@@ -1462,7 +1569,7 @@ function legacyConditioningVector(item, statistics) {
 }
 
 function branchCounts(items) {
-  const counts = Object.fromEntries(REQUIRED_TRAINING_BRANCHES.map((branch) => [branch, 0]))
+  const counts = Object.fromEntries(ALL_TRAINING_BRANCHES.map((branch) => [branch, 0]))
   for (const item of items) counts[trainingBranchKey(item)] += 1
   return counts
 }
@@ -1475,12 +1582,17 @@ function qualityWarnings(metrics) {
   if ((metrics.completeAccountCount || 0) < 2 && (metrics.completeTrainingSamples || 0) > 0) {
     warnings.push('SINGLE_ACCOUNT_COMPLETE_SAMPLES')
   }
-  for (const branch of REQUIRED_TRAINING_BRANCHES) {
+  for (const branch of ALL_TRAINING_BRANCHES) {
     if ((metrics.completeBranchValidationSamples?.[branch] || 0) === 0) {
       warnings.push(`NO_HELD_OUT_COMPLETE_SAMPLES:${branch}`)
     }
     if (metrics.branchValidation?.[branch]?.improvesPrior === false) {
       warnings.push(`NO_IMPROVEMENT_OVER_PRIOR:${branch}`)
+    }
+  }
+  for (const branch of ALL_TRAINING_BRANCHES) {
+    if (metrics.confidenceCalibration?.branches?.[branch]?.status !== 'calibrated') {
+      warnings.push(`INSUFFICIENT_CONFIDENCE_CALIBRATION:${branch}`)
     }
   }
   if (!metrics.preferenceValidationPairs) warnings.push('NO_HELD_OUT_HUMAN_PREFERENCE_PAIRS')
@@ -1883,7 +1995,7 @@ function evaluateGroups(examples, parameters, prepared, groups, belongs) {
 }
 
 function evaluateBranches(examples, parameters, prepared) {
-  return evaluateGroups(examples, parameters, prepared, REQUIRED_TRAINING_BRANCHES,
+  return evaluateGroups(examples, parameters, prepared, ALL_TRAINING_BRANCHES,
     (item, branch) => trainingBranchKey(item) === branch)
 }
 
@@ -1904,7 +2016,8 @@ function evaluateConditions(examples, parameters, prepared) {
 // Synchronous core used by the worker thread (and by tests through the
 // in-process fallback). `progress` is invoked once per epoch and may return
 // false to cancel.
-function trainTinyModelSync({ training, validation, settings, progress }) {
+function trainTinyModelSync({ training, validation, calibration = [], settings, progress }) {
+  assertCalibrationIsolation(training, validation, calibration)
   const prepared = prepareTrainingSet({ training, validation, settings })
   const { train, validate } = prepared
   const random = seededRandom(0x4d4f4e4f)
@@ -2032,17 +2145,19 @@ function trainTinyModelSync({ training, validation, settings, progress }) {
     preferenceTraining: preferenceMetrics(train, parameters),
     preferenceValidation: preferenceMetrics(validate, parameters),
     branchValidation: evaluateBranches(validation, parameters, prepared),
-    conditionValidation: evaluateConditions(validation, parameters, prepared)
+    conditionValidation: evaluateConditions(validation, parameters, prepared),
+    confidenceCalibration: calibrateConfidence({ training, validation, calibration, parameters, prepared })
   }
 }
 
 // Runs the optimisation off the event loop so a multi-minute job cannot stall
 // the admin API. Cancellation is a shared flag the worker polls each epoch.
-function trainTinyModel({ training, validation, settings, isCancelled, onEpoch }) {
+function trainTinyModel({ training, validation, calibration = [], settings, isCancelled, onEpoch }) {
   if (settings.inProcess === true) {
     return Promise.resolve().then(() => trainTinyModelSync({
       training,
       validation,
+      calibration,
       settings,
       progress: (event) => {
         onEpoch?.(event)
@@ -2053,7 +2168,7 @@ function trainTinyModel({ training, validation, settings, isCancelled, onEpoch }
   return new Promise((resolve, reject) => {
     const cancelFlag = new Int32Array(new SharedArrayBuffer(4))
     const worker = new Worker(__filename, {
-      workerData: { audioTuningTrainer: true, training, validation, settings, cancelFlag }
+      workerData: { audioTuningTrainer: true, training, validation, calibration, settings, cancelFlag }
     })
     let settled = false
     let cancelRequestedAt = null
@@ -2097,11 +2212,35 @@ function installAudioTuningTrainingRoutes({
   service,
   authMiddleware,
   authorize,
+  resolvePublicToken,
   audit,
   logger = console
 }) {
   if (typeof authMiddleware !== 'function' || typeof authorize !== 'function') return
   const protectedRoute = [authMiddleware, authorize('training.manage')]
+
+  app.get('/api/audio-training/models', ...protectedRoute, route(async (_req, res) => {
+    res.setHeader('Cache-Control', 'private, no-store')
+    res.json({ ok: true, models: service.publishedModels() })
+  }, logger))
+
+  if (typeof resolvePublicToken === 'function') {
+    app.get('/api/public/audio-training/models/:modelId/coreml', route(async (req, res) => {
+      const access = resolvePublicToken(req, res)
+      if (!access) return
+      const configuration = access.data.aiProviderConfig
+      const selection = configuration?.resonance
+      const distributed = service.distributedModel(configuration)
+      if (configuration?.enabled !== true || selection?.enabled !== true || distributed?.id !== req.params.modelId) {
+        throw trainingError('MODEL_NOT_DISTRIBUTED', '此模型尚未启用分发，请刷新调音服务后重试。', 403)
+      }
+      const artifact = service.publishedCoreMLArtifact(req.params.modelId)
+      if (artifact.sha256 !== distributed.sha256) {
+        throw trainingError('MODEL_CHANGED', '模型已更新，请重新发布调音服务配置。', 409)
+      }
+      await sendCoreMLArtifact(res, artifact)
+    }, logger))
+  }
 
   app.get('/api/audio-training', ...protectedRoute, route(async (_req, res) => {
     res.json({ ok: true, ...service.status() })
@@ -2202,7 +2341,7 @@ async function createCoreMLArtifact({ row, modelsDirectory, exportModel }) {
       format: CORE_ML_ARTIFACT_FORMAT,
       relativePath,
       filePath,
-      fileName: `${safeFileComponent(model.version)}.mlmodel`,
+      fileName: modelDownloadFileName(model.createdAt, model.version),
       sha256,
       byteCount: stat.size,
       createdAt: new Date().toISOString()
@@ -2323,6 +2462,15 @@ function prepareStatements(database) {
     selectLatestModel: database.prepare('SELECT * FROM audio_training_models ORDER BY created_at DESC LIMIT 1'),
     selectPublishedModel: database.prepare(`SELECT m.* FROM audio_training_model_publication p
       JOIN audio_training_models m ON m.id = p.model_id WHERE p.singleton = 1`),
+    selectPublication: database.prepare('SELECT * FROM audio_training_published_models WHERE model_id = ?'),
+    selectReleaseBaseline: database.prepare(`SELECT m.* FROM audio_training_published_models p
+      JOIN audio_training_models m ON m.id = p.model_id WHERE m.id != ? ORDER BY p.published_at DESC, m.id LIMIT 1`),
+    selectPublishedModels: database.prepare(`SELECT m.*, p.published_at, p.release_summary, p.release_notes, p.release_generator_version FROM audio_training_published_models p
+      JOIN audio_training_models m ON m.id = p.model_id ORDER BY p.published_at DESC, m.id`),
+    recordPublication: database.prepare(`INSERT INTO audio_training_published_models (model_id, published_at, release_summary, release_notes, release_generator_version)
+      VALUES (?, ?, ?, ?, ?) ON CONFLICT(model_id) DO UPDATE SET published_at = excluded.published_at,
+      release_summary = excluded.release_summary, release_notes = excluded.release_notes,
+      release_generator_version = excluded.release_generator_version`),
     publishModel: database.prepare(`INSERT INTO audio_training_model_publication
       (singleton, model_id, published_by, published_at) VALUES (1, ?, ?, ?)
       ON CONFLICT(singleton) DO UPDATE SET model_id = excluded.model_id,
@@ -2415,6 +2563,47 @@ function hydrateJob(row) {
   }
 }
 
+function migrateReleaseNotes(database) {
+  const outdated = database.prepare(`SELECT m.* FROM audio_training_published_models p
+    JOIN audio_training_models m ON m.id = p.model_id
+    WHERE p.release_generator_version < ?`).all(RELEASE_NOTES_VERSION)
+  if (!outdated.length) return
+  const update = database.prepare(`UPDATE audio_training_published_models
+    SET release_summary = ?, release_notes = ?, release_generator_version = ?
+    WHERE model_id = ? AND release_generator_version < ?`)
+  database.exec('BEGIN IMMEDIATE')
+  try {
+    for (const row of outdated) {
+      // Older releases did not retain a comparison model. Describe their own
+      // capabilities without inventing a historical improvement or a new release.
+      const release = generateReleaseNotes(hydrateModel(row))
+      update.run(release.summary, release.notes, RELEASE_NOTES_VERSION, row.id, RELEASE_NOTES_VERSION)
+    }
+    database.exec('COMMIT')
+  } catch (error) {
+    database.exec('ROLLBACK')
+    throw error
+  }
+}
+
+function hydrateModelRelease(row) {
+  if (!row?.published_at) return null
+  const notes = row.release_notes || ''
+  return {
+    publishedAt: row.published_at, summary: row.release_summary || '', notes,
+    generatedAutomatically: row.release_generator_version === RELEASE_NOTES_VERSION,
+    changelog: notes
+  }
+}
+
+function modelDownloadFileName(createdAt, version) {
+  const family = String(version).startsWith('mono-resonance-s1-') ? 'S1' : 'S2'
+  const date = new Date(createdAt)
+  if (!Number.isFinite(date.getTime())) return `Mono-Resonance-${family}.mlmodel`
+  const timestamp = date.toISOString().replace('T', '_').replace(/:/g, '-').replace('Z', 'UTC')
+  return `Mono-Resonance-${family}_${timestamp}.mlmodel`
+}
+
 function hydrateModel(row) {
   if (!row) return null
   return {
@@ -2496,6 +2685,106 @@ function splitExamples(examples, validationPercent) {
     )
   }
 }
+
+
+function calibrationTrackKey(item) {
+  return item.trackGroup || `proposal:${item.id}`
+}
+
+// Reserve complete recordings before optimisation. The configured held-out share
+// is split between model selection and calibration; neither side trains weights.
+function splitCalibrationExamples(examples, validationPercent) {
+  // Unidentified recordings cannot be safely separated from held-out songs.
+  // Omit them from fitting rather than invalidate all otherwise valid branches.
+  const identified = examples.filter(item => item.trackGroup && !item.trackGroup.startsWith('proposal:'))
+  const split = splitExamples(identified, validationPercent)
+  const groups = [...new Set(split.validation.map(calibrationTrackKey))]
+    .sort((a, b) => stableBucket(`calibration:${a}`) - stableBucket(`calibration:${b}`) || a.localeCompare(b))
+  const calibrationGroups = new Set(groups.slice(0, Math.floor(groups.length / 2)))
+  const heldOutGroups = new Set(groups)
+  return {
+    excludedUnresolvedTrackSamples: examples.length - identified.length,
+    // An older proposal for the same recording must not leak into the prior.
+    training: split.training.filter(item => !heldOutGroups.has(calibrationTrackKey(item))),
+    validation: split.validation.filter(item => !calibrationGroups.has(calibrationTrackKey(item))),
+    calibration: split.validation.filter(item => item.x !== null && calibrationGroups.has(calibrationTrackKey(item)))
+  }
+}
+
+function assertCalibrationIsolation(training, validation, calibration) {
+  const fitted = new Set([...training, ...validation].map(calibrationTrackKey))
+  if (calibration.some(item => fitted.has(calibrationTrackKey(item)))) {
+    throw trainingError('CALIBRATION_DATA_LEAKAGE', '校准歌曲与训练或选模数据重叠，请重新划分数据。', 422)
+  }
+}
+
+// Split-conformal simultaneous EQ bands. One recording contributes its maximum
+// error across bands and paired contexts, never multiple independent votes.
+// Coverage is marginal for exchangeable recordings within this branch, relative
+// to the reference EQ target; it is not a probability of subjective sound quality.
+function calibrateConfidence({ training, validation, calibration, parameters, prepared }) {
+  assertCalibrationIsolation(training, validation, calibration)
+  const unresolvedTrackSamples = [...training, ...validation, ...calibration].filter(
+    item => !item.trackGroup || item.trackGroup.startsWith('proposal:')
+  ).length
+  const unresolvedFitSamples = [...training, ...validation].filter(
+    item => !item.trackGroup || item.trackGroup.startsWith('proposal:')
+  ).length
+  const completeFit = [...training, ...validation].filter(item => item.x !== null)
+  const branches = Object.fromEntries(ALL_TRAINING_BRANCHES.map(branch => {
+    const fitted = completeFit.filter(item => trainingBranchKey(item) === branch)
+    const accounts = new Set(fitted.map(item => item.accountId)).size
+    const strength = Math.min(1, fitted.length / 64) * (accounts < 2 ? 0.6 : accounts === 2 ? 0.8 : 1)
+    const items = calibration.filter(item => item.x !== null && trainingBranchKey(item) === branch)
+    const unresolvedBranchSamples = unresolvedFitSamples + items.filter(
+      item => !item.trackGroup || item.trackGroup.startsWith('proposal:')
+    ).length
+    const trackErrors = new Map()
+    for (const original of items) {
+      for (const item of original.populationPair
+        ? [original, { ...original, ...original.populationPair }] : [original]) {
+        const prediction = forward(parameters, normalizeVector(item.x, prepared.inputNormalization)).prediction
+        const prior = forward(parameters, legacyConditioningVector(item, prepared.inputNormalization)).prediction
+        const start = item.graphicEQMode === 'thirtyTwoBand' ? 10 : 0
+        const count = item.graphicEQMode === 'thirtyTwoBand' ? 32 : 10
+        let error = 0
+        for (let i = start; i < start + count; i += 1) {
+          if (!item.targetMask[i]) throw trainingError('INVALID_CALIBRATION_TARGET', '校准样本缺少完整 EQ 目标。', 422)
+          const raw = (prior[i] + (prediction[i] - prior[i]) * strength)
+            * prepared.outputNormalization.standardDeviation[i] + prepared.outputNormalization.mean[i]
+          const delta = Math.abs(Math.max(-9, Math.min(9, raw)) - item.y[i])
+          if (!Number.isFinite(delta)) throw trainingError('INVALID_CALIBRATION_TARGET', '校准样本包含无效数值。', 422)
+          error = Math.max(error, delta)
+        }
+        const key = calibrationTrackKey(original)
+        trackErrors.set(key, Math.max(trackErrors.get(key) || 0, error))
+      }
+    }
+    const scores = [...trackErrors.values()].sort((a, b) => a - b)
+    const rank = Math.ceil((scores.length + 1) * CALIBRATION_COVERAGE)
+    const ready = unresolvedBranchSamples === 0 && scores.length >= MINIMUM_CALIBRATION_TRACKS && rank <= scores.length
+    return [branch, {
+      status: ready ? 'calibrated' : unresolvedBranchSamples > 0
+        ? 'unresolved_track_identity' : 'insufficient_calibration_tracks',
+      unresolvedTrackSamples: unresolvedBranchSamples,
+      samples: items.length, tracks: scores.length, quantileRank: rank,
+      // Core ML uses float32; reserve the native parity tolerance in dB.
+      radiusDB: ready ? scores[rank - 1] + CALIBRATION_NUMERICAL_MARGIN_DB : null,
+      trackCorrectionStrength: strength
+    }]
+  }))
+  return {
+    schemaVersion: 1, method: CALIBRATION_METHOD, scope: 'graphic-eq-reference',
+    unresolvedTrackSamples,
+    coverage: CALIBRATION_COVERAGE, minimumTracks: MINIMUM_CALIBRATION_TRACKS,
+    numericalMarginDB: CALIBRATION_NUMERICAL_MARGIN_DB,
+    trainingTracks: new Set(training.map(calibrationTrackKey)).size,
+    selectionTracks: new Set(validation.map(calibrationTrackKey)).size,
+    calibrationTracks: new Set(calibration.map(calibrationTrackKey)).size,
+    branches
+  }
+}
+
 
 function featureBranch(name) {
   if (name.startsWith('tenBand.')) return 'tenBand'
@@ -2917,10 +3206,11 @@ function route(handler, logger) {
 // Worker bootstrap must follow every module-level declaration it depends on.
 if (!isMainThread && workerData?.audioTuningTrainer) {
   try {
-    const { training, validation, settings, cancelFlag } = workerData
+    const { training, validation, calibration, settings, cancelFlag } = workerData
     const result = trainTinyModelSync({
       training,
       validation,
+      calibration,
       settings,
       progress: (event) => {
         parentPort.postMessage({ type: 'epoch', ...event })
@@ -2952,6 +3242,8 @@ module.exports = {
   isSelfGeneratedProposal,
   normalizeSettings,
   splitExamples,
+  splitCalibrationExamples,
+  calibrateConfidence,
   targetNames,
   trainTinyModelSync,
   forward,

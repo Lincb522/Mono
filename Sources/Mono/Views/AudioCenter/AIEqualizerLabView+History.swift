@@ -350,11 +350,29 @@ extension AIEqualizerLabView {
     }
 
     var serviceFooter: some View {
-        Text(String(localized: "ai_lab_service_credit"))
-            .font(.system(size: 11, weight: .medium))
+        NavigationLink {
+            AITuningServiceSettingsView()
+        } label: {
+            VStack(spacing: 4) {
+                Text(tuningServiceStore.settings.isEnabled
+                     ? tuningServiceStore.settings.service.serviceCredit
+                     : String(localized: "ai_tuning_service_disabled"))
+                    .font(.caption2.weight(.medium))
+
+                if tuningServiceStore.settings.isEnabled,
+                   tuningServiceStore.settings.service == .resonance {
+                    AIEqualizerResonanceVersionLabel()
+                }
+            }
             .foregroundStyle(.white.opacity(0.52))
-            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(String(localized: "ai_tuning_service_title"))
     }
 
     var divider: some View {
@@ -365,4 +383,20 @@ extension AIEqualizerLabView {
     /// into the page. Keeping its deeply nested disclosure/grid tree as one
     /// concrete SwiftUI type can overflow Swift's runtime metadata demangler on
     /// device when measured features first become available.
+}
+
+@MainActor
+private struct AIEqualizerResonanceVersionLabel: View {
+    @ObservedObject private var updates = AIResonanceUpdateStore.shared
+    @ScaledMetric(relativeTo: .caption2) private var versionFontSize: CGFloat = 10
+
+    var body: some View {
+        if let model = updates.tuningModel {
+            Text(String(
+                format: String(localized: "ai_lab_service_version_format"),
+                AudioTrainingModelPresentation.versionText(model.version)
+            ))
+                .font(.system(size: versionFontSize))
+        }
+    }
 }

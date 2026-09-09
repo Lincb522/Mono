@@ -16,6 +16,14 @@ enum FloatingBarStyle: String, Codable, CaseIterable, Identifiable {
     case studioMeter // 金属仪表 - VU 指针与机械刻度
     
     var id: String { rawValue }
+
+    var isSignatureStyle: Bool {
+        switch self {
+        case .vinylNeedle, .cassette, .orbit, .waveform, .filmstrip, .studioMeter: true
+        default: false
+        }
+    }
+
     
     var displayName: String {
         switch self {

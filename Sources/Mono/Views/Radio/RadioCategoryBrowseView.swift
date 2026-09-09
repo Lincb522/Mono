@@ -14,6 +14,16 @@ struct RadioCategoryBrowseView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+                if SignalStyle.isActive {
+                    SignalNestedPageHeader(
+                        title: String(localized: "radio_category_browse"),
+                        eyebrow: "RADIO MATRIX",
+                        icon: .gridSquare,
+                        module: .radio
+                    )
+                    .padding(.horizontal, DeviceLayout.viewHorizontalPadding)
+                }
+
                 // 分类标签栏
                 if !viewModel.categories.isEmpty {
                     categoryBar
@@ -86,7 +96,7 @@ struct RadioCategoryBrowseView: View {
 
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .monoNavigationBackButton(title: String(localized: "radio_category_browse"))
+        .monoNavigationBackButton()
         .onAppear {
             viewModel.initialLoad()
         }

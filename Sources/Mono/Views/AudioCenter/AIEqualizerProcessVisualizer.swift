@@ -169,6 +169,8 @@ struct AIEqualizerProcessVisualizer: View {
                     0.45 + advancement * 0.43
                 )
                 switch stage {
+                case .preparingModel:
+                    return 0.02
                 case .preparing:
                     return elapsed > 1
                         ? estimatedGenerationProgress
@@ -199,7 +201,7 @@ struct AIEqualizerProcessVisualizer: View {
                 }
             case let .generating(stage, _):
                 switch stage {
-                case .preparing: return 0.08
+                case .preparing, .preparingModel: return 0.08
                 case .generating: return 0.15
                 case .validating: return 0.06
                 case .finalizing: return 0.025

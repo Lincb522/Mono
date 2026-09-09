@@ -5,24 +5,32 @@ extension AIEqualizerLabView {
     var immersiveTuningStage: AnyView {
         AnyView(
             VStack(spacing: 0) {
-                HStack(spacing: 10) {
-                    tuningStageIndicator
+                Group {
+                    if let proposal = agent.proposal,
+                       usesResonanceProposalLayout(proposal),
+                       !agent.phase.isWorking, processPresentation == nil {
+                        resonanceTuningStageHeader(proposal)
+                    } else {
+                        HStack(spacing: 10) {
+                            tuningStageIndicator
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(tuningStageTitle)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.white)
-                            .fixedSize(horizontal: false, vertical: true)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(tuningStageTitle)
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .fixedSize(horizontal: false, vertical: true)
 
-                        Text(tuningStageDetail)
-                            .font(.system(size: 10.5, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .fixedSize(horizontal: false, vertical: true)
+                                Text(tuningStageDetail)
+                                    .font(.system(size: 10.5, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.5))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
+                            Spacer(minLength: 8)
+
+                            tuningStageProgress
+                        }
                     }
-
-                    Spacer(minLength: 8)
-
-                    tuningStageProgress
                 }
                 .padding(.horizontal, centerLayout.isCompactWidth ? 12 : 16)
                 .padding(.top, centerLayout.isCompactHeight ? 12 : 16)
@@ -65,6 +73,32 @@ extension AIEqualizerLabView {
             }
             .background(tuningStageBackground)
         )
+    }
+
+    func resonanceTuningStageHeader(_ proposal: AIEqualizerProposal) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                tuningStageIndicator
+
+                Text(tuningStageTitle)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text(tuningStageDetail)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.white.opacity(0.5))
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(proposal.confidenceDisplayText)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(accent)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     var tuningStageVisualization: AnyView {
@@ -321,8 +355,12 @@ extension AIEqualizerLabView {
             VStack(spacing: 0) {
                 automationToggleRow(
                     title: String(localized: "ai_lab_auto_configure"),
-                    isOn: $agent.automaticConfigurationEnabled
+                    isOn: Binding(
+                        get: { agent.isAutomaticTuningActive },
+                        set: { agent.automaticConfigurationEnabled = $0 }
+                    )
                 )
+                .disabled(!tuningServiceStore.settings.isEnabled)
 
                 divider
 
@@ -567,19 +605,22 @@ extension AIEqualizerLabView {
         .contentShape(Rectangle())
     }
 
+    @ViewBuilder
     var analysisNotice: some View {
-        HStack(alignment: .top, spacing: 10) {
-            MonoIcon(icon: .infoCircle, size: 14, color: accent)
-                .frame(width: 18, height: 18)
+        if tuningServiceStore.settings.isEnabled {
+            HStack(alignment: .top, spacing: 10) {
+                MonoIcon(icon: .infoCircle, size: 14, color: accent)
+                    .frame(width: 18, height: 18)
 
-            Text(String(localized: "ai_lab_result_notice"))
-                .font(.system(size: 11.5, weight: .medium))
-                .foregroundStyle(.white.opacity(0.5))
-                .fixedSize(horizontal: false, vertical: true)
+                Text(tuningServiceStore.settings.service.availabilityNotice)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 2)
+            .accessibilityElement(children: .combine)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 2)
-        .accessibilityElement(children: .combine)
     }
 
     func progressSection(

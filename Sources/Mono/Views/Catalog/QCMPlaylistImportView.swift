@@ -29,6 +29,18 @@ struct QQPlaylistImportView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
+                    if SignalStyle.isActive {
+                        SignalNestedPageHeader(
+                            title: String(localized: "QCM歌单导入"),
+                            eyebrow: "QCM DATA IMPORT",
+                            icon: .download,
+                            module: .importData
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 12)
+                    }
+
                     if playlists.isEmpty && !isLoading {
                         inputSection
                     } else if isLoading && playlists.isEmpty {
@@ -41,7 +53,7 @@ struct QQPlaylistImportView: View {
 
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
-            .monoNavigationBackButton(title: String(localized: "QCM歌单导入"))
+            .monoNavigationBackButton()
             .toolbar {
                 if !selectedIds.isEmpty && !isImporting {
                     ToolbarItem(placement: .topBarTrailing) {

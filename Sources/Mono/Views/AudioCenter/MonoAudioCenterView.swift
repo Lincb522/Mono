@@ -147,7 +147,7 @@ struct MonoAudioCenterView: View {
         .environment(\.colorScheme, .dark)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .monoNavigationBackButton(iconColor: .white, title: String(localized: "mono_audio_center_title"))
+        .monoNavigationBackButton(iconColor: .white)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {

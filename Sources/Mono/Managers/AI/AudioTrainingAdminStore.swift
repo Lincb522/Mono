@@ -34,6 +34,8 @@ final class AudioTrainingAdminStore: ObservableObject {
     @Published private(set) var isRefreshing = false
     @Published private(set) var isMutating = false
     @Published private(set) var errorMessage: String?
+    @Published private(set) var publicationMessage: String?
+    @Published private(set) var publicationError: String?
     @Published private(set) var downloadedModelFileName: String?
     @Published private(set) var activeInstalledModel: AudioTrainingInstalledModelStatus?
     @Published private(set) var previousInstalledModel: AudioTrainingInstalledModelStatus?
@@ -146,15 +148,33 @@ final class AudioTrainingAdminStore: ObservableObject {
         }
     }
 
-    func publishCurrentModel() async {
-        guard let modelID = status?.currentModel?.id else { return }
+    func publishModel(id modelID: String) async {
+        guard !isMutating else { return }
+        publicationMessage = nil
+        publicationError = nil
+        var published = false
         await mutate(action: "publish", context: ["modelID": modelID]) {
-            _ = try await request(
+            struct Publication: Encodable {
+                let confirmed = true
+            }
+            let body = try JSONEncoder().encode(Publication())
+            let response = try await request(
                 path: "/_admin/api/audio-training/models/\(modelID)/publish",
                 method: "POST",
-                body: Data("{\"confirmed\":true}".utf8),
+                body: body,
                 as: AudioTrainingModelResponse.self
             )
+            guard response.model.id == modelID, response.model.release?.generatedAutomatically == true else {
+                throw AudioTrainingAdminError.server(String(localized: "audio_training_publication_upgrade_required"), 409)
+            }
+            published = true
+            publicationMessage = String(format: String(localized: "audio_training_publication_success"), response.model.displayName)
+        }
+        if published {
+            await AIProviderConfigurationStore.shared.fetchPublishedResonanceModels()
+            publicationError = AIProviderConfigurationStore.shared.resonanceModelsError
+        } else {
+            publicationError = errorMessage
         }
     }
 
@@ -191,7 +211,10 @@ final class AudioTrainingAdminStore: ObservableObject {
                 completeAccountCount: model.metrics.completeAccountCount ?? 0,
                 completeBranchSampleCounts: Self.completeBranchSampleCounts(model),
                 completeBranchAccountCounts: model.metrics.completeBranchAccounts ?? [:],
-                qualityWarnings: model.metrics.qualityWarnings ?? []
+                qualityWarnings: model.metrics.qualityWarnings ?? [],
+                createdAt: model.createdAt,
+                fileName: model.fileName,
+                release: model.release
             )
             let installed = try await AudioTrainingOnDeviceModelStore.shared.install(
                 modelData: data,
@@ -297,7 +320,7 @@ final class AudioTrainingAdminStore: ObservableObject {
             let previousProposalID = agent.proposal?.id
             let wallClockStartedAt = Date()
             let startedAt = ProcessInfo.processInfo.systemUptime
-            await agent.runAnalysis(trigger: .manual, forceRegeneration: true)
+            await agent.runAnalysis(trigger: .manual, forceRegeneration: true, preferInstalledModel: true)
             if case let .failed(message) = agent.phase {
                 throw AudioTrainingAdminError.tuningTestFailed(message)
             }
