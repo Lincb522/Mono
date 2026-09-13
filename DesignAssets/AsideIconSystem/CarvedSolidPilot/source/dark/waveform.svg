@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-  <title>Aside Waveform</title>
-  <rect x="2" y="9" width="3" height="6" rx="1.5" fill="#F4F1FA"/>
-  <rect x="6.25" y="6" width="3" height="12" rx="1.5" fill="#F4F1FA"/>
-  <rect x="10.5" y="3" width="3" height="18" rx="1.5" fill="#A493FF"/>
-  <rect x="14.75" y="6" width="3" height="12" rx="1.5" fill="#F4F1FA"/>
-  <rect x="19" y="9" width="3" height="6" rx="1.5" fill="#F4F1FA"/>
-</svg>

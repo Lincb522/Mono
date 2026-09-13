@@ -1,4 +1,0 @@
-source=/Users/linchengbo/.codex/generated_images/019e4e8a-ab23-7443-aad9-3de0e5c09f30/ig_0b2d0cda04dabdde016a100419d2c48191b2d19e8e1a1fe3b9.png
-icons=music-library-selected,music-library-unselected
-sizes=24,32,48,72,120
-canvas_side_source_px=580

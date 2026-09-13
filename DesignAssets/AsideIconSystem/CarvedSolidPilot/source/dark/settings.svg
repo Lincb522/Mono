@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-  <title>Aside Settings</title>
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 5a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm0 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" fill="#F4F1FA"/>
-  <rect x="10" y="2" width="4" height="5" rx="2" fill="#A493FF"/>
-  <rect x="10" y="17" width="4" height="5" rx="2" fill="#F4F1FA"/>
-  <rect x="2" y="10" width="5" height="4" rx="2" fill="#F4F1FA"/>
-  <rect x="17" y="10" width="5" height="4" rx="2" fill="#F4F1FA"/>
-</svg>

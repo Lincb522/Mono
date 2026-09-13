@@ -241,17 +241,12 @@ test_layout.swift
 /docs/.artifacts/
 /output/
 
-# Relocated local packages, design sources and website assets.
+# Relocated local packages and website assets.
 # These exceptions keep already-versioned source assets visible after the move
 # while package build output remains ignored by the rules above.
 !Packages/**/*.md
 !Packages/**/*.png
 !Packages/**/*.txt
-!DesignAssets/**/*.md
-!DesignAssets/**/*.png
-!DesignAssets/**/*.svg
-!DesignAssets/**/*.txt
-!DesignAssets/**/*.zip
 !Web/website/**/*.md
 
 !Packages/Audio/ffmpeg-swift/scripts/
@@ -265,16 +260,14 @@ Packages/Audio/ffmpeg-swift/scripts/*
 *.json
 !Sources/Mono/Resources/mono_audio_tuning_knowledge.json
 !Packages/Icons/MonoGlyphIcons/**/*.json
-!Design/IconSystems/MonoGlyph/manifest.json
 /artifacts/web-reverse
 __pycache__/
 *.pyc
-DesignAssets/AsideIconSystem/aside-design-dna.md
 *.mov
 /artifacts/
-/DesignAssets/Branding/GitHubCatPawStyle/GitHubCatPawStyle-1024.png
-/DesignAssets/Branding/GitHubCatPawStyle/GitHubCatPawStyle-source.png
-/DesignAssets/Branding/GitHubCatPawStyle/GitHubCatPawStyle.svg
+# Local design sources and previews.
+/Design/
+/DesignAssets/
 
 # Executable audit regressions and the session dependency lock.
 !/Tests/
@@ -294,20 +287,8 @@ DesignAssets/AsideIconSystem/aside-design-dna.md
 !/Scripts/Tests/background_audio_fixture.swift
 !/Scripts/Tests/audio_session_executor_fixture.swift
 
-# MONO bitmap icon redesign sources.
-!/Design/IconSystems/MonoGlyph/BitmapRedesign/*.png
-!/Design/IconSystems/MonoGlyph/BitmapRedesign/semantics.json
-!/Design/IconSystems/MonoGlyph/BitmapRedesign/manifest.json
-
-# Reproducible MONO bitmap extraction and validation evidence.
+# MONO bitmap extraction tool.
 !/Packages/Icons/MonoGlyphIcons/Tools/slice_source_sheets.py
-!/Design/IconSystems/MonoGlyph/slicing-report.json
-!/Design/IconSystems/MonoGlyph/validation-report.json
-
-# Optional MONO Glyph expressive outline bitmap sources and crop evidence.
-!/Design/IconSystems/MonoGlyph/ExpressiveOutline/*.png
-!/Design/IconSystems/MonoGlyph/ExpressiveOutline/*.json
-/Design/Themes/
 
 # Resonance S2 distribution regressions.
 !/Scripts/Tests/resonance_distribution_regressions.py
