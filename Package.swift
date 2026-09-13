@@ -41,7 +41,6 @@ let package = Package(
         .package(path: "Packages/Icons/PulseBloomIcons"),
         // MonoGlyphIcons - MONO 原创图标包
         .package(path: "Packages/Icons/MonoGlyphIcons"),
-        .package(path: "Packages/UI/ShibaWelcome"),
         // ZIPFoundation - 用户字体 ZIP 压缩包导入
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", from: "0.9.20"),
     ],
@@ -63,7 +62,6 @@ let package = Package(
                 "MinimalWhiteIcons",
                 "PulseBloomIcons",
                 "MonoGlyphIcons",
-                "ShibaWelcome",
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
             ],
             resources: [

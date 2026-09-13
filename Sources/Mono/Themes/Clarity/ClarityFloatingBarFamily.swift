@@ -27,12 +27,6 @@ struct ClarityFloatingBarFamily: View {
                 Spacer(minLength: 0)
                 LiquidFloatingBar(currentTab: $currentTab).frame(maxWidth: 560).padding(.horizontal, 20).padding(.bottom, 8)
             }
-        case .vinylNeedle, .cassette, .orbit, .waveform, .filmstrip, .studioMeter:
-            VStack {
-                Spacer(minLength: 0)
-                SignatureFloatingBar(currentTab: $currentTab, kind: SignatureFloatingBarKind(style: settings.floatingBarStyle))
-                    .frame(maxWidth: 560).padding(.horizontal, 20).padding(.bottom, 8)
-            }
         }
     }
 }

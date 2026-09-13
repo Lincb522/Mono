@@ -69,24 +69,13 @@ struct LibraryView: View {
                 switch destination {
                 case let .playlist(playlist):
                     PlaylistDetailView(playlist: playlist)
+                        .id(playlist.navigationIdentity)
 
                 case let .artist(id):
                     ArtistDetailView(artistId: id)
 
                 case let .artistInfo(artist):
-                    if artist.source == .qqmusic, let mid = artist.qqMid {
-                        QQMusicDetailView(detailType: .artist(
-                            mid: mid,
-                            name: artist.name,
-                            coverUrl: artist.picUrl ?? artist.img1v1Url
-                        ))
-
-                    } else if artist.source == .appleMusic || artist.source == .kugou {
-                        ArtistDetailView(artist: artist)
-
-                    } else {
-                        ArtistDetailView(artistId: artist.id)
-                    }
+                    ArtistDetailView(artist: artist)
 
                 case let .qqArtist(mid, name, coverUrl):
                     QQMusicDetailView(detailType: .artist(mid: mid, name: name, coverUrl: coverUrl))
@@ -305,7 +294,7 @@ struct LibraryView: View {
         case .artists:
             viewModel.fetchArtistsForSelectedSource()
         case .charts:
-            viewModel.chartsSource == .qq ? viewModel.fetchQQTopLists() : viewModel.fetchTopLists()
+            viewModel.fetchChartsForSelectedSource()
         }
     }
 

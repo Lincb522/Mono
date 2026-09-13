@@ -35,9 +35,9 @@ class LibraryViewModel: ObservableObject {
 
         func hash(into hasher: inout Hasher) {
             switch self {
-            case .playlist(let p): hasher.combine("p_\(p.id)")
+            case .playlist(let p): hasher.combine("p_\(p.navigationIdentity)")
             case .artist(let id): hasher.combine("a_\(id)")
-            case .artistInfo(let a): hasher.combine("a_\(a.id)")
+            case .artistInfo(let a): hasher.combine("a_\(a.navigationIdentity)")
             case .qqArtist(let mid, _, _): hasher.combine("qa_\(mid)")
             case .radioDetail(let id): hasher.combine("r_\(id)")
             case .localPlaylist(let id): hasher.combine("lp_\(id)")
@@ -47,9 +47,9 @@ class LibraryViewModel: ObservableObject {
 
         static func == (lhs: NavigationDestination, rhs: NavigationDestination) -> Bool {
             switch (lhs, rhs) {
-            case (.playlist(let l), .playlist(let r)): return l.id == r.id
+            case (.playlist(let l), .playlist(let r)): return l.navigationIdentity == r.navigationIdentity
             case (.artist(let l), .artist(let r)): return l == r
-            case (.artistInfo(let l), .artistInfo(let r)): return l.id == r.id
+            case (.artistInfo(let l), .artistInfo(let r)): return l.navigationIdentity == r.navigationIdentity
             case (.qqArtist(let lm, _, _), .qqArtist(let rm, _, _)): return lm == rm
             case (.radioDetail(let l), .radioDetail(let r)): return l == r
             case (.localPlaylist(let l), .localPlaylist(let r)): return l == r
@@ -198,12 +198,31 @@ class LibraryViewModel: ObservableObject {
     @Published var kugouTopLists: [TopList] = []
     @Published var isLoadingKugouCharts: Bool = false
 
+    @Published var appleMusicTopLists: [TopList] = []
+    @Published var isLoadingAppleMusicCharts = false
+
     var displayedTopLists: [TopList] {
-        chartsSource == .kugou ? kugouTopLists : topLists
+        switch chartsSource {
+        case .ncm: return topLists
+        case .kugou: return kugouTopLists
+        case .appleMusic: return appleMusicTopLists
+        case .qq:
+            return qqTopLists.flatMap(\.items).map { item in
+                TopList(
+                    id: item.topId, name: item.title, coverImgUrl: item.coverUrl,
+                    updateFrequency: item.updateTime, source: .qqmusic
+                )
+            }
+        }
     }
 
     var isLoadingDisplayedCharts: Bool {
-        chartsSource == .kugou ? isLoadingKugouCharts : isLoadingCharts
+        switch chartsSource {
+        case .ncm: return isLoadingCharts
+        case .qq: return isLoadingQQCharts
+        case .kugou: return isLoadingKugouCharts
+        case .appleMusic: return isLoadingAppleMusicCharts
+        }
     }
 
     @Published var artistArea: Int = -1
@@ -237,6 +256,7 @@ class LibraryViewModel: ObservableObject {
     let chartsRequest = LibraryRequestScope()
     let qqChartsRequest = LibraryRequestScope()
     let kugouChartsRequest = LibraryRequestScope()
+    let appleChartsRequest = LibraryRequestScope()
     let categoryRequest = LibraryRequestScope()
     let qqCategoryRequest = LibraryRequestScope()
     let kugouCategoryRequest = LibraryRequestScope()
@@ -376,13 +396,34 @@ class LibraryViewModel: ObservableObject {
         }
     }
 
-    func fetchChartsForSelectedSource() {
+    func fetchChartsForSelectedSource(force: Bool = false) {
         switch chartsSource {
-        case .ncm, .appleMusic:
+        case .ncm:
+            if force {
+                chartsRequest.cancel()
+                topLists = []
+                OptimizedCacheManager.shared.setObject([TopList](), forKey: "top_charts_lists")
+            }
             fetchTopLists()
+        case .appleMusic:
+            if force {
+                appleChartsRequest.cancel()
+                appleMusicTopLists = []
+            }
+            fetchAppleMusicTopLists()
         case .qq:
+            if force {
+                qqChartsRequest.cancel()
+                qqTopLists = []
+                OptimizedCacheManager.shared.setObject([QQTopListGroup](), forKey: "qq_top_charts")
+            }
             fetchQQTopLists()
         case .kugou:
+            if force {
+                kugouChartsRequest.cancel()
+                kugouTopLists = []
+                OptimizedCacheManager.shared.setObject([TopList](), forKey: "kcm_top_charts")
+            }
             fetchKugouTopLists()
         }
     }

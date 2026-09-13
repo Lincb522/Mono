@@ -72,6 +72,7 @@ public struct ContentView: View {
                 if showWelcome {
                     WelcomeView(
                         isPresented: $showWelcome,
+                        onIntroCompleted: mountMainContentWithoutAnimation,
                         onForceEnter: forceEnterFromWelcome
                     )
                         .transition(.identity)
@@ -109,7 +110,7 @@ public struct ContentView: View {
         }
         .onAppear {
             synchronizeLaunchThemeIfNeeded()
-            scheduleMainContentMountAfterWelcomeFirstFrame()
+            if !showWelcome { mountMainContentWithoutAnimation() }
             deliverPendingDeepLinkIfReady()
         }
         .onChange(of: settings.globalThemeApplicationRevision) { _, _ in
@@ -204,16 +205,6 @@ public struct ContentView: View {
             // MARK: - 系统 TabBar 模式下的紧凑迷你播放器
 
             ContentViewCompactPlayerContainer(settings: settings)
-        }
-    }
-
-    private func scheduleMainContentMountAfterWelcomeFirstFrame() {
-        guard showWelcome, !canMountMainContent else { return }
-
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 850_000_000)
-            guard showWelcome, !canMountMainContent else { return }
-            mountMainContentWithoutAnimation()
         }
     }
 
@@ -609,8 +600,6 @@ public struct ContentView: View {
             return 112
         case .unified, .classic, .flux, .liquid:
             return 96
-        case .cassette, .orbit, .vinylNeedle, .waveform, .filmstrip, .studioMeter:
-            return SignatureFloatingBarKind(style: settings.floatingBarStyle).activeHeight + 40
         }
     }
 
@@ -779,23 +768,10 @@ private struct ContentViewFloatingBarContainer: View {
                         .padding(.horizontal, DeviceLayout.usesExpandedLayout ? 40 : 20)
                         .padding(.bottom, 6)
                 }
-
-            case .vinylNeedle, .cassette, .orbit, .waveform, .filmstrip, .studioMeter:
-                VStack {
-                    Spacer()
-                    SignatureFloatingBar(
-                        currentTab: $currentTab,
-                        kind: SignatureFloatingBarKind(style: settings.floatingBarStyle)
-                    )
-                    .iPadContentWidth(600)
-                    .padding(.horizontal, DeviceLayout.usesExpandedLayout ? 40 : 20)
-                    .padding(.bottom, 6)
-                }
             }
         } else if settings.globalThemeId == .clarity {
             ClarityFloatingBarFamily(currentTab: $currentTab)
         } else if settings.globalThemeId == .manga
-                    && !settings.floatingBarStyle.isSignatureStyle
                     && settings.floatingBarStyle != .flux
                     && settings.floatingBarStyle != .liquid {
             VStack {
@@ -848,19 +824,6 @@ private struct ContentViewFloatingBarContainer: View {
                         .padding(.horizontal, DeviceLayout.usesExpandedLayout ? 40 : 20)
                         .padding(.bottom, 6)
                 }
-
-            case .vinylNeedle, .cassette, .orbit, .waveform, .filmstrip, .studioMeter:
-                VStack {
-                    Spacer()
-                    SignatureFloatingBar(
-                        currentTab: $currentTab,
-                        kind: SignatureFloatingBarKind(style: settings.floatingBarStyle)
-                    )
-                    .iPadContentWidth(600)
-                    .padding(.horizontal, DeviceLayout.usesExpandedLayout ? 40 : 20)
-                    .padding(.bottom, 6)
-                }
-
             }
         }
     }

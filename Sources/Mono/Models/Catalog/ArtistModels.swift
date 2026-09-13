@@ -70,6 +70,21 @@ struct ArtistInfo: Identifiable, Codable {
     }
     
     var isQQMusic: Bool { source == .qqmusic }
+
+    var navigationIdentity: String {
+        let source = source ?? .netease
+        let providerID: String?
+        switch source {
+        case .qqmusic: providerID = qqMid
+        case .appleMusic: providerID = appleMusicID
+        case .kugou: providerID = kugouID
+        default: providerID = nil
+        }
+        if let providerID, !providerID.isEmpty {
+            return "\(source.rawValue):provider:\(providerID)"
+        }
+        return "\(source.rawValue):id:\(id)"
+    }
 }
 
 struct ArtistDetailResponse: Codable {

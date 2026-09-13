@@ -7,7 +7,6 @@ import SwiftUI
 struct FloatingBarBottomSpacer: View {
     var extra: CGFloat = 0
     @ScaledMetric(relativeTo: .caption2) private var monoDockHeight: CGFloat = 162
-    @ScaledMetric(relativeTo: .caption2) private var instrumentScale: CGFloat = 1
 
     @AppStorage("useSystemTabBar") private var useSystemTabBar = false
     @AppStorage("systemTabBarStyle") private var systemTabBarStyleRaw = SystemTabBarStyle.native.rawValue
@@ -37,10 +36,6 @@ struct FloatingBarBottomSpacer: View {
 
         if useSystemTabBar && globalThemeId != .manga {
             return hasCurrentSong ? 72 : 20
-        }
-
-        if floatingBarStyle.isSignatureStyle {
-            return hasCurrentSong ? (SignatureFloatingBarKind(style: floatingBarStyle).activeHeight + 28) * instrumentScale : 88
         }
 
         if globalThemeId == .clarity {
@@ -83,9 +78,6 @@ struct FloatingBarBottomSpacer: View {
 
         case .flux, .liquid:
             return hasCurrentSong ? 112 : 94
-
-        case .cassette, .orbit, .vinylNeedle, .waveform, .filmstrip, .studioMeter:
-            return hasCurrentSong ? (SignatureFloatingBarKind(style: floatingBarStyle).activeHeight + 28) * instrumentScale : 88
         }
     }
 

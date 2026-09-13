@@ -30,6 +30,13 @@ struct Playlist: Identifiable, Codable, Hashable {
     var isKugou: Bool { source == .kugou }
     var usesLocalCollection: Bool { isQQMusic || isKugou || isAppleMusic }
     var sourceShortName: String { (source ?? .netease).shortName }
+
+    var navigationIdentity: String {
+        let source = source ?? .netease
+        let providerID = source == .appleMusic ? appleMusicID : (source == .kugou ? kugouID : nil)
+        let identifier = providerID.flatMap { $0.isEmpty ? nil : $0 } ?? String(id)
+        return "\(source.rawValue):\(isTopList ? "chart" : "playlist"):\(identifier)"
+    }
     
     var coverUrl: URL? {
         if let urlStr = coverImgUrl ?? picUrl {
@@ -175,6 +182,7 @@ struct TopList: Identifiable, Codable {
     let updateFrequency: String
     var source: MusicSource?
     var kugouID: String?
+    var appleMusicID: String?
 
     init(
         id: Int,
@@ -182,7 +190,8 @@ struct TopList: Identifiable, Codable {
         coverImgUrl: String?,
         updateFrequency: String,
         source: MusicSource? = nil,
-        kugouID: String? = nil
+        kugouID: String? = nil,
+        appleMusicID: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -190,6 +199,16 @@ struct TopList: Identifiable, Codable {
         self.updateFrequency = updateFrequency
         self.source = source
         self.kugouID = kugouID
+        self.appleMusicID = appleMusicID
+    }
+
+    func playlist(description: String? = nil) -> Playlist {
+        Playlist(
+            id: id, name: name, coverImgUrl: coverImgUrl, picUrl: nil,
+            trackCount: nil, playCount: nil, subscribedCount: nil, shareCount: nil,
+            commentCount: nil, creator: nil, description: description, tags: nil,
+            source: source, isTopList: true, appleMusicID: appleMusicID, kugouID: kugouID
+        )
     }
     
     var coverUrl: URL? {

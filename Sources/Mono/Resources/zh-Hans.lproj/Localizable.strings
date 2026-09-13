@@ -635,12 +635,6 @@
 "floating_bar_flux_desc" = "封面取色云雾随播放进度漫过迷你播放器";
 "floating_bar_liquid" = "液态";
 "floating_bar_liquid_desc" = "有黏性的液体随真实播放进度推进";
-"floating_bar_vinyl" = "黑胶唱针";
-"floating_bar_vinyl_desc" = "旋转黑胶与唱针轨迹随播放推进";
-"floating_bar_cassette" = "磁带卡座";
-"floating_bar_cassette_desc" = "紧凑磁带卡座随真实播放进度转动";
-"floating_bar_orbit" = "星环轨道";
-"floating_bar_orbit_desc" = "封面星体、环形进度与导航卫星独立联动";
 "airpods_experience_title" = "AirPods 调音";
 "airpods_connected" = "已连接";
 "airpods_model_section" = "AirPods 型号";
@@ -688,12 +682,6 @@
 "airpods_apply_now_desc" = "将当前方案重新应用到播放链路";
 "airpods_recenter" = "重新校准朝向";
 "airpods_recenter_desc" = "以当前头部方向作为空间舞台正前方";
-"floating_bar_waveform" = "实时声纹";
-"floating_bar_waveform_desc" = "动态声纹随播放状态和进度变化";
-"floating_bar_filmstrip" = "电影胶片";
-"floating_bar_filmstrip_desc" = "胶片格、齿孔和时间码跟随播放移动";
-"floating_bar_meter" = "金属仪表";
-"floating_bar_meter_desc" = "机械刻度、指针和电平反馈播放状态";
 
 /* Login - New */
 "login_subtitle" = "登录NCM账号";
@@ -815,6 +803,7 @@
 "artist_tab_album" = "专辑";
 "artist_tab_video" = "视频";
 "artist_no_songs" = "暂无歌曲";
+"artist_missing_identifier" = "歌手信息缺少标识，无法加载。请返回并刷新歌手列表后重试。";
 "artist_no_albums" = "暂无专辑";
 "artist_no_videos" = "暂无视频";
 "artist_no_bio" = "暂无歌手简介";

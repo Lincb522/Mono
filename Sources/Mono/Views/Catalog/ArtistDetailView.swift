@@ -55,6 +55,27 @@ struct ArtistDetailView: View {
     }
 
     var body: some View {
+        if let artist = initialArtist, artist.source == .qqmusic {
+            if let mid = artist.qqMid, !mid.isEmpty {
+                QQMusicDetailView(detailType: .artist(
+                    mid: mid,
+                    name: artist.name,
+                    coverUrl: artist.picUrl ?? artist.img1v1Url
+                ))
+                .id(artist.navigationIdentity)
+            } else {
+                Text(String(localized: "artist_missing_identifier"))
+                    .foregroundStyle(Color.monoTextSecondary)
+                    .padding(24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .monoNavigationBackButton()
+            }
+        } else {
+            catalogBody
+        }
+    }
+
+    private var catalogBody: some View {
         ArtistDetailPage(
             identity: ArtistNameArtworkIdentity(name: displayArtist?.name ?? "", aliases: displayArtist?.alias ?? [], qqMid: displayArtist?.qqMid),
             coverURL: displayArtist?.coverUrl?.sized(1000),
@@ -127,13 +148,8 @@ struct ArtistDetailView: View {
 
 private extension ArtistDetailView {
     func openArtist(_ artist: ArtistInfo) {
-        if artist.source == .appleMusic || artist.source == .kugou {
-            selectedArtistInfo = artist
-            selectedArtistId = nil
-        } else {
-            selectedArtistInfo = nil
-            selectedArtistId = artist.id
-        }
+        selectedArtistInfo = artist
+        selectedArtistId = nil
         showArtistDetail = true
     }
 

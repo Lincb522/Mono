@@ -862,7 +862,7 @@ struct NeumorphicLibraryWorkspace: View {
                 ? MusicSource.qqmusic.themedBadgeColor
                 : (viewModel.chartsSource == .kugou ? MusicSource.kugou.themedBadgeColor : NeumorphicStyle.red)
         ) {
-            sourceSwitch(selected: viewModel.chartsSource, sources: [.ncm, .qq, .kugou]) { source in
+            sourceSwitch(selected: viewModel.chartsSource, sources: [.ncm, .qq, .kugou, .appleMusic]) { source in
                 viewModel.chartsSource = source
                 viewModel.fetchChartsForSelectedSource()
             }
@@ -1584,7 +1584,7 @@ struct NeumorphicLibraryWorkspace: View {
     }
 
     private func chartDestination(_ list: TopList) -> LibraryViewModel.NavigationDestination {
-        .playlist(Playlist(id: list.id, name: list.name, coverImgUrl: list.coverImgUrl, picUrl: nil, trackCount: nil, playCount: nil, subscribedCount: nil, shareCount: nil, commentCount: nil, creator: nil, description: nil, tags: nil, source: list.source, isTopList: true, kugouID: list.kugouID))
+        .playlist(list.playlist())
     }
 
     private func qqChartDestination(_ item: QQTopListItem) -> LibraryViewModel.NavigationDestination {

@@ -31,6 +31,7 @@ struct FluxFloatingBar: View {
     @State private var scrubStartProgress: Double = 0
     @State private var scrubTargetProgress: Double = 0
     @State private var scrubFlowIntensity: CGFloat = 0
+    @State private var scrubLocation: CGFloat = 0.5
     @State private var lastScrubTranslation: CGFloat = 0
     @State private var lastScrubUpdate = Date()
     @State private var isScrubbing = false
@@ -141,6 +142,9 @@ struct FluxFloatingBar: View {
                     isPlaying: isVisible && isPlaying && !usesScrubProgress,
                     fillsEntireSurface: false,
                     stir: scrubFlowIntensity,
+                    touchPosition: scrubLocation,
+                    isInteracting: isScrubbing,
+                    isDarkMaterial: coverColors.isDark,
                     motionSeed: motionSeed
                 )
                 .clipShape(Capsule(style: .continuous))
@@ -157,7 +161,7 @@ struct FluxFloatingBar: View {
                         panelBackgroundColor: Color.monoStructuralBackground,
                         fluidPrimaryColor: fluidPrimaryColor,
                         fluidSecondaryColor: fluidPrimaryColor.opacity(0.82),
-                        fluidBackgroundColor: palette.first ?? Color.monoAccent,
+                        fluidBackgroundColor: coverColors.isDark ? .black : .white,
                         fluidProgress: fluidProgress
                     ) { tab in
                         selectTab(tab)
@@ -310,15 +314,24 @@ struct FluxFloatingBar: View {
                     )
 
                     FloatingBarLyricReader { lineText in
-                        splitMarqueeText(
-                            text: lineText ?? song.artistName,
-                            font: .system(size: 11, weight: .medium, design: .rounded),
-                            panelColor: .monoTextSecondary,
-                            fluidColor: fluidSecondaryColor,
-                            coverage: fluxCoverage(progress: fluidProgress, start: 0.14, end: 0.66),
-                            speed: 22
-                        )
+                        HStack(spacing: 5) {
+                            FluxPlaybackIndicator(
+                                isActive: isVisible && isPlaying && !isLoading,
+                                color: fluxCoverage(progress: fluidProgress, start: 0.14, end: 0.18) >= 0.5
+                                    ? fluidSecondaryColor : Color.monoTextSecondary
+                            )
+                            .id(song.identityKey)
+
+                            splitMarqueeText(
+                                text: lineText ?? song.artistName,
+                                font: .system(size: 11, weight: .medium, design: .rounded),
+                                panelColor: .monoTextSecondary,
+                                fluidColor: fluidSecondaryColor,
+                                coverage: fluxCoverage(progress: fluidProgress, start: 0.14, end: 0.66),
+                                speed: 22
+                            )
                             .contentTransition(.interpolate)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -488,12 +501,16 @@ struct FluxFloatingBar: View {
         coverage: Double
     ) -> some View {
         if usesAdaptiveOriginalArtwork {
-            MonoIcon(
+            FloatingBarArtworkProgressIcon(
                 icon: icon,
                 size: size,
-                color: panelColor,
+                frameSize: size,
                 lineWidth: lineWidth,
-                normalizesBitmapScale: true
+                panelColor: panelColor,
+                coveredColor: fluidColor,
+                panelBackgroundColor: .monoStructuralBackground,
+                coveredBackgroundColor: coverColors.isDark ? .black : .white,
+                coverage: coverage
             )
         } else {
             ZStack {
@@ -600,9 +617,10 @@ struct FluxFloatingBar: View {
                 let now = Date()
                 let elapsed = max(now.timeIntervalSince(lastScrubUpdate), 1.0 / 120.0)
                 let translationDelta = value.translation.width - lastScrubTranslation
-                let normalizedVelocity = abs(translationDelta / barWidth / CGFloat(elapsed))
-                let nextFlow = min(max(normalizedVelocity / 1.65, 0), 1)
+                let normalizedVelocity = translationDelta / barWidth / CGFloat(elapsed)
+                let nextFlow = min(max(normalizedVelocity / 1.65, -1), 1)
                 scrubFlowIntensity = scrubFlowIntensity * 0.68 + nextFlow * 0.32
+                scrubLocation = min(max(value.location.x / barWidth, 0), 1)
                 lastScrubTranslation = value.translation.width
                 lastScrubUpdate = now
 
@@ -728,13 +746,11 @@ private struct FluxTabContent: View {
                 splitIcon(
                     icon: icon(for: tab, selected: selected),
                     size: iconSize,
+                    frameSize: iconFrame,
                     panelColor: selected ? panelPrimaryColor : panelSecondaryColor,
                     fluidColor: selected ? fluidPrimaryColor : fluidSecondaryColor,
                     lineWidth: selected ? 1.9 : 1.6,
-                    coverage: iconCoverage,
-                    artworkContrastBackground: iconCoverage >= 0.5
-                        ? fluidBackgroundColor
-                        : panelBackgroundColor
+                    coverage: iconCoverage
                 )
                 .frame(width: iconFrame, height: iconFrame)
 
@@ -799,22 +815,24 @@ private struct FluxTabContent: View {
     private func splitIcon(
         icon: MonoIcon.IconType,
         size: CGFloat,
+        frameSize: CGFloat,
         panelColor: Color,
         fluidColor: Color,
         lineWidth: CGFloat,
-        coverage: Double,
-        artworkContrastBackground: Color
+        coverage: Double
     ) -> some View {
         if usesAdaptiveOriginalArtwork {
-            MonoIcon(
+            FloatingBarArtworkProgressIcon(
                 icon: icon,
                 size: size,
-                color: panelColor,
+                frameSize: frameSize,
                 lineWidth: lineWidth,
-                normalizesBitmapScale: true,
-                artworkContrastBackground: artworkContrastBackground
+                panelColor: panelColor,
+                coveredColor: fluidColor,
+                panelBackgroundColor: panelBackgroundColor,
+                coveredBackgroundColor: fluidBackgroundColor,
+                coverage: coverage
             )
-                .frame(width: size, height: size)
         } else {
             ZStack {
                 MonoIcon(
@@ -875,10 +893,12 @@ private struct FluxLivingMaterial: View {
     let isPlaying: Bool
     let fillsEntireSurface: Bool
     let stir: CGFloat
+    let touchPosition: CGFloat
+    let isInteracting: Bool
+    let isDarkMaterial: Bool
     let motionSeed: CGFloat
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -895,9 +915,10 @@ private struct FluxLivingMaterial: View {
                     isPlaying: isPlaying,
                     fillsEntireSurface: fillsEntireSurface,
                     stir: stir,
+                    touchPosition: touchPosition,
                     motionSeed: motionSeed,
-                    isDarkMode: colorScheme == .dark,
-                    isPaused: reduceMotion || !isPlaying || scenePhase != .active
+                    isDarkMode: isDarkMaterial,
+                    isPaused: reduceMotion || (!isPlaying && !isInteracting) || scenePhase != .active
                 )
             } else {
                 fallbackMaterial
@@ -1101,6 +1122,7 @@ private struct FluxMetalMaterial: View {
     let isPlaying: Bool
     let fillsEntireSurface: Bool
     let stir: CGFloat
+    let touchPosition: CGFloat
     let motionSeed: CGFloat
     let isDarkMode: Bool
     let isPaused: Bool
@@ -1119,21 +1141,16 @@ private struct FluxMetalMaterial: View {
             let motionTime = context.date.timeIntervalSinceReferenceDate
                 .truncatingRemainder(dividingBy: 600)
 
-            Rectangle()
-                .fill(Color.white)
-                .colorEffect(
-                    ShaderLibrary.fluxTabMaterial(
-                        .float2(size),
-                        .float(Float(motionTime)),
-                        .float(Float(progress)),
-                        .float(Float(stir)),
-                        .float(Float(motionSeed)),
-                        .float(isDarkMode ? 1 : 0),
-                        .color(colors[0]),
-                        .color(colors[1]),
-                        .color(colors[2])
-                    )
-                )
+            FluxMaterialSurface(
+                size: size,
+                colors: colors,
+                time: motionTime,
+                progress: progress,
+                stir: stir,
+                touchPosition: touchPosition,
+                motionSeed: motionSeed,
+                isDarkMode: isDarkMode
+            )
         }
     }
 

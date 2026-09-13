@@ -109,7 +109,10 @@ struct LiquidFloatingBar: View {
                     anchorDate: anchorDate,
                     duration: playbackTime.duration,
                     isPlaying: isVisible && isPlaying && !usesScrubProgress,
-                    isPaused: reduceMotion || scenePhase != .active || usesScrubProgress,
+                    isPaused: reduceMotion || scenePhase != .active || !isVisible,
+                    isInteracting: isScrubbing,
+                    isDarkMaterial: hasResolvedPalette ? coverColors.isDark : true,
+                    reducesMotion: reduceMotion,
                     scrubFlow: scrubFlow,
                     motionSeed: motionSeed
                 )
@@ -126,7 +129,7 @@ struct LiquidFloatingBar: View {
                         panelBackgroundColor: .monoStructuralBackground,
                         liquidPrimaryColor: liquidPrimaryColor,
                         liquidSecondaryColor: liquidPrimaryColor.opacity(0.82),
-                        liquidBackgroundColor: liquidColors.first ?? Color.monoAccent,
+                        liquidBackgroundColor: hasResolvedPalette && !coverColors.isDark ? .white : .black,
                         liquidProgress: progress,
                         onSelect: selectTab
                     )
@@ -386,12 +389,16 @@ struct LiquidFloatingBar: View {
         coverage: Double
     ) -> some View {
         if usesAdaptiveOriginalArtwork {
-            MonoIcon(
+            FloatingBarArtworkProgressIcon(
                 icon: icon,
                 size: 15,
-                color: panelColor,
+                frameSize: 15,
                 lineWidth: 1.75,
-                normalizesBitmapScale: true
+                panelColor: panelColor,
+                coveredColor: liquidColor,
+                panelBackgroundColor: .monoStructuralBackground,
+                coveredBackgroundColor: hasResolvedPalette && !coverColors.isDark ? .white : .black,
+                coverage: coverage
             )
         } else {
             ZStack {
@@ -656,17 +663,17 @@ private struct LiquidTabContent: View {
         let iconFrame: CGFloat = 28
         let iconSize: CGFloat = 21
         if usesAdaptiveOriginalArtwork {
-            MonoIcon(
+            FloatingBarArtworkProgressIcon(
                 icon: icon,
                 size: iconSize,
-                color: selected ? panelPrimaryColor : panelSecondaryColor,
+                frameSize: iconFrame,
                 lineWidth: selected ? 1.9 : 1.6,
-                normalizesBitmapScale: true,
-                artworkContrastBackground: coverage >= 0.5
-                    ? liquidBackgroundColor
-                    : panelBackgroundColor
+                panelColor: selected ? panelPrimaryColor : panelSecondaryColor,
+                coveredColor: selected ? liquidPrimaryColor : liquidSecondaryColor,
+                panelBackgroundColor: panelBackgroundColor,
+                coveredBackgroundColor: liquidBackgroundColor,
+                coverage: coverage
             )
-            .frame(width: iconFrame, height: iconFrame)
         } else {
             ZStack {
                 MonoIcon(
@@ -721,6 +728,9 @@ private struct LiquidPlaybackProgress: View {
     let duration: Double
     let isPlaying: Bool
     let isPaused: Bool
+    let isInteracting: Bool
+    let isDarkMaterial: Bool
+    let reducesMotion: Bool
     let scrubFlow: CGFloat
     let motionSeed: CGFloat
 
@@ -730,23 +740,53 @@ private struct LiquidPlaybackProgress: View {
         TimelineView(
             AppFrameRate.throttledTimeline(
                 maximumFramesPerSecond: 30,
-                paused: isPaused || !isPlaying
+                paused: isPaused || (!isPlaying && !isInteracting)
             )
         ) { context in
-            Canvas { graphics, size in
-                let playbackTime = projectedTime(at: context.date)
-                let progress = resolvedProgress(at: playbackTime)
-                // 液面波相使用连续视觉时钟，和歌曲进度解耦。拖动只移动液体
-                // 的体积与前沿，不再因为跳过几十秒而让波形瞬间重排。
-                let motionTime = context.date.timeIntervalSinceReferenceDate
-                    .truncatingRemainder(dividingBy: 600)
-                drawLiquid(
-                    context: &graphics,
-                    size: size,
-                    progress: progress,
-                    time: motionTime
-                )
-            }
+            LiquidMaterialSurface(
+                colors: colors,
+                progress: resolvedProgress(at: projectedTime(at: context.date)),
+                time: reducesMotion ? 0 : context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 600),
+                scrubFlow: reducesMotion ? 0 : scrubFlow,
+                motionSeed: motionSeed,
+                isDarkMaterial: isDarkMaterial
+            )
+        }
+    }
+
+    private func projectedTime(at date: Date) -> Double {
+        let elapsed = isPlaying ? max(date.timeIntervalSince(anchorDate), 0) : 0
+        let value = anchorTime + elapsed
+        guard duration.isFinite, duration > 0 else { return max(value, 0) }
+        return min(max(value, 0), duration)
+    }
+
+    private func resolvedProgress(at time: Double) -> Double {
+        guard duration.isFinite, duration > 0 else { return 0 }
+        return min(max(time / duration, 0), 1)
+    }
+}
+
+private struct LiquidMaterialSurface: View, Animatable {
+    let colors: [Color]
+    nonisolated var progress: Double
+    let time: TimeInterval
+    nonisolated var scrubFlow: CGFloat
+    let motionSeed: CGFloat
+    let isDarkMaterial: Bool
+
+    // Interpolate the entire contour and its glow together when a seek settles.
+    nonisolated var animatableData: AnimatablePair<Double, CGFloat> {
+        get { AnimatablePair(progress, scrubFlow) }
+        set {
+            progress = newValue.first
+            scrubFlow = newValue.second
+        }
+    }
+
+    var body: some View {
+        Canvas { graphics, size in
+            drawLiquid(context: &graphics, size: size, progress: progress, time: time)
         }
     }
 
@@ -762,14 +802,15 @@ private struct LiquidPlaybackProgress: View {
         let flowStrength = min(abs(scrubFlow), 1)
         let flowDirection: CGFloat = scrubFlow < 0 ? -1 : 1
         let phase = CGFloat(time) * profile.waveSpeed + profile.phaseOffset
+        let edgeEnvelope = CGFloat(min(1, max(0, progress / 0.06), max(0, (1 - progress) / 0.06)))
         let rippleAmplitude = min(
             size.height * (profile.baseRipple + flowStrength * 0.075 / profile.viscosity),
             12.8
-        )
+        ) * edgeEnvelope
         let diagonalAmplitude = min(
             size.width * (0.018 + profile.surfaceTilt * 0.012 + flowStrength * 0.014),
             14.5
-        )
+        ) * edgeEnvelope
         // 液面不会与手指完全同步倾斜：速度越快，靠惯性越向反方向滞后。
         let diagonalDirection = sin(phase * profile.tiltFrequency)
             - flowDirection * flowStrength * (0.48 / profile.viscosity)
@@ -788,11 +829,11 @@ private struct LiquidPlaybackProgress: View {
                 diagonalAmplitude: diagonalAmplitude,
                 diagonalDirection: diagonalDirection,
                 profile: profile,
-                scrubFlow: scrubFlow,
+                scrubFlow: scrubFlow * edgeEnvelope,
                 width: size.width
             ), y: 0))
 
-            let steps = 28
+            let steps = 48
             for step in 0...steps {
                 let fraction = CGFloat(step) / CGFloat(steps)
                 let y = fraction * size.height
@@ -804,7 +845,7 @@ private struct LiquidPlaybackProgress: View {
                     diagonalAmplitude: diagonalAmplitude,
                     diagonalDirection: diagonalDirection,
                     profile: profile,
-                    scrubFlow: scrubFlow,
+                    scrubFlow: scrubFlow * edgeEnvelope,
                     width: size.width
                 )
                 if step == 0 {
@@ -818,10 +859,11 @@ private struct LiquidPlaybackProgress: View {
             body.closeSubpath()
         }
 
+        context.fill(body, with: .color(isDarkMaterial ? Color(white: 0.025) : Color(white: 0.98)))
         context.fill(
             body,
             with: .linearGradient(
-                Gradient(colors: resolvedColors),
+                Gradient(colors: resolvedColors.map { $0.opacity(isDarkMaterial ? 0.56 : 0.70) }),
                 startPoint: CGPoint(x: 0, y: 0),
                 endPoint: CGPoint(x: max(size.width, 1), y: size.height)
             )
@@ -838,19 +880,14 @@ private struct LiquidPlaybackProgress: View {
         )
 
         if progress < 0.997 {
-            // 细窄的表面张力高光只贴着液面移动，避免再次变成普通进度分割线。
-            context.stroke(
-                surface,
-                with: .linearGradient(
-                    Gradient(colors: [
-                        Color.white.opacity(0.16),
-                        Color.white.opacity(0.48),
-                        Color.white.opacity(0.10),
-                    ]),
-                    startPoint: CGPoint(x: front - 4, y: 0),
-                    endPoint: CGPoint(x: front + 4, y: size.height)
-                ),
-                style: StrokeStyle(lineWidth: 1.05, lineCap: .round, lineJoin: .round)
+            drawSurfaceLight(
+                context: &context,
+                surface: surface,
+                body: body,
+                size: size,
+                front: front,
+                strength: edgeEnvelope,
+                flowStrength: flowStrength
             )
         }
 
@@ -894,42 +931,100 @@ private struct LiquidPlaybackProgress: View {
             )
         }
 
-        // 两层速度不同的内部流体高光，经过裁切后会像液体内部折射而不是独立色块。
+        // Each wake has a different phase and depth but remains inside the same liquid body.
         context.drawLayer { layer in
             layer.clip(to: body)
-            layer.addFilter(.blur(radius: 5.5))
+            layer.addFilter(.blur(radius: 2.8))
 
-            let upperTravel = (sin(phase * profile.innerUpperSpeed) + 1) * 0.5
-            let upperRect = CGRect(
-                x: max(front - size.width * (0.34 + upperTravel * 0.08), -24),
-                y: size.height * (0.02 + upperTravel * 0.10),
-                width: min(size.width * 0.34, 118),
-                height: size.height * 0.34
-            )
-            layer.fill(Path(ellipseIn: upperRect), with: .color(Color.white.opacity(0.16)))
+            for index in 0..<4 {
+                let depth = CGFloat(index)
+                let drift = phase * (profile.innerUpperSpeed + depth * 0.09)
+                let inset = size.height * (0.22 + depth * 0.54)
+                var wake = Path()
+                for step in 0...32 {
+                    let fraction = CGFloat(step) / 32
+                    let curl = sin(fraction * .pi * 2.2 + drift + depth * 0.8)
+                        + 0.38 * sin(fraction * .pi * 4.6 - phase * profile.innerLowerSpeed + depth)
+                    let displacement = curl * size.height * (0.11 + flowStrength * 0.05)
+                    let point = CGPoint(x: front - inset + displacement, y: fraction * size.height)
+                    if step == 0 {
+                        wake.move(to: point)
+                    } else {
+                        wake.addLine(to: point)
+                    }
+                }
 
-            let lowerTravel = (sin(phase * profile.innerLowerSpeed + profile.phaseOffset * 0.7) + 1) * 0.5
-            let lowerRect = CGRect(
-                x: max(front - size.width * (0.26 + lowerTravel * 0.12), -18),
-                y: size.height * (0.56 - lowerTravel * 0.08),
-                width: min(size.width * 0.28, 96),
-                height: size.height * 0.30
-            )
-            layer.fill(Path(ellipseIn: lowerRect), with: .color(Color.black.opacity(0.10)))
-
-            if flowStrength > 0.08 {
-                let shearWidth = min(size.width * (0.18 + flowStrength * 0.12), 92)
-                let shearRect = CGRect(
-                    x: max(front - shearWidth * 1.15, -20),
-                    y: size.height * (0.30 + sin(phase * 0.34) * 0.08),
-                    width: shearWidth,
-                    height: size.height * 0.24
+                layer.stroke(
+                    wake,
+                    with: .color(Color.black.opacity(isDarkMaterial ? 0.30 : 0.08)),
+                    style: StrokeStyle(lineWidth: 13 + depth * 2, lineCap: .round, lineJoin: .round)
                 )
-                layer.fill(
-                    Path(ellipseIn: shearRect),
-                    with: .color(Color.white.opacity(0.07 + Double(flowStrength) * 0.10))
+                layer.stroke(
+                    wake.offsetBy(dx: -3, dy: 0),
+                    with: .linearGradient(
+                        Gradient(colors: [
+                            resolvedColors[index % resolvedColors.count].opacity(0.06),
+                            resolvedColors[(index + 1) % resolvedColors.count].opacity(0.46 - Double(index) * 0.07),
+                            Color.white.opacity(isDarkMaterial ? 0.15 : 0.25),
+                            Color.clear,
+                        ]),
+                        startPoint: CGPoint(x: front - inset, y: 0),
+                        endPoint: CGPoint(x: front - inset, y: size.height)
+                    ),
+                    style: StrokeStyle(lineWidth: 3.5 + depth * 1.3, lineCap: .round, lineJoin: .round)
                 )
             }
+        }
+    }
+
+    private func drawSurfaceLight(
+        context: inout GraphicsContext,
+        surface: Path,
+        body: Path,
+        size: CGSize,
+        front: CGFloat,
+        strength: CGFloat,
+        flowStrength: CGFloat
+    ) {
+        let pigment = resolvedColors[1]
+        let light = GraphicsContext.Shading.linearGradient(
+            Gradient(colors: [pigment.opacity(0.55), pigment, Color.white.opacity(0.92), pigment]),
+            startPoint: CGPoint(x: front, y: 0),
+            endPoint: CGPoint(x: front, y: size.height)
+        )
+
+        // Broad pigment bloom, a narrower luminous edge, and a continuous hot core.
+        context.drawLayer { glow in
+            glow.opacity = Double(strength) * (isDarkMaterial ? 0.72 : 0.48)
+            glow.addFilter(.blur(radius: 6))
+            glow.stroke(
+                surface,
+                with: light,
+                style: StrokeStyle(lineWidth: 10 + flowStrength * 3, lineCap: .round, lineJoin: .round)
+            )
+        }
+        context.drawLayer { rim in
+            rim.opacity = Double(strength)
+            rim.addFilter(.blur(radius: 1.4))
+            rim.stroke(
+                surface,
+                with: light,
+                style: StrokeStyle(lineWidth: 3.2, lineCap: .round, lineJoin: .round)
+            )
+        }
+        context.drawLayer { core in
+            core.opacity = Double(strength)
+            core.stroke(
+                surface,
+                with: .color(Color.white.opacity(isDarkMaterial ? 0.94 : 0.86)),
+                style: StrokeStyle(lineWidth: 1.15, lineCap: .round, lineJoin: .round)
+            )
+        }
+        context.drawLayer { refraction in
+            refraction.clip(to: body)
+            refraction.opacity = Double(strength) * 0.25
+            refraction.addFilter(.blur(radius: 3))
+            refraction.stroke(surface.offsetBy(dx: -9, dy: 0), with: light, lineWidth: 4)
         }
     }
 
@@ -1079,17 +1174,6 @@ private struct LiquidPlaybackProgress: View {
         return colors
     }
 
-    private func projectedTime(at date: Date) -> Double {
-        let elapsed = isPlaying ? max(date.timeIntervalSince(anchorDate), 0) : 0
-        let value = anchorTime + elapsed
-        guard duration.isFinite, duration > 0 else { return max(value, 0) }
-        return min(max(value, 0), duration)
-    }
-
-    private func resolvedProgress(at time: Double) -> Double {
-        guard duration.isFinite, duration > 0 else { return 0 }
-        return min(max(time / duration, 0), 1)
-    }
 }
 
 /// 每首歌获得稳定但不同的黏度、波速、液面频率和水珠行为。

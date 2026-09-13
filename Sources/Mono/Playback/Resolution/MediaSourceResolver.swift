@@ -65,7 +65,9 @@ final class MediaSourceResolver {
         sessionId: Int,
         engineInput: String?
     ) -> Bool {
-        guard let activeLoadSessionId else { return true }
+        // MusicKit owns the committed playback state. FFmpeg may still deliver
+        // stop/pause callbacks after its pipeline has been retired.
+        guard let activeLoadSessionId else { return !player.appleMusicPlayback.isActive }
         guard activeLoadSessionId == sessionId,
               let activeLoadExpectedInput,
               activeLoadExpectedInput == engineInput else { return false }
@@ -438,7 +440,12 @@ final class MediaSourceResolver {
                 activeMediaLoadTask = nil
                 AppLogger.error(
                     "[AppleMusic] 播放失败 target=\(song.name) error=\(error.localizedDescription)",
-                    step: "apple-music.playback"
+                    step: "apple-music.playback",
+                    context: [
+                        "errorDomain": (error as NSError).domain,
+                        "errorCode": String((error as NSError).code),
+                        "playbackSession": String(sessionId)
+                    ]
                 )
                 settlePlaybackLoadFailure(
                     song: song,

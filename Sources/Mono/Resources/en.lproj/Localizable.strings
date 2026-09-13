@@ -635,12 +635,6 @@
 "floating_bar_flux_desc" = "Cover-colored mist advances through the MiniPlayer with playback";
 "floating_bar_liquid" = "Liquid";
 "floating_bar_liquid_desc" = "Viscous liquid advances with the real playback progress";
-"floating_bar_vinyl" = "Vinyl Needle";
-"floating_bar_vinyl_desc" = "A rotating record and tonearm trace playback progress";
-"floating_bar_cassette" = "Cassette Deck";
-"floating_bar_cassette_desc" = "A compact cassette deck driven by real playback progress";
-"floating_bar_orbit" = "Orbital Ring";
-"floating_bar_orbit_desc" = "Artwork, circular progress, and navigation satellites move independently";
 "airpods_experience_title" = "AirPods Tuning";
 "airpods_connected" = "Connected";
 "airpods_model_section" = "AirPods Model";
@@ -688,12 +682,6 @@
 "airpods_apply_now_desc" = "Reapply the current profile to the playback pipeline";
 "airpods_recenter" = "Recenter Orientation";
 "airpods_recenter_desc" = "Use the current head direction as the front of the spatial stage";
-"floating_bar_waveform" = "Live Waveform";
-"floating_bar_waveform_desc" = "A responsive waveform follows playback state and progress";
-"floating_bar_filmstrip" = "Filmstrip";
-"floating_bar_filmstrip_desc" = "Frames, perforations and timecode move with playback";
-"floating_bar_meter" = "Metal Meter";
-"floating_bar_meter_desc" = "Mechanical ticks, needles and levels reflect playback";
 
 /* Login - New */
 "login_subtitle" = "Log in to NCM";
@@ -815,6 +803,7 @@
 "artist_tab_album" = "Albums";
 "artist_tab_video" = "Videos";
 "artist_no_songs" = "No songs";
+"artist_missing_identifier" = "This artist’s identifier is missing. Go back and refresh the artist list, then try again.";
 "artist_no_albums" = "No albums";
 "artist_no_videos" = "No videos";
 "artist_no_bio" = "No artist bio available";

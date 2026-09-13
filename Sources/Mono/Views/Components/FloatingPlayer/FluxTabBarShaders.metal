@@ -143,6 +143,7 @@ static float fluxBackgroundFBM(float2 point, float seed) {
     float time,
     float progress,
     float stir,
+    float touchPosition,
     float motionSeed,
     float darkMode,
     half4 firstColor,
@@ -152,17 +153,21 @@ static float fluxBackgroundFBM(float2 point, float seed) {
     float2 safeSize = max(size, float2(1.0));
     float2 uv = position / safeSize;
     float aspect = safeSize.x / safeSize.y;
-    float stirAmount = clamp(stir, 0.0, 1.0);
+    float signedStir = clamp(stir, -1.0, 1.0);
+    float stirAmount = abs(signedStir);
     float seed = clamp(motionSeed, 0.0, 1.0);
-    float spatialScale = 1.38 + fract(seed * 7.31) * 0.58;
+    float spatialScale = 1.20 + fract(seed * 7.31) * 0.30;
     float2 seedOffset = float2(
         fract(seed * 13.17) * 7.4,
         fract(seed * 29.43 + 0.37) * 5.8
     );
-    float2 point = uv * float2(aspect, 1.0) * spatialScale
-        + seedOffset
-        + float2(stirAmount * 0.34, -stirAmount * 0.18);
-    // 时间始终连续；搅动只改变域偏移和饱和度，避免交互时相位跳变。
+    // A finger bends only its neighbourhood; reversing direction reverses the wake.
+    float touchDistance = (uv.x - clamp(touchPosition, 0.0, 1.0)) * aspect;
+    float touchFalloff = exp(-touchDistance * touchDistance * 0.85);
+    float2 touchBend = float2(0.42, (uv.y - 0.5) * -0.38)
+        * signedStir * touchFalloff;
+    float2 point = uv * float2(aspect * 0.62, 1.0) * spatialScale
+        + seedOffset + touchBend;
     float flowSpeed = 0.14 + fract(seed * 11.79 + 0.21) * 0.17;
     float flowTime = time * flowSpeed + seed * 9.7;
 
@@ -197,25 +202,31 @@ static float fluxBackgroundFBM(float2 point, float seed) {
         smoothstep(0.60, 0.95, clamp(warpA.x * 1.3, 0.0, 1.0))
     );
     color += 0.15 * warpB.y * float3(secondColor.rgb);
-    color = mix(color, color * color * 1.35 + color * 0.12, stirAmount * 0.55);
 
-    float cloudDensity = smoothstep(0.32, 0.85, field + 0.22 * warpB.x);
-    // 原项目为卡片左侧文字保留了灰白区域；播放器没有这项排版需求。
-    // 颜色覆盖率只跟云团密度变化，确保进度从 0% 开始就是封面颜料，
-    // 而不是先经过一段灰色再慢慢出现颜色。
-    float cloudVariation = smoothstep(0.18, 0.82, warpA.y + field * 0.22);
-    float cloudMask = clamp(
-        0.52 + cloudDensity * 0.32 + cloudVariation * 0.16,
-        0.0,
-        0.98
-    );
+    // Keep a trace of cover pigment in thin areas, with dense folds between them.
+    // Density is spatial, independent of the progress mask and text placement.
+    float densityField = field + 0.24 * warpB.x;
+    float cloudDensity = smoothstep(0.38, 0.78, densityField);
+    float openPocket = smoothstep(0.46, 0.76, warpA.y + field * 0.20);
+    float cloudMask = clamp(0.10 + cloudDensity * 0.84 - openPocket * 0.24, 0.08, 0.96);
     float darkness = clamp(darkMode, 0.0, 1.0);
     float3 base = mix(float3(0.985), float3(0.025, 0.030, 0.038), darkness);
-    color = mix(color, color * 0.48, darkness);
+    color *= mix(1.0, 0.66, darkness);
     float3 result = mix(base, color, cloudMask);
 
-    float topMist = smoothstep(0.58, 1.05, 1.0 - uv.y) * 0.16;
-    result = mix(result, base, topMist * (1.0 - cloudMask * 0.72));
+    float fold = field + warpA.x * 0.24;
+    float lightRibbon = exp(-pow((fold - 0.64) * 17.0, 2.0));
+    float ribbonShoulder = exp(-pow((fold - 0.70) * 10.0, 2.0));
+    float3 pigmentLight = mix(float3(secondColor.rgb), float3(1.0), 0.62);
+    result *= 1.0 - ribbonShoulder * cloudDensity * mix(0.09, 0.24, darkness);
+    result += pigmentLight * lightRibbon * cloudDensity
+        * mix(0.13, 0.30, darkness) * (1.0 + stirAmount * touchFalloff * 0.14);
+
+    float topMist = smoothstep(0.36, 1.02, 1.0 - uv.y) * 0.34;
+    result = mix(result, base, topMist * (1.0 - cloudDensity * 0.55));
+    float rimLight = exp(-pow((uv.y - 0.10) * 20.0, 2.0))
+        * smoothstep(0.35, 0.88, warpB.y) * cloudDensity;
+    result += pigmentLight * rimLight * mix(0.035, 0.065, darkness);
 
     // 播放进度只决定侵染区域的中心位置，不直接生成竖直裁切线。
     // 两层域扭曲与当前云团密度共同推动边缘，使不同高度出现凸起、

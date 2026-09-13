@@ -628,7 +628,7 @@ extension ScrollableLibraryExperience {
 
     var chartsPage: some View {
         VStack(alignment: .leading, spacing: 16) {
-            sourceStrip(selected: viewModel.chartsSource, sources: [.ncm, .qq, .kugou]) { source in
+            sourceStrip(selected: viewModel.chartsSource, sources: [.ncm, .qq, .kugou, .appleMusic]) { source in
                 viewModel.chartsSource = source
                 viewModel.fetchChartsForSelectedSource()
             }

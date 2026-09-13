@@ -22,7 +22,6 @@
 		C0DE80000000000000000001 /* SwiftPixelGrid in Frameworks */ = {isa = PBXBuildFile; productRef = C0DE80000000000000000003 /* SwiftPixelGrid */; };
 		C0DEA0000000000000000001 /* PulseBloomIcons in Frameworks */ = {isa = PBXBuildFile; productRef = C0DEA0000000000000000003 /* PulseBloomIcons */; };
 		C0DEB0000000000000000001 /* MonoGlyphIcons in Frameworks */ = {isa = PBXBuildFile; productRef = C0DEB0000000000000000003 /* MonoGlyphIcons */; };
-		C0DEC0000000000000000001 /* ShibaWelcome in Frameworks */ = {isa = PBXBuildFile; productRef = C0DEC0000000000000000003 /* ShibaWelcome */; };
 		DD300001DD300001DD300001 /* HiconIcons in Frameworks */ = {isa = PBXBuildFile; productRef = DD300002DD300002DD300002 /* HiconIcons */; };
 		E1900002E1900002E1900002 /* YeZiGongChangGangFengSong.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1900001E1900001E1900001 /* YeZiGongChangGangFengSong.ttf */; };
 		F4087C202F543A24006005CB /* HiconIcons in Frameworks */ = {isa = PBXBuildFile; productRef = F4087C1F2F543A24006005CB /* HiconIcons */; };
@@ -163,7 +162,6 @@
 				C0DE80000000000000000001 /* SwiftPixelGrid in Frameworks */,
 				C0DEA0000000000000000001 /* PulseBloomIcons in Frameworks */,
 				C0DEB0000000000000000001 /* MonoGlyphIcons in Frameworks */,
-				C0DEC0000000000000000001 /* ShibaWelcome in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,7 +287,6 @@
 				C0DE80000000000000000003 /* SwiftPixelGrid */,
 				C0DEA0000000000000000003 /* PulseBloomIcons */,
 				C0DEB0000000000000000003 /* MonoGlyphIcons */,
-				C0DEC0000000000000000003 /* ShibaWelcome */,
 			);
 			productName = Mono;
 			productReference = F4CCFD782F320B5900FC36CA /* Mono.app */;
@@ -340,7 +337,6 @@
 				C0DE80000000000000000002 /* XCLocalSwiftPackageReference "Packages/UI/SwiftPixelGrid" */,
 				C0DEA0000000000000000002 /* XCLocalSwiftPackageReference "Packages/Icons/PulseBloomIcons" */,
 				C0DEB0000000000000000002 /* XCLocalSwiftPackageReference "Packages/Icons/MonoGlyphIcons" */,
-				C0DEC0000000000000000002 /* XCLocalSwiftPackageReference "Packages/UI/ShibaWelcome" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F4CCFD792F320B5900FC36CA /* Products */;
@@ -851,10 +847,6 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/Icons/MonoGlyphIcons;
 		};
-		C0DEC0000000000000000002 /* XCLocalSwiftPackageReference "Packages/UI/ShibaWelcome" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/UI/ShibaWelcome;
-		};
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* XCLocalSwiftPackageReference "Packages/Icons/SolarIcons" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/Icons/SolarIcons;
@@ -943,11 +935,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C0DEB0000000000000000002 /* XCLocalSwiftPackageReference "Packages/Icons/MonoGlyphIcons" */;
 			productName = MonoGlyphIcons;
-		};
-		C0DEC0000000000000000003 /* ShibaWelcome */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C0DEC0000000000000000002 /* XCLocalSwiftPackageReference "Packages/UI/ShibaWelcome" */;
-			productName = ShibaWelcome;
 		};
 		DD300002DD300002DD300002 /* HiconIcons */ = {
 			isa = XCSwiftPackageProductDependency;

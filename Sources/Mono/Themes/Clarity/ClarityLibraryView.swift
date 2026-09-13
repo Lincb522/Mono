@@ -498,25 +498,14 @@ struct ClarityLibraryView: View {
     private func chartGrid(artworkSize: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 15) {
             ClaritySectionHeading(title: String(localized: "lib_tab_charts"))
+            if model.isLoadingDisplayedCharts && model.displayedTopLists.isEmpty {
+                LibraryLoadingStateView()
+            } else if model.displayedTopLists.isEmpty {
+                emptyState(icon: .chart, title: String(localized: "empty_no_charts"))
+            }
             LazyVGrid(columns: grid, spacing: 20) {
                 ForEach(model.displayedTopLists) { chart in
-                    let playlist = Playlist(
-                        id: chart.id,
-                        name: chart.name,
-                        coverImgUrl: chart.coverImgUrl,
-                        picUrl: nil,
-                        trackCount: nil,
-                        playCount: nil,
-                        subscribedCount: nil,
-                        shareCount: nil,
-                        commentCount: nil,
-                        creator: nil,
-                        description: chart.updateFrequency,
-                        tags: nil,
-                        source: chart.source,
-                        isTopList: true,
-                        kugouID: chart.kugouID
-                    )
+                    let playlist = chart.playlist(description: chart.updateFrequency)
                     NavigationLink(value: LibraryViewModel.NavigationDestination.playlist(playlist)) {
                         VStack(alignment: .leading, spacing: 9) {
                             ClarityArtwork(url: chart.coverUrl, size: artworkSize, radius: 27)
@@ -586,7 +575,7 @@ struct ClarityLibraryView: View {
             loadPersonalSection(force: force)
         case .square: model.fetchSquareForSelectedSource()
         case .artists: model.fetchArtistsForSelectedSource(reset: force)
-        case .charts: model.fetchChartsForSelectedSource()
+        case .charts: model.fetchChartsForSelectedSource(force: force)
         }
     }
 
@@ -699,7 +688,7 @@ struct ClarityLibraryView: View {
     @ViewBuilder
     private func destinationView(_ destination: LibraryViewModel.NavigationDestination) -> some View {
         switch destination {
-        case let .playlist(playlist): PlaylistDetailView(playlist: playlist)
+        case let .playlist(playlist): PlaylistDetailView(playlist: playlist).id(playlist.navigationIdentity)
         case let .artist(id): ArtistDetailView(artistId: id)
         case let .artistInfo(artist): ArtistDetailView(artist: artist)
         case let .qqArtist(mid, name, cover): QQMusicDetailView(detailType: .artist(mid: mid, name: name, coverUrl: cover))

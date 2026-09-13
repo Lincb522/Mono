@@ -3,6 +3,29 @@ import Combine
 @preconcurrency import QQMusicKit
 
 extension LibraryViewModel {
+    func fetchAppleMusicTopLists() {
+        guard appleMusicTopLists.isEmpty, !appleChartsRequest.isRunning else { return }
+        let request = appleChartsRequest.begin()
+        isLoadingAppleMusicCharts = true
+        appleChartsRequest.task = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            defer {
+                if self.appleChartsRequest.isCurrent(request) {
+                    self.appleChartsRequest.finish(request)
+                    self.isLoadingAppleMusicCharts = false
+                }
+            }
+            do {
+                let lists = try await AppleMusicService.shared.topLists()
+                guard !Task.isCancelled, self.appleChartsRequest.isCurrent(request) else { return }
+                self.appleMusicTopLists = lists
+            } catch {
+                guard !Task.isCancelled, self.appleChartsRequest.isCurrent(request) else { return }
+                AppLogger.warning("[AppleMusic] 榜单获取失败: \(error.localizedDescription)")
+            }
+        }
+    }
+
     func fetchTopLists() {
         guard topLists.isEmpty, !chartsRequest.isRunning else { return }
         let request = chartsRequest.begin()

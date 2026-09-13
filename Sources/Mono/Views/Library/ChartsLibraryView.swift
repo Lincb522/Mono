@@ -22,7 +22,7 @@ struct ChartsLibraryView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                MusicSourcePicker(source: $viewModel.chartsSource, sources: [.ncm, .qq, .kugou], usesPlatformTint: false)
+                MusicSourcePicker(source: $viewModel.chartsSource, sources: [.ncm, .qq, .kugou, .appleMusic], usesPlatformTint: false)
                 Spacer()
             }
             .padding(.horizontal, DeviceLayout.viewHorizontalPadding)
@@ -200,13 +200,7 @@ struct ChartsLibraryView: View {
     // MARK: - Helpers
 
     private func chartDestination(_ list: TopList) -> LibraryViewModel.NavigationDestination {
-        .playlist(Playlist(
-            id: list.id, name: list.name, coverImgUrl: list.coverImgUrl,
-            picUrl: nil, trackCount: nil, playCount: nil,
-            subscribedCount: nil, shareCount: nil, commentCount: nil,
-            creator: nil, description: nil, tags: nil,
-            source: list.source, isTopList: true, kugouID: list.kugouID
-        ))
+        .playlist(list.playlist())
     }
 
     private func qqChartDestination(_ item: QQTopListItem) -> LibraryViewModel.NavigationDestination {
@@ -220,25 +214,12 @@ struct ChartsLibraryView: View {
     }
 
     private func refreshCharts() async {
-        if viewModel.chartsSource == .kugou {
-            viewModel.kugouTopLists = []
-            viewModel.isLoadingKugouCharts = true
-            OptimizedCacheManager.shared.setObject([TopList](), forKey: "kcm_top_charts")
-            viewModel.fetchKugouTopLists()
-        } else {
-            viewModel.topLists = []
-            viewModel.isLoadingCharts = true
-            OptimizedCacheManager.shared.setObject([TopList](), forKey: "top_charts_lists")
-            viewModel.fetchTopLists()
-        }
+        viewModel.fetchChartsForSelectedSource(force: true)
         try? await Task.sleep(nanoseconds: 1_500_000_000)
     }
 
     private func refreshQQCharts() async {
-        viewModel.qqTopLists = []
-        viewModel.isLoadingQQCharts = true
-        OptimizedCacheManager.shared.setObject([QQTopListGroup](), forKey: "qq_top_charts")
-        viewModel.fetchQQTopLists()
+        viewModel.fetchChartsForSelectedSource(force: true)
         try? await Task.sleep(nanoseconds: 1_500_000_000)
     }
 }

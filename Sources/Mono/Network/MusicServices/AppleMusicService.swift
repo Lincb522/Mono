@@ -694,6 +694,35 @@ final class AppleMusicService: ObservableObject {
         )
     }
 
+    func topLists() async throws -> [TopList] {
+        guard await requestAuthorizationIfNeeded() else {
+            throw AppleMusicServiceError.authorizationDenied
+        }
+        var request = MusicCatalogChartsRequest(
+            kinds: [.dailyGlobalTop, .cityTop], types: [MusicKit.Playlist.self]
+        )
+        request.limit = 100
+        let response = try await Self.performMusicKitRequest {
+            try await request.response()
+        }
+        var lists: [TopList] = []
+        var seen = Set<String>()
+        for chart in response.playlistCharts {
+            for item in chart.items {
+                guard seen.insert(item.id.rawValue).inserted,
+                      let playlist = Self.convert(item) else { continue }
+                playlistCache[item.id.rawValue] = item
+                lists.append(TopList(
+                    id: playlist.id, name: playlist.name, coverImgUrl: playlist.coverImgUrl,
+                    updateFrequency: chart.title, source: .appleMusic,
+                    appleMusicID: item.id.rawValue
+                ))
+            }
+        }
+        enforceMemoryLimitsIfNeeded()
+        return lists
+    }
+
     func searchPlaylists(
         term: String,
         offset: Int,
