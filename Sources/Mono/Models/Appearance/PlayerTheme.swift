@@ -13,6 +13,7 @@ enum PlayerTheme: String, Codable, CaseIterable, Identifiable {
     case pixel             // 像素 - 8-bit 复古游戏风格
     case aqua              // 水韵 - 水波纹沉浸式播放器
     case breathing         // 呼吸体 - 没有常规控件的声音核心
+    case bloud             // 圆形角色与随音乐变化的表情
     case cassette          // 磁带 - 精致复古纯平几何像素风
     case radio             // 收音机 - 横向卡片式复古收音机
     case immersiveLyric    // 沉浸歌词 - 顶部小图大字纯净版
@@ -43,6 +44,7 @@ enum PlayerTheme: String, Codable, CaseIterable, Identifiable {
         case .pixel:      return String(localized: "像素")
         case .aqua:       return String(localized: "水韵")
         case .breathing:  return String(localized: "呼吸体")
+        case .bloud:      return "BLOUD"
         case .cassette:   return String(localized: "磁带")
         case .radio:      return String(localized: "收音机")
         case .immersiveLyric: return String(localized: "沉浸歌词")
@@ -74,6 +76,7 @@ enum PlayerTheme: String, Codable, CaseIterable, Identifiable {
         case .pixel:      return "square.grid.3x3.fill"
         case .aqua:       return "drop.fill"
         case .breathing:  return "dot.radiowaves.left.and.right"
+        case .bloud:      return "face.smiling"
         case .cassette:   return "play.rectangle.fill"
         case .radio:      return "radio.fill"
         case .immersiveLyric: return "music.note.list"
@@ -105,6 +108,7 @@ enum PlayerTheme: String, Codable, CaseIterable, Identifiable {
         case .pixel:      return String(localized: "8-bit 像素风格，复古游戏机界面")
         case .aqua:       return String(localized: "水波纹沉浸式，如水杯般宁静流动")
         case .breathing:  return "No controls, just a living audio core"
+        case .bloud:      return String(localized: "player_bloud_description")
         case .cassette:   return String(localized: "复古扁平磁带，极其精致的纯平几何重构")
         case .radio:      return String(localized: "复古收音机，横向卡片式 LED 点阵与扬声器")
         case .immersiveLyric: return String(localized: "沉浸歌词，顶部小图大字纯净版")
@@ -128,7 +132,7 @@ enum PlayerTheme: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .classic, .vinyl, .lyricFocus, .poster, .breathing, .immersiveLyric:
             return false // 依赖全局模糊封面背景
-        case .card, .neumorphic, .motoPager, .typewriter, .pixel, .aqua, .cassette, .radio, .folk, .game2048, .ipod, .liquidGlass, .tornPaper, .clarity, .dotMatrix, .console, .muji, .capsule, .petWhite, .minimalWhite:
+        case .card, .neumorphic, .motoPager, .typewriter, .pixel, .aqua, .bloud, .cassette, .radio, .folk, .game2048, .ipod, .liquidGlass, .tornPaper, .clarity, .dotMatrix, .console, .muji, .capsule, .petWhite, .minimalWhite:
             return true  // 自带不透明的自定义背景
         }
     }

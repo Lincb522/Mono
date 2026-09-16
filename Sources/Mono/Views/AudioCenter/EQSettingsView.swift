@@ -11,6 +11,8 @@ struct EQSettingsView: View {
     @ObservedObject private var settings = SettingsManager.shared
     @StateObject private var coverColors = CoverColorExtractor()
     @Environment(\.monoSoundCenterLayout) private var centerLayout
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var selectedCurveBand: Int?
     @State private var showSaveSheet = false
     @State private var customPresetName = ""
     @State private var isCustomEditingEnabled = false
@@ -95,7 +97,7 @@ struct EQSettingsView: View {
             syncSelectedPresetCategory()
             refreshCoverAccent()
         }
-        .onChange(of: player.currentSong?.id) { _, _ in refreshCoverAccent() }
+        .onChange(of: player.currentSong?.coverUrl?.absoluteString) { _, _ in refreshCoverAccent() }
         .onChange(of: eqManager.isEnabled) {
             // 当均衡器关闭时，同步 UI 旋钮到重置状态
             if !eqManager.isEnabled {
@@ -208,6 +210,7 @@ struct EQSettingsView: View {
             AnyView(
                 VStack(alignment: .leading, spacing: 16) {
                     controlDeck
+                    overviewCurve
                     if eqManager.isEnabled {
                         presetScrollSection
                         if !eqManager.customPresets.isEmpty {
@@ -223,6 +226,7 @@ struct EQSettingsView: View {
         workspaceScroll(
             AnyView(
                 VStack(alignment: .leading, spacing: 16) {
+                    controlDeck
                     equalizerSection
                     saveButton
                 }
@@ -344,57 +348,117 @@ struct EQSettingsView: View {
     // MARK: - 主控制台
 
     private var controlDeck: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 14) {
-                MonoIcon(
-                    icon: .equalizer,
-                    size: centerLayout.isCompactHeight ? 17 : 20,
-                    color: eqManager.isEnabled ? eqAccent : eqSecondaryText
-                )
-                .frame(
-                    width: centerLayout.isCompactHeight ? 38 : 44,
-                    height: centerLayout.isCompactHeight ? 38 : 44
-                )
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(eqManager.isEnabled ? eqAccent.opacity(0.13) : eqPressedSurface.opacity(0.55))
-                )
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(LocalizedStringKey("eq_toggle_title"))
-                        .font(.system(size: centerLayout.isCompactHeight ? 16 : 18, weight: .bold, design: .rounded))
-                        .foregroundColor(eqPrimaryText)
-                    Text(displayedPresetName)
-                        .font(.rounded(size: 12, weight: .medium))
-                        .foregroundColor(eqSecondaryText)
-                        .lineLimit(1)
+        MonoSoundCenterSplitPanel {
+            VStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 8) {
+                    MonoSoundCenterMetric(
+                        title: String(localized: "eq_preamp"),
+                        value: eqManager.preampDB.formatted(.number.precision(.fractionLength(1))),
+                        unit: "dB"
+                    )
+                    Divider().overlay(Color.white.opacity(0.08))
+                    MonoSoundCenterMetric(
+                        title: String(localized: "eq_pitch"),
+                        value: pitchValue.formatted(.number.precision(.fractionLength(0))),
+                        unit: String(localized: "mono_audio_semitones")
+                    )
                 }
+                .padding(12)
+                .background(cardBackground)
 
-                Spacer(minLength: 0)
-
-                if eqManager.isEnabled {
-                    Button(action: resetAll) {
-                        Text(String(localized: "eq_reset"))
-                            .font(.rounded(size: 12, weight: .semibold))
-                            .foregroundStyle(eqSecondaryText)
-                            .padding(.horizontal, 10)
-                            .frame(height: centerLayout.isCompactHeight ? 28 : 32)
-                            .background(
-                                Capsule()
-                                    .fill(eqPressedSurface)
-                            )
+                Button {
+                    selectedWorkspace = .effects
+                } label: {
+                    let arrangement = dynamicTypeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(spacing: 16))
+                        : AnyLayout(HStackLayout(alignment: .top, spacing: 6))
+                    arrangement {
+                        toneDial(String(localized: "eq_bass"), value: bassValue)
+                        toneDial(String(localized: "eq_treble"), value: trebleValue)
+                        MonoSoundCenterDial(
+                            accent: eqAccent,
+                            title: String(localized: "eq_surround"),
+                            value: Double(surroundValue).formatted(.percent.precision(.fractionLength(0))),
+                            fraction: eqManager.isEnabled ? Double(surroundValue) : nil,
+                            icon: .headphones
+                        )
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(cardBackground)
                 }
-
-                Toggle("", isOn: $eqManager.isEnabled)
-                    .labelsHidden()
-                    .tint(eqAccent)
-                    .controlSize(centerLayout.isCompactHeight ? .mini : .regular)
+                .buttonStyle(.plain)
+                .disabled(!eqManager.isEnabled)
             }
-            .padding(centerLayout.isCompactHeight ? 12 : 16)
-
+        } trailing: {
+            MonoSoundCenterFocusCard(
+                accent: eqAccent,
+                foreground: eqAccentForeground,
+                value: eqManager.graphicEQMode.bandCount.formatted(),
+                unit: String(localized: "mono_audio_bands"),
+                title: String(localized: "eq_equalizer"),
+                detail: displayedPresetName,
+                fraction: eqManager.isEnabled ? 1 : nil
+            ) {
+                Toggle(String(localized: eqManager.isEnabled ? "settings_on" : "settings_off"), isOn: $eqManager.isEnabled)
+                    .font(.caption.weight(.medium))
+                    .tint(eqAccentForeground)
+                    .accessibilityLabel(String(localized: "eq_toggle_title"))
+                Button {
+                    if selectedWorkspace == .equalizer {
+                        resetAll()
+                    } else {
+                        selectedWorkspace = .equalizer
+                    }
+                } label: {
+                    Text(String(localized: selectedWorkspace == .equalizer ? "eq_reset" : "mono_audio_adjust"))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(eqAccent)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(eqAccentForeground, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(!eqManager.isEnabled)
+                .opacity(eqManager.isEnabled ? 1 : 0.5)
+            }
         }
+    }
+
+    private func toneDial(_ title: String, value: CGFloat) -> some View {
+        MonoSoundCenterDial(
+            accent: eqAccent,
+            title: title,
+            value: Double(value * 24 - 12).formatted(.number.precision(.fractionLength(1))) + " dB",
+            fraction: eqManager.isEnabled ? Double(value) : nil,
+            icon: .waveform
+        )
+    }
+
+    private var overviewCurve: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(String(localized: "mono_audio_eq_curve"))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white)
+                Spacer(minLength: 8)
+                if eqManager.isEnabled {
+                    Button(String(localized: "eq_reset"), action: resetAll)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(eqAccent)
+                        .frame(minWidth: 44, minHeight: 44)
+                }
+            }
+            MonoSoundCenterEQChart(
+                accent: eqAccent,
+                gains: eqManager.isEnabled && !eqManager.isAuditioningReference
+                    ? displayGains : Array(repeating: 0, count: eqManager.graphicEQMode.bandCount),
+                mode: eqManager.graphicEQMode,
+                selectedBand: $selectedCurveBand
+            )
+        }
+        .padding(12)
         .background(cardBackground)
     }
 
@@ -598,25 +662,62 @@ struct EQSettingsView: View {
         return String(format: NSLocalizedString("eq_semitone", comment: ""), v > 0 ? "+\(v)" : "\(v)")
     }
 
-    // MARK: - 均衡器区域（曲线 + 滑块合一）
+    // MARK: - Equalizer curve and band controls
 
     private var equalizerSection: some View {
-        section(title: String(localized: "eq_equalizer")) {
-            VStack(spacing: 12) {
-                graphicModePicker
-                customEditingToggle
-
-                if eqManager.graphicEQMode == .thirtyTwoBand {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        equalizerGraph
-                            .frame(width: 896)
-                    }
-                } else {
-                    equalizerGraph
-                }
+        VStack(alignment: .leading, spacing: 16) {
+            Text(String(localized: "mono_audio_eq_curve"))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white)
+            graphicModePicker
+            customEditingToggle
+            MonoSoundCenterEQChart(
+                accent: eqAccent,
+                gains: displayGains,
+                mode: eqManager.graphicEQMode,
+                selectedBand: $selectedCurveBand
+            )
+            if isCustomEditingEnabled {
+                bandGainControl
             }
-            .padding(14)
-            .background(cardBackground)
+        }
+        .padding(16)
+        .background(cardBackground)
+    }
+
+    private var bandGainControl: some View {
+        let index = min(max(0, selectedCurveBand ?? eqManager.graphicEQMode.bandCount / 2), eqManager.graphicEQMode.bandCount - 1)
+        return VStack(spacing: 12) {
+            HStack {
+                Picker(String(localized: "mono_audio_frequency"), selection: Binding(
+                    get: { index },
+                    set: { selectedCurveBand = $0 }
+                )) {
+                    ForEach(0..<eqManager.graphicEQMode.bandCount, id: \.self) { band in
+                        Text(eqManager.graphicBandLabels[band] + " Hz").tag(band)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(eqAccent)
+                Spacer(minLength: 8)
+                Text(eqManager.customGains[index].formatted(.number.precision(.fractionLength(1))) + " dB")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.white)
+            }
+            Slider(value: Binding(
+                get: { eqManager.customGains[index] },
+                set: { eqManager.setCustomGain($0, at: index) }
+            ), in: -12...12, step: 0.1) {
+                Text(eqManager.graphicBandLabels[index] + " Hz")
+            } minimumValueLabel: {
+                Text("−12")
+            } maximumValueLabel: {
+                Text("+12")
+            }
+            .font(.caption2)
+            .foregroundStyle(MonoSoundCenterStyle.secondary)
+            .tint(eqAccent)
+            .accessibilityValue(eqManager.customGains[index].formatted(.number.precision(.fractionLength(1))) + " dB")
         }
     }
 
@@ -647,7 +748,7 @@ struct EQSettingsView: View {
                 .labelsHidden()
                 .tint(eqAccent)
         }
-        .frame(minHeight: 38)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
     }
 
@@ -671,6 +772,7 @@ struct EQSettingsView: View {
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) {
                 isCustomEditingEnabled = false
+                selectedCurveBand = nil
                 eqManager.setGraphicEQMode(mode)
             }
         } label: {
@@ -678,7 +780,7 @@ struct EQSettingsView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(isSelected ? eqAccentForeground : eqSecondaryText)
                 .frame(maxWidth: .infinity)
-                .frame(height: 34)
+                .frame(minHeight: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(isSelected ? eqAccent : .clear)
@@ -687,196 +789,14 @@ struct EQSettingsView: View {
         .buttonStyle(.plain)
     }
 
-    private var equalizerGraph: some View {
-        let graphHeight: CGFloat = centerLayout.isCompactHeight ? 170 : 220
-
-        return VStack(spacing: 12) {
-            // 曲线 + 滑块叠加
-            ZStack(alignment: .bottom) {
-                // 频谱曲线填充
-                spectrumFill
-                    .frame(height: graphHeight)
-
-                // dB 参考标签
-                VStack {
-                    Text("+12")
-                    Spacer()
-                    Text("0")
-                    Spacer()
-                    Text("-12")
-                }
-                .font(.system(size: 8.5, weight: .medium, design: .monospaced))
-                .foregroundColor(eqMutedText.opacity(0.55))
-                .padding(.vertical, 2)
-                .frame(height: graphHeight)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .allowsHitTesting(false)
-
-                // 垂直滑块
-                sliderOverlay
-                    .frame(height: graphHeight)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-            frequencyLabels
-        }
-    }
-
-    // 频谱曲线填充（渐变）
-    private var spectrumFill: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            let gains = displayGains
-            let count = gains.count
-            let divisor = max(count - 1, 1)
-            let points = gains.enumerated().map { (i, gain) -> CGPoint in
-                let x = w * CGFloat(i) / CGFloat(divisor)
-                let y = h * (1 - CGFloat((gain + 12) / 24))
-                return CGPoint(x: x, y: y)
-            }
-
-            ZStack {
-                // 水平参考线
-                ForEach([0.25, 0.5, 0.75], id: \.self) { ratio in
-                    Path { path in
-                        let y = h * CGFloat(ratio)
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: w, y: y))
-                    }
-                    .stroke(eqSeparator, lineWidth: 0.5)
-                }
-
-                if points.count >= 2 {
-                    // 填充区域
-                    Path { path in
-                        path.move(to: CGPoint(x: 0, y: h))
-                        path.addLine(to: points[0])
-                        for i in 1..<points.count {
-                            let prev = points[i - 1]
-                            let curr = points[i]
-                            let midX = (prev.x + curr.x) / 2
-                            path.addCurve(to: curr,
-                                          control1: CGPoint(x: midX, y: prev.y),
-                                          control2: CGPoint(x: midX, y: curr.y))
-                        }
-                        path.addLine(to: CGPoint(x: w, y: h))
-                        path.closeSubpath()
-                    }
-                    .fill(eqAccent.opacity(0.11))
-
-                    // 曲线描边
-                    Path { path in
-                        path.move(to: points[0])
-                        for i in 1..<points.count {
-                            let prev = points[i - 1]
-                            let curr = points[i]
-                            let midX = (prev.x + curr.x) / 2
-                            path.addCurve(to: curr,
-                                          control1: CGPoint(x: midX, y: prev.y),
-                                          control2: CGPoint(x: midX, y: curr.y))
-                        }
-                    }
-                    .stroke(eqAccent.opacity(0.68), lineWidth: 2)
-                }
-            }
-            .animation(.easeOut(duration: 0.15), value: displayGains)
-        }
-    }
-
-    // 垂直滑块叠加层
-    private var sliderOverlay: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            let count = displayGains.count
-            let spacing = w / CGFloat(count)
-
-            let sliders = ZStack {
-                ForEach(0..<count, id: \.self) { index in
-                    let gain = displayGains[index]
-                    let normalized = CGFloat((gain + 12) / 24)
-                    let centerX = spacing * CGFloat(index) + spacing / 2
-                    let thumbY = h * (1 - normalized)
-                    let centerY = h * 0.5
-
-                    // 轨道线
-                    RoundedRectangle(cornerRadius: 1.5)
-                        .fill(eqMutedText.opacity(isCustomEditingEnabled ? 0.26 : 0.16))
-                        .frame(width: 3, height: h)
-                        .position(x: centerX, y: h / 2)
-
-                    // 增益条（从中线到拇指）
-                    let barHeight = abs(thumbY - centerY)
-                    let barMidY = min(thumbY, centerY) + barHeight / 2
-                    if barHeight > 1 {
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill((isCustomEditingEnabled ? eqAccent : eqMutedText).opacity(0.56))
-                            .frame(width: 3, height: barHeight)
-                            .position(x: centerX, y: barMidY)
-                    }
-
-                    // 拇指
-                    Capsule()
-                        .fill(isCustomEditingEnabled ? eqAccent : eqMutedText.opacity(0.7))
-                        .frame(width: 8, height: 24)
-                        .shadow(
-                            color: isCustomEditingEnabled ? eqAccent.opacity(0.3) : .clear,
-                            radius: 4,
-                            y: 2
-                        )
-                        .position(x: centerX, y: thumbY)
-                }
-            }
-
-            if isCustomEditingEnabled {
-                sliders
-                    .contentShape(Rectangle())
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 8)
-                            .onChanged { value in
-                                guard abs(value.translation.height) > abs(value.translation.width) else { return }
-                                let spacing = w / CGFloat(count)
-                                let index = Int((value.location.x / spacing).rounded(.down))
-                                let clampedIndex = min(max(index, 0), count - 1)
-                                let ratio = 1 - (value.location.y / h)
-                                let clamped = min(max(ratio, 0), 1)
-                                let newGain = Float(clamped) * 24 - 12
-                                eqManager.setCustomGain(newGain, at: clampedIndex)
-                            }
-                    )
-            } else {
-                sliders
-                    .allowsHitTesting(false)
-            }
-        }
-    }
-
-    // 频率标签
-    private var frequencyLabels: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(eqManager.graphicBandLabels.enumerated()), id: \.offset) { _, label in
-                Text(label)
-                    .font(.system(size: eqManager.graphicEQMode == .thirtyTwoBand ? 8 : 9, weight: .medium, design: .monospaced))
-                    .foregroundColor(eqSecondaryText)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-
     // MARK: - 内置预设
 
     private var presetScrollSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(String(localized: "eq_builtin_presets_title"))
-                    .font(.system(size: centerLayout.isCompactHeight ? 22 : 26, weight: .bold, design: .rounded))
+                    .font(.title3.weight(.medium))
                     .foregroundStyle(eqPrimaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(String(localized: "eq_builtin_presets_description"))
-                    .font(.rounded(size: 13, weight: .medium))
-                    .foregroundStyle(eqSecondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -892,8 +812,7 @@ struct EQSettingsView: View {
 
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: 12),
-                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.adaptive(minimum: dynamicTypeSize >= .xxLarge ? 280 : 150), spacing: 10),
                 ],
                 spacing: 12
             ) {
@@ -944,9 +863,7 @@ struct EQSettingsView: View {
     private func presetCard(_ preset: EQPreset) -> some View {
         let isSelected = eqManager.currentPreset?.id == preset.id
         let barColor = isSelected ? eqAccentForeground.opacity(0.92) : eqAccent.opacity(0.62)
-        // The selected card uses a translucent accent surface, so keep its
-        // copy on the stable primary text color for contrast in every theme.
-        let nameColor = eqPrimaryText
+        let nameColor = isSelected ? eqAccentForeground : eqPrimaryText
 
         return Button(action: {
             withAnimation(.easeOut(duration: 0.2)) {
@@ -958,14 +875,13 @@ struct EQSettingsView: View {
                 HStack(alignment: .top, spacing: 8) {
                     VStack(alignment: .leading, spacing: 7) {
                         Text(preset.name)
-                            .font(.rounded(size: 16, weight: isSelected ? .bold : .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(nameColor)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.82)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         Text(preset.description)
-                            .font(.rounded(size: 12, weight: .medium))
-                            .foregroundColor(isSelected ? eqPrimaryText.opacity(0.68) : eqSecondaryText)
+                            .font(.caption)
+                            .foregroundColor(isSelected ? eqAccentForeground.opacity(0.8) : MonoSoundCenterStyle.secondary)
                             .lineSpacing(2)
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
@@ -995,24 +911,10 @@ struct EQSettingsView: View {
                 minHeight: centerLayout.isCompactHeight ? 148 : 164,
                 alignment: .topLeading
             )
-            .background {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(eqAccent.opacity(0.16))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(eqAccent.opacity(0.75), lineWidth: 1)
-                        }
-                } else {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(eqPrimaryText.opacity(0.04))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .strokeBorder(eqSeparator.opacity(0.5), lineWidth: 0.8)
-                        )
-                }
-            }
-            .shadow(color: isSelected ? eqAccent.opacity(0.22) : .clear, radius: 8, y: 4)
+            .background(
+                isSelected ? eqAccent : MonoSoundCenterStyle.surface,
+                in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+            )
         }
         .buttonStyle(MonoBouncingButtonStyle(scale: 0.96))
     }
@@ -1106,12 +1008,8 @@ struct EQSettingsView: View {
     }
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(Color.white.opacity(0.05))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
-            }
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(MonoSoundCenterStyle.surface)
     }
 
     private var backdrop: some View {

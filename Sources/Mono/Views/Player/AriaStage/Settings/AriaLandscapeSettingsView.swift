@@ -6,6 +6,8 @@ struct AriaLandscapeSettingsView: View {
     let palette: AriaPalette
     let onDismiss: () -> Void
 
+    @AppStorage("showTranslation") private var showTranslation = true
+    @AppStorage("ariaPosterShowTranslation") private var posterShowTranslation = false
     @AppStorage("ariaLyricEffect") private var lyricEffectRaw = AriaLyricEffect.classic.rawValue
     @AppStorage("ariaLyricFont") private var lyricFontRaw = AriaLyricFontChoice.system.rawValue
     @AppStorage("ariaCustomLyricFontID") private var customFontID = ""
@@ -427,6 +429,10 @@ struct AriaLandscapeSettingsView: View {
                     isOn: $canopyFragmentStage
                 )
             }
+            landscapeToggle(
+                String(localized: "显示翻译"),
+                isOn: lyricEffect == .poster ? $posterShowTranslation : $showTranslation
+            )
             landscapeToggle(
                 String(localized: "英文歌词强制大写"),
                 isOn: $forceUppercaseEnglish

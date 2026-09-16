@@ -18,6 +18,7 @@ enum AriaLyricEffect: String, CaseIterable {
     case tide
     case echo
     case refraction
+    case poster
 
     var label: String {
         switch self {
@@ -30,6 +31,7 @@ enum AriaLyricEffect: String, CaseIterable {
         case .canopy: return String(localized: "巨幕")
         case .tide: return String(localized: "潮汐")
         case .echo: return String(localized: "回响")
+        case .poster: return String(localized: "跃字")
         case .refraction: return String(localized: "折光")
         }
     }
@@ -45,13 +47,14 @@ enum AriaLyricEffect: String, CaseIterable {
         case .canopy: return String(localized: "巨幅淡字与注音细线")
         case .tide: return String(localized: "随演唱起伏的流动字浪")
         case .echo: return String(localized: "清晰主句与层叠余韵")
+        case .poster: return String(localized: "粗字海报与错位字墙")
         case .refraction: return String(localized: "横向切片与折射聚合")
         }
     }
 
     /// Fume and Cappella own the full stage instead of a single 70%-height lyric viewport.
     var usesFullStage: Bool {
-        self == .fume || self == .cappella
+        self == .fume || self == .cappella || self == .poster
     }
 
     /// Removed legacy effects migrate to Folia's default visualizer.
@@ -670,6 +673,7 @@ struct AriaFoliaLyricStage: View {
     let activeIndex: Int
     let palette: AriaPalette
     let effect: AriaLyricEffect
+    var songIdentity: String = ""
     let language: AriaLyricLanguage
     let fontChoice: AriaLyricFontChoice
     let fontScale: Double
@@ -868,6 +872,21 @@ struct AriaFoliaLyricStage: View {
                         time: time,
                         stageSize: stageSize
                     )
+                }
+            }
+        case .poster:
+            // 海报按播放时间直接切场，通用换句会缩小并模糊整块背景。
+            if lines.indices.contains(activeIndex) {
+                let line = lines[activeIndex]
+                if line.isInterlude {
+                    AriaFoliaInterlude(line: line, palette: palette, time: time)
+                } else if line.isCredit {
+                    AriaFoliaCreditLine(line: line, palette: palette, fontChoice: fontChoice,
+                                        fontScale: fontScale, time: time)
+                } else {
+                    AriaPosterLyricLineView(line: line, palette: palette, arrangement: AriaPosterArrangement(songIdentity: songIdentity),
+                                            compositionIndex: lines.prefix(activeIndex).filter { !$0.isInterlude && !$0.isCredit }.count,
+                                            fontChoice: fontChoice, fontScale: fontScale, time: time)
                 }
             }
         case .refraction:

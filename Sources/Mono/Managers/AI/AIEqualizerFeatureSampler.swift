@@ -370,7 +370,13 @@ private actor AIEqualizerSpectrumAccumulator {
         let lowRatio = min(1, max(0, Self.trimmedMean(lowEnergyRatioFrames, trimFraction: 0.1)))
         let midRatio = min(1, max(0, Self.trimmedMean(midEnergyRatioFrames, trimFraction: 0.1)))
         let highRatio = min(1, max(0, Self.trimmedMean(highEnergyRatioFrames, trimFraction: 0.1)))
-        let spectralTempo = Self.tempoEstimate(flux: spectralFluxFrames, timestamps: samplingTimestamps)
+        // PCM observer windows are sparse. Use timestamped spectral and RMS
+        // attacks rather than concatenating non-contiguous PCM blocks.
+        let tempo = AIEqualizerTempoEstimator.estimate(
+            flux: spectralFluxFrames,
+            rmsDB: rmsDBFrames,
+            timestamps: samplingTimestamps
+        )
         let pcm = Self.analyzePCM(
             samples: pcmAnalysisSamples,
             sampleRate: pcmAnalysisSampleRate,
@@ -380,10 +386,6 @@ private actor AIEqualizerSpectrumAccumulator {
             samplePeak: pcmSamplePeak,
             estimatedTruePeak: pcmEstimatedTruePeak
         )
-        // PCM observer windows are intentionally sparse to protect playback.
-        // Tempo therefore comes from the timestamped spectral-onset timeline,
-        // never from concatenating non-contiguous PCM blocks.
-        let tempo = spectralTempo
         let melody = Self.melodyEstimate(samples: dominantPitchFrames)
         let chroma = Self.normalizedChroma(accumulatedChroma)
         let key = Self.keyEstimate(chroma: chroma)
@@ -712,99 +714,6 @@ private actor AIEqualizerSpectrumAccumulator {
             monoCompatibility: phase?.monoCompatibility ?? 1,
             stereoWidth: phase?.stereoWidth ?? 0
         )
-    }
-
-    private static func tempoEstimate(
-        flux: [Float],
-        timestamps: [TimeInterval]
-    ) -> (bpm: Float, confidence: Float, onsetCount: Int, stability: Float) {
-        let count = min(flux.count, timestamps.count)
-        guard count >= 24 else { return (0, 0, 0, 0) }
-
-        let samples = zip(timestamps.prefix(count), flux.prefix(count))
-            .map { (timestamp: $0.0, flux: $0.1) }
-            .sorted { $0.timestamp < $1.timestamp }
-        let values = samples.map { $0.flux }
-        let orderedTimestamps = samples.map { $0.timestamp }
-        let sortedFlux = values.sorted()
-        let median = percentile(sortedFlux, 0.50)
-        let deviations = values.map { abs($0 - median) }.sorted()
-        let mad = percentile(deviations, 0.50)
-        let threshold = median + max(0.000_05, mad * 2.6)
-        var onsets: [(time: TimeInterval, strength: Float)] = []
-        var lastOnset = -Double.greatestFiniteMagnitude
-
-        for index in 1..<(count - 1) where values[index] >= threshold {
-            guard values[index] >= values[index - 1], values[index] > values[index + 1] else { continue }
-            let timestamp = orderedTimestamps[index]
-            guard timestamp - lastOnset >= 0.16 else { continue }
-            let strength = max(0, (values[index] - median) / max(mad, 0.000_05))
-            onsets.append((timestamp, min(8, strength)))
-            lastOnset = timestamp
-        }
-
-        guard onsets.count >= 4 else { return (0, 0, onsets.count, 0) }
-
-        let minimumBPM = 58
-        let maximumBPM = 200
-        var histogram = Array(repeating: Float(0), count: maximumBPM + 1)
-        var candidates: [(bpm: Float, weight: Float)] = []
-        for start in onsets.indices {
-            let endLimit = min(onsets.count, start + 9)
-            guard start + 1 < endLimit else { continue }
-            for end in (start + 1)..<endLimit {
-                let interval = onsets[end].time - onsets[start].time
-                guard interval >= 0.28, interval <= 4.2 else { continue }
-                var bpm = Float(60 / interval)
-                while bpm < Float(minimumBPM) { bpm *= 2 }
-                while bpm > Float(maximumBPM) { bpm /= 2 }
-                guard bpm >= Float(minimumBPM), bpm <= Float(maximumBPM) else { continue }
-
-                let distance = Float(end - start)
-                let weight = sqrtf(max(0.01, onsets[start].strength * onsets[end].strength))
-                    / sqrtf(distance)
-                let rounded = Int(bpm.rounded())
-                histogram[rounded] += weight
-                candidates.append((bpm, weight))
-            }
-        }
-        guard !candidates.isEmpty else { return (0, 0, onsets.count, 0) }
-
-        var smoothed = histogram
-        for bpm in minimumBPM...maximumBPM {
-            let lower = max(minimumBPM, bpm - 2)
-            let upper = min(maximumBPM, bpm + 2)
-            smoothed[bpm] = (lower...upper).reduce(Float(0)) { partial, candidate in
-                let distance = abs(candidate - bpm)
-                let kernel: Float = distance == 0 ? 1 : (distance == 1 ? 0.65 : 0.3)
-                return partial + histogram[candidate] * kernel
-            }
-        }
-
-        guard let bestBPM = (minimumBPM...maximumBPM).max(by: {
-            smoothed[$0] < smoothed[$1]
-        }) else { return (0, 0, onsets.count, 0) }
-        let peak = smoothed[bestBPM]
-        let runnerUp = (minimumBPM...maximumBPM)
-            .filter { abs($0 - bestBPM) > 6 }
-            .map { smoothed[$0] }
-            .max() ?? 0
-
-        let matching = candidates.filter {
-            abs($0.bpm - Float(bestBPM)) <= max(3, Float(bestBPM) * 0.045)
-        }
-        let matchingWeight = matching.reduce(Float(0)) { $0 + $1.weight }
-        let totalWeight = candidates.reduce(Float(0)) { $0 + $1.weight }
-        let weightedDeviation = matchingWeight > 0
-            ? matching.reduce(Float(0)) { $0 + abs($1.bpm - Float(bestBPM)) * $1.weight } / matchingWeight
-            : Float(bestBPM)
-        let stability = min(1, max(0, 1 - weightedDeviation / max(4, Float(bestBPM) * 0.055)))
-        let peakSeparation = min(1, max(0, (peak - runnerUp) / max(peak, 0.000_1)))
-        let support = min(1, matchingWeight / max(totalWeight * 0.24, 0.000_1))
-        let evidence = min(1, Float(onsets.count) / 16)
-        let confidence = min(1, evidence * (0.34 + support * 0.36 + peakSeparation * 0.30) * stability)
-
-        return (Float(bestBPM), confidence, onsets.count, stability)
     }
 
     private static func melodyEstimate(

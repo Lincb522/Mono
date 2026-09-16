@@ -4,6 +4,7 @@ import FFmpegSwiftSDK
 
 @MainActor
 struct MonoOutputStudioView: View {
+    let accent: Color
     enum Section: String, CaseIterable, Identifiable {
         case devices
         case monitor
@@ -53,14 +54,14 @@ struct MonoOutputStudioView: View {
                 } label: {
                     Text(item.title)
                         .font(.system(size: layout.isCompactWidth ? 10 : 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(section == item ? .white : .white.opacity(0.42))
+                        .foregroundStyle(section == item ? accent : MonoSoundCenterStyle.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 34)
+                        .frame(height: 44)
                         .overlay(alignment: .bottom) {
                             Rectangle()
-                                .fill(section == item ? Color.white.opacity(0.9) : .clear)
+                                .fill(section == item ? accent : .clear)
                                 .frame(height: 1.5)
                         }
                 }

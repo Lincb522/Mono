@@ -14,6 +14,8 @@ struct AriaSettingsPage: View {
     @ObservedObject private var player = CurrentSongPresentationModel.shared
     @StateObject private var coverColors = CoverColorExtractor()
 
+    @AppStorage("showTranslation") private var showTranslation = true
+    @AppStorage("ariaPosterShowTranslation") private var posterShowTranslation = false
     @AppStorage("ariaLyricEffect") private var lyricEffectRaw = AriaLyricEffect.classic.rawValue
     @AppStorage("ariaLyricFont") private var lyricFontRaw = AriaLyricFontChoice.system.rawValue
     @AppStorage("ariaCustomLyricFontID") private var customFontID = ""
@@ -320,6 +322,11 @@ struct AriaSettingsPage: View {
                     }
                     .tint(settingsAccent)
                 }
+
+                Toggle(isOn: lyricEffect == .poster ? $posterShowTranslation : $showTranslation) {
+                    rowLabel(String(localized: "显示翻译"))
+                }
+                .tint(settingsAccent)
 
                 Toggle(isOn: $forceUppercaseEnglish) {
                     rowLabel(String(localized: "英文歌词强制大写"))

@@ -2893,3 +2893,122 @@
 
 
 "playback_progress" = "播放进度";
+
+/* Sound center console */
+"mono_audio_bands" = "频段";
+"mono_audio_adjust" = "调整";
+"mono_audio_eq_curve" = "均衡器曲线";
+"mono_audio_current_eq" = "当前均衡";
+"mono_audio_ai_curve" = "AI 方案";
+"mono_audio_low" = "低频";
+"mono_audio_mid" = "中频";
+"mono_audio_high" = "高频";
+"mono_audio_semitones" = "半音";
+"mono_audio_frequency" = "频率";
+
+"ai_lab_retune" = "重新调音";
+
+// Bloud player
+"player_bloud_description" = "圆形角色随节奏律动，视线跟随触摸";
+"player_bloud_expressions" = "表情";
+"player_bloud_follow_song" = "角色表情";
+"player_bloud_empty" = "还没有播放的歌曲";
+"player_bloud_seek" = "播放进度，沿圆环拖动";
+"player_bloud_expression_calm" = "平静";
+"player_bloud_expression_attentive" = "专注";
+"player_bloud_expression_surprised" = "惊讶";
+"player_bloud_expression_excited" = "兴奋";
+"player_bloud_expression_happy" = "开心";
+"player_bloud_expression_laughing" = "大笑";
+"player_bloud_expression_angry" = "生气";
+"player_bloud_expression_sad" = "难过";
+"player_bloud_expression_scared" = "害怕";
+"player_bloud_expression_suspicious" = "怀疑";
+"player_bloud_expression_confused" = "困惑";
+"player_bloud_expression_curious" = "好奇";
+"player_bloud_expression_proud" = "得意";
+"player_bloud_expression_shy" = "羞怯";
+"player_bloud_expression_bored" = "无趣";
+"player_bloud_expression_sleepy" = "困倦";
+"player_bloud_like" = "喜欢";
+"player_bloud_unlike" = "取消喜欢";
+
+"player_bloud_gaze_follow" = "视线追随";
+"player_bloud_gaze_follow_hint" = "通过前置摄像头跟随手指和人脸的位置。";
+"player_bloud_camera_permission" = "请在系统设置中允许相机访问，让角色跟随手指和人脸。";
+"player_bloud_camera_settings" = "打开设置";
+"player_bloud_camera_retry" = "重试";
+"player_bloud_camera_unavailable" = "无法使用前置摄像头，请在有前置摄像头的设备上重试。";
+"player_bloud_camera_failed" = "视线追随已停止，请重试。";
+"player_bloud_camera_interrupted" = "相机使用被中断，请在相机可用后重试。";
+
+"player_bloud_expression_dreamy" = "出神";
+
+"player_bloud_expression_playful" = "俏皮";
+
+"player_bloud_expression_determined" = "坚定";
+
+"player_bloud_expression_tender" = "温柔";
+
+"player_bloud_expression_amazed" = "惊叹";
+
+"player_bloud_expression_skeptical" = "狐疑";
+
+"player_bloud_expression_blissful" = "陶醉";
+
+"player_bloud_expression_wink" = "眨眼";
+
+"player_bloud_companion" = "角色与表情";
+
+"player_bloud_character" = "角色";
+
+"player_bloud_color" = "角色颜色";
+
+"player_bloud_reset_color" = "恢复默认颜色";
+
+"player_paw_pet" = "摸摸 PAW";
+
+"player_paw_expression_soft" = "乖乖";
+"player_paw_expression_bright" = "开心";
+"player_paw_expression_beaming" = "笑眯眯";
+"player_paw_expression_delighted" = "乐开花";
+"player_paw_expression_curious" = "好奇";
+"player_paw_expression_listening" = "认真听";
+"player_paw_expression_hopeful" = "期待";
+"player_paw_expression_bashful" = "害羞";
+"player_paw_expression_cozy" = "惬意";
+"player_paw_expression_drowsy" = "犯困";
+"player_paw_expression_sleeping" = "打盹";
+"player_paw_expression_puzzled" = "疑惑";
+"player_paw_expression_pout" = "小委屈";
+"player_paw_expression_pleading" = "撒娇";
+"player_paw_expression_unimpressed" = "小嫌弃";
+"player_paw_expression_sulky" = "闹别扭";
+"player_paw_expression_astonished" = "惊讶";
+"player_paw_expression_alert" = "竖耳听";
+"player_paw_expression_playful" = "调皮";
+"player_paw_expression_wink" = "眨眨眼";
+"player_paw_expression_blep" = "小吐舌";
+"player_paw_expression_proud" = "小得意";
+"player_paw_expression_dreamy" = "发呆";
+"player_paw_expression_affectionate" = "亲昵";
+
+"player_color_body" = "主体";
+"player_color_eyes" = "眼睛";
+"player_color_blush" = "腮红";
+"player_color_ears" = "耳朵内侧";
+"player_color_muzzle" = "脸部白毛";
+"player_color_tongue" = "舌头";
+"player_color_outline" = "轮廓与嘴线";
+"player_color_nose" = "鼻子";
+"player_color_stripes" = "花纹";
+"player_color_whiskers" = "胡须";
+"player_color_cover" = "跟随封面取色";
+"player_color_reset" = "恢复";
+"player_color_reset_part" = "恢复%@颜色";
+
+"player_character_editor" = "角色设置";
+"player_character_colors" = "配色";
+
+"跃字" = "跃字";
+"粗字海报与错位字墙" = "粗字海报与错位字墙";

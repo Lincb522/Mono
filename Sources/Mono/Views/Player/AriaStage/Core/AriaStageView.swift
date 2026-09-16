@@ -309,20 +309,26 @@ struct AriaStageView: View {
 
         GeometryReader { geo in
             ZStack {
-                // 舞台底座：封面流体 + 音频光场 + 景深纹理
-                AriaStageShell(
-                    coverUrl: player.currentSong?.coverUrl?.sized(500),
-                    palette: palette,
-                    pulse: audioPulse,
-                    isPlaying: player.isPlaying,
-                    seed: stageSeed,
-                    backgroundOpacity: backgroundOpacity,
-                    reduceMotion: !ambientMotion,
-                    videoURL: videoURL,
-                    isStageActive: !stageRuntimeSuspended,
-                    depthIntensity: lyricDepthIntensity,
-                    gpuEffectsEnabled: gpuStageEnabled
-                )
+                if lyricEffect == .poster {
+                    // 海报底色独立于歌词换句，前奏、间奏和空歌词也不露出封面背景。
+                    AriaPosterLyricLineView.contrastingInk(for: lyricPalette.accent)
+                        .ignoresSafeArea()
+                } else {
+                    // 舞台底座：封面流体 + 音频光场 + 景深纹理
+                    AriaStageShell(
+                        coverUrl: player.currentSong?.coverUrl?.sized(500),
+                        palette: palette,
+                        pulse: audioPulse,
+                        isPlaying: player.isPlaying,
+                        seed: stageSeed,
+                        backgroundOpacity: backgroundOpacity,
+                        reduceMotion: !ambientMotion,
+                        videoURL: videoURL,
+                        isStageActive: !stageRuntimeSuspended,
+                        depthIntensity: lyricDepthIntensity,
+                        gpuEffectsEnabled: gpuStageEnabled
+                    )
+                }
 
                 // 歌词舞台 + 字幕层：同一条时间轴逐帧驱动
                 Group {
@@ -346,7 +352,7 @@ struct AriaStageView: View {
                             let _ = advanceStageIntelligence(time: time, lines: lyricLines)
                             // 默认未开启 GPU 光学和人声呼吸时，歌词不需要争用
                             // 音频频谱锁；背景拥有自己的低频率快照读取。
-                            let needsLyricPulse = vocalBreathingEnabled || gpuStageEnabled
+                            let needsLyricPulse = lyricEffect != .poster && (vocalBreathingEnabled || gpuStageEnabled)
                             let stagePulse = needsLyricPulse
                                 ? audioPulse.snapshot()
                                 : AriaAudioPulse.Snapshot()
@@ -354,103 +360,121 @@ struct AriaStageView: View {
                                 ? stagePulse.vocal
                                 : 0
 
-                            ZStack {
-                                Group {
-                                    if lyricEffect == .classic {
-                                        if let activeLine {
-                                            if lyricLanguage == .foreign {
-                                                AriaForeignClassicLyricStage(
-                                                    line: activeLine,
-                                                    palette: lyricPalette.lineVariant(activeLine.id),
-                                                    fontChoice: lyricFont,
-                                                    fontScale: fontScale,
-                                                    time: time,
-                                                    stageSize: geo.size,
-                                                    breathing: breathing
-                                                )
-                                            } else {
-                                                AriaClassicLyricStage(
-                                                    line: activeLine,
-                                                    palette: lyricPalette.lineVariant(activeLine.id),
-                                                    fontChoice: lyricFont,
-                                                    fontScale: fontScale,
-                                                    time: time,
-                                                    stageSize: geo.size,
-                                                    breathing: breathing
-                                                )
-                                            }
-                                        }
-                                    } else {
-                                        AriaFoliaLyricStage(
-                                            lines: lyricLines,
-                                            activeIndex: activeIndex,
-                                            palette: lyricPalette,
-                                            effect: lyricEffect,
-                                            language: lyricLanguage,
-                                            fontChoice: lyricFont,
-                                            fontScale: fontScale,
-                                            time: time,
-                                            stageSize: geo.size
-                                        )
-                                    }
-                                }
-                                .id(
-                                    "\(lyricEffect.rawValue)|\(lyricFont.cacheIdentity)|\(customFontID)|\(foreignLyricFontRaw)|\(foreignCustomFontID)|\(lyricLanguage)|\(lyricTypography)"
-                                )
-                                .ariaLyricRenderSurface(
-                                    effect: lyricEffect,
-                                    material: lyricMaterialStyle
-                                )
-                                .frame(
-                                    width: geo.size.width,
-                                    height: lyricEffect.usesFullStage
-                                        ? geo.size.height
-                                        : geo.size.height * 0.7
-                                )
-                                // 材质在歌词自身视口内完成合成，避免粒子、玻璃和
-                                // 棱镜为整块全屏透明区域反复分配离屏纹理。
-                                .ariaLyricTypography(
-                                    configuration: lyricTypography,
+                            if lyricEffect == .poster {
+                                // 全屏海报拥有自己的转场，不进入玻璃、景深和 GPU 光学合成。
+                                AriaFoliaLyricStage(
+                                    lines: lyricLines,
+                                    activeIndex: activeIndex,
                                     palette: lyricPalette,
-                                    time: time
-                                )
-                                .offset(
-                                    y: lyricEffect.usesFullStage
-                                        ? 0
-                                        : lyricLayoutOffset(stageHeight: geo.size.height)
+                                    effect: .poster,
+                                    songIdentity: player.currentSong?.identityKey ?? "",
+                                    language: lyricLanguage,
+                                    fontChoice: lyricFont,
+                                    fontScale: fontScale,
+                                    time: time,
+                                    stageSize: geo.size
                                 )
                                 .frame(width: geo.size.width, height: geo.size.height)
-                                .ariaLyricSpatialDepth(
-                                    palette: lyricPalette,
-                                    intensity: lyricDepthIntensity,
-                                    time: time,
-                                    motionEnabled: ambientMotion && player.isPlaying,
-                                    usesFullStage: lyricEffect.usesFullStage,
-                                    embossEnabled: lyricEmbossEnabled
-                                )
-                                .ariaLyricStageOptics(
-                                    pulse: stagePulse,
-                                    fallbackAccent: lyricPalette.accent,
-                                    gpuEnabled: gpuStageEnabled,
-                                    isActive: player.isPlaying && scenePhase == .active,
-                                    reduceMotion: reduceMotion,
-                                    time: time
-                                )
-
-                                // 巨幕开启「小字显示翻译」后，翻译已内嵌到注音位，
-                                // 不再叠加底部字幕胶囊
-                                if showTranslation,
-                                   !(lyricEffect == .canopy && canopyCaptionTranslation),
-                                   let translation = activeLine?.translation,
-                                   !translation.isEmpty,
-                                   !chromeHidden {
-                                    subtitleOverlay(
-                                        translation: translation,
-                                        palette: lyricPalette,
-                                        font: translationFont,
-                                        typographyOpacity: lyricTypography.opacity,
-                                        depthAmount: lyricDepthAmount
+                            } else {
+                                ZStack {
+                                    Group {
+                                        if lyricEffect == .classic {
+                                            if let activeLine {
+                                                if lyricLanguage == .foreign {
+                                                    AriaForeignClassicLyricStage(
+                                                        line: activeLine,
+                                                        palette: lyricPalette.lineVariant(activeLine.id),
+                                                        fontChoice: lyricFont,
+                                                        fontScale: fontScale,
+                                                        time: time,
+                                                        stageSize: geo.size,
+                                                        breathing: breathing
+                                                    )
+                                                } else {
+                                                    AriaClassicLyricStage(
+                                                        line: activeLine,
+                                                        palette: lyricPalette.lineVariant(activeLine.id),
+                                                        fontChoice: lyricFont,
+                                                        fontScale: fontScale,
+                                                        time: time,
+                                                        stageSize: geo.size,
+                                                        breathing: breathing
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            AriaFoliaLyricStage(
+                                                lines: lyricLines,
+                                                activeIndex: activeIndex,
+                                                palette: lyricPalette,
+                                                effect: lyricEffect,
+                                                songIdentity: player.currentSong?.identityKey ?? "",
+                                                language: lyricLanguage,
+                                                fontChoice: lyricFont,
+                                                fontScale: fontScale,
+                                                time: time,
+                                                stageSize: geo.size
+                                            )
+                                        }
+                                    }
+                                    .id(
+                                        "\(lyricEffect.rawValue)|\(lyricFont.cacheIdentity)|\(customFontID)|\(foreignLyricFontRaw)|\(foreignCustomFontID)|\(lyricLanguage)|\(lyricTypography)"
                                     )
+                                    .ariaLyricRenderSurface(
+                                        effect: lyricEffect,
+                                        material: lyricMaterialStyle
+                                    )
+                                    .frame(
+                                        width: geo.size.width,
+                                        height: lyricEffect.usesFullStage
+                                            ? geo.size.height
+                                            : geo.size.height * 0.7
+                                    )
+                                    // 材质在歌词自身视口内完成合成，避免粒子、玻璃和
+                                    // 棱镜为整块全屏透明区域反复分配离屏纹理。
+                                    .ariaLyricTypography(
+                                        configuration: lyricTypography,
+                                        palette: lyricPalette,
+                                        time: time
+                                    )
+                                    .offset(
+                                        y: lyricEffect.usesFullStage
+                                            ? 0
+                                            : lyricLayoutOffset(stageHeight: geo.size.height)
+                                    )
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                                    .ariaLyricSpatialDepth(
+                                        palette: lyricPalette,
+                                        intensity: lyricDepthIntensity,
+                                        time: time,
+                                        motionEnabled: ambientMotion && player.isPlaying,
+                                        usesFullStage: lyricEffect.usesFullStage,
+                                        embossEnabled: lyricEmbossEnabled
+                                    )
+                                    .ariaLyricStageOptics(
+                                        pulse: stagePulse,
+                                        fallbackAccent: lyricPalette.accent,
+                                        gpuEnabled: gpuStageEnabled,
+                                        isActive: player.isPlaying && scenePhase == .active,
+                                        reduceMotion: reduceMotion,
+                                        time: time
+                                    )
+
+                                    // 巨幕开启「小字显示翻译」后，翻译已内嵌到注音位，
+                                    // 不再叠加底部字幕胶囊
+                                    if showTranslation,
+                                       !(lyricEffect == .canopy && canopyCaptionTranslation),
+                                       let translation = activeLine?.translation,
+                                       !translation.isEmpty,
+                                       !chromeHidden {
+                                        subtitleOverlay(
+                                            translation: translation,
+                                            palette: lyricPalette,
+                                            font: translationFont,
+                                            typographyOpacity: lyricTypography.opacity,
+                                            depthAmount: lyricDepthAmount
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -460,9 +484,9 @@ struct AriaStageView: View {
                 .contentShape(Rectangle())
                 .gesture(stageTapGesture)
                 // 入场揭幕：歌词层从轻微缩小 + 模糊中聚焦
-                .opacity(stageRevealed ? 1 : 0)
-                .scaleEffect(stageRevealed ? 1 : 0.94)
-                .blur(radius: stageRevealed ? 0 : 8)
+                .opacity(lyricEffect == .poster || stageRevealed ? 1 : 0)
+                .scaleEffect(lyricEffect == .poster || stageRevealed ? 1 : 0.94)
+                .blur(radius: lyricEffect == .poster || stageRevealed ? 0 : 8)
 
                 // 左上角退出（folia 封面悬浮小圆钮语言：黑玻璃 + 白描边）
                 VStack {
@@ -1676,6 +1700,7 @@ private struct AriaControlCapsule: View {
     @ObservedObject private var player = PlayerManager.shared
 
     private let maxWidth: CGFloat = 520
+    private let playButtonBackground = Color.white
 
     var body: some View {
         ZStack {
@@ -1757,7 +1782,7 @@ private struct AriaControlCapsule: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.95))
+                    .fill(playButtonBackground)
                     .frame(width: 48, height: 48)
                     .shadow(color: .black.opacity(0.3), radius: 10, y: 3)
 
@@ -1768,7 +1793,8 @@ private struct AriaControlCapsule: View {
                     MonoIcon(
                         icon: player.isPlaying ? .pause : .play,
                         size: 20,
-                        color: .black.opacity(0.85)
+                        color: .black.opacity(0.85),
+                        artworkContrastBackground: playButtonBackground
                     )
                     .offset(x: player.isPlaying ? 0 : 1)
                 }

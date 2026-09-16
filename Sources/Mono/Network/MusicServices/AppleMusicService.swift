@@ -2176,7 +2176,8 @@ final class AppleMusicService: ObservableObject {
             alia: nil,
             source: .appleMusic,
             appleMusicID: catalogID,
-            appleMusicISRC: source.isrc
+            appleMusicISRC: source.isrc,
+            genreTags: SongGenreMetadata.clean(source.genreNames)
         )
     }
 

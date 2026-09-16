@@ -43,9 +43,19 @@ struct MonoMoreMenuOverlay<Content: View>: View {
     }
 }
 
+struct MonoMoreMenuPalette {
+    let text: Color
+    let secondary: Color
+    let surface: Color
+    let accent: Color
+    let onAccent: Color
+    var separator: Color { text.opacity(0.16) }
+}
+
 struct MonoMoreMenuPanel<Content: View>: View {
     let title: String
     var isDarkBackground = false
+    var palette: MonoMoreMenuPalette? = nil
     let closeAction: () -> Void
     @ViewBuilder let content: () -> Content
 
@@ -54,14 +64,14 @@ struct MonoMoreMenuPanel<Content: View>: View {
             HStack(spacing: 12) {
                 Text(title)
                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(.monoTextPrimary)
+                    .foregroundColor(palette?.text ?? .monoTextPrimary)
 
                 Spacer(minLength: 0)
 
                 Button(action: closeAction) {
-                    MonoIcon(icon: .close, size: 12, color: .monoTextSecondary)
+                    MonoIcon(icon: .close, size: 12, color: palette?.secondary ?? .monoTextSecondary)
                         .frame(width: 32, height: 32)
-                        .background(Circle().fill(Color.monoTextPrimary.opacity(0.055)))
+                        .background(Circle().fill((palette?.text ?? Color.monoTextPrimary).opacity(0.055)))
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain)
@@ -71,15 +81,19 @@ struct MonoMoreMenuPanel<Content: View>: View {
             .padding(.trailing, 4)
             .padding(.vertical, 4)
 
-            Rectangle().fill(Color.monoSeparator).frame(height: 0.5)
+            Rectangle().fill(palette?.separator ?? Color.monoSeparator).frame(height: 0.5)
 
             content()
                 .padding(12)
         }
         .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.monoGlassTint)
-                .monoGlass(cornerRadius: 16)
+            if let palette {
+                RoundedRectangle(cornerRadius: 16, style: .continuous).fill(palette.surface)
+            } else {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.monoGlassTint)
+                    .monoGlass(cornerRadius: 16)
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(isDarkBackground ? 0.3 : 0.2), radius: 12, x: 0, y: 7)

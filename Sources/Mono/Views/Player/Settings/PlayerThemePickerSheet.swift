@@ -208,6 +208,7 @@ private struct PlayerThemeStaticPreview: View {
         case .pixel:          return isDark ? Color(hex: "30FF6A") : Color(hex: "1E8C43")
         case .aqua:           return Color(hex: "2E86C1")
         case .breathing:      return Color(hex: "58D7FF")
+        case .bloud:          return ink
         case .cassette:       return ink
         case .radio:          return Color(hex: "DCC8FF")
         case .immersiveLyric: return ink
@@ -276,6 +277,10 @@ private struct PlayerThemeStaticPreview: View {
         case .pixel: pixelMotif
         case .aqua: aquaMotif
         case .breathing: breathingMotif
+        case .bloud:
+            BloudCharacterView(expression: .calm, isAnimating: false,
+                               bodyColor: ink, eyeColor: isDark ? .black : .white)
+                .frame(width: 88, height: 88)
         case .cassette: cassetteMotif
         case .radio: radioMotif
         case .immersiveLyric: immersiveLyricMotif
@@ -1185,6 +1190,8 @@ private struct PlayerThemeStaticPreview: View {
             LinearGradient(colors: isDark ? [Color(hex: "071A2C"), Color(hex: "0D4A69")] : [Color(hex: "F4FCFF"), Color(hex: "87C9E8")], startPoint: .top, endPoint: .bottom)
         case .breathing:
             RadialGradient(colors: isDark ? [Color(hex: "182A36"), Color(hex: "05070B")] : [Color(hex: "ECFAFF"), Color(hex: "F4F0FF")], center: .center, startRadius: 4, endRadius: 95)
+        case .bloud:
+            isDark ? Color(hex: "17191C") : Color(hex: "F7F8FA")
         case .cassette:
             isDark ? Color(hex: "19191D") : Color(hex: "E7E5DD")
         case .radio:

@@ -21,7 +21,7 @@ struct MonoSoundCenterLayout: Equatable {
         contentMaxWidth = min(width, width >= 700 ? 760 : width)
         workspaceMaxWidth = min(contentMaxWidth, width >= 700 ? 720 : contentMaxWidth)
         coverSize = isCompactHeight ? 46 : (width >= 700 ? 62 : 54)
-        primaryTabHeight = isCompactHeight ? 34 : 38
+        primaryTabHeight = 44
     }
 
     static let fallback = MonoSoundCenterLayout(size: CGSize(width: 390, height: 844))
@@ -95,14 +95,6 @@ struct MonoAudioCenterView: View {
         normalizedMonoAudioAccent(coverColors.dominantColor)
     }
 
-    private var accentForeground: Color {
-        ThemeColorCustomization.readableForegroundColor(
-            on: accent,
-            light: Color(hex: "101114"),
-            dark: .white
-        )
-    }
-
     private var isProtectedAppleMusicPlayback: Bool {
         player.currentSong?.isAppleMusic == true
     }
@@ -145,18 +137,23 @@ struct MonoAudioCenterView: View {
         .background { backdrop }
         .compatFontDesign(nil)
         .environment(\.colorScheme, .dark)
+        .tint(accent)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .monoNavigationBackButton(iconColor: .white)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(String(localized: "mono_audio_center_title"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 8) {
-                    workspaceStatus
                     Button { showsAgentSettings = true } label: {
                         MonoIcon(icon: .settings, size: 16, color: .white)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -168,9 +165,7 @@ struct MonoAudioCenterView: View {
             MonoAudioAgentSettingsView()
         }
         .onAppear(perform: refreshAccent)
-        .onChange(of: player.currentSong?.id) { _, _ in
-            refreshAccent()
-        }
+        .onChange(of: player.currentSong?.coverUrl?.absoluteString) { _, _ in refreshAccent() }
         .animation(
             reduceMotion ? nil : .easeOut(duration: 0.2),
             value: workspace
@@ -290,18 +285,18 @@ struct MonoAudioCenterView: View {
                         MonoIcon(
                             icon: item.icon,
                             size: layout.isCompactWidth ? 11 : 12,
-                            color: workspace == item ? accentForeground : .white.opacity(0.5)
+                            color: workspace == item ? accent : MonoSoundCenterStyle.secondary
                         )
                         .monoIconArtwork(item.monoGlyphSemantic.rawValue)
                         Text(item.title)
                             .font(.system(size: layout.isCompactWidth ? 9.5 : 11, weight: .bold, design: .rounded))
-                            .foregroundStyle(workspace == item ? accentForeground : .white.opacity(0.58))
+                            .foregroundStyle(workspace == item ? accent : MonoSoundCenterStyle.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.76)
 
                         if workspaceHasActivity(item) {
                             Circle()
-                                .fill(workspace == item ? accentForeground.opacity(0.8) : accent)
+                                .fill(accent)
                                 .frame(width: 4, height: 4)
                         }
                     }
@@ -310,7 +305,7 @@ struct MonoAudioCenterView: View {
                     .background {
                         if workspace == item {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(accent.opacity(0.88))
+                                .fill(MonoSoundCenterStyle.raised)
                                 .matchedGeometryEffect(id: "mono-audio-workspace", in: workspaceNamespace)
                         }
                     }
@@ -323,11 +318,7 @@ struct MonoAudioCenterView: View {
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.black.opacity(0.24))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                }
+                .fill(MonoSoundCenterStyle.surface)
         )
         .padding(.horizontal, layout.horizontalInset)
         .padding(.vertical, layout.isCompactHeight ? 7 : 9)
@@ -363,63 +354,8 @@ struct MonoAudioCenterView: View {
             case .enhancement:
                 MonoSuiteSettingsView(isEmbedded: true)
             case .output:
-                MonoOutputStudioView()
+                MonoOutputStudioView(accent: accent)
             }
-        }
-    }
-
-    private var workspaceStatus: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(workspaceHasActivity(workspace) ? accent : Color.white.opacity(0.3))
-                .frame(width: 6, height: 6)
-
-            Text(workspaceStatusText)
-                .font(.system(size: 10.5, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.68))
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 9)
-        .frame(height: 30)
-        .background(
-            Capsule()
-                .fill(Color.black.opacity(0.28))
-                .overlay {
-                    Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1)
-                }
-        )
-    }
-
-    private var workspaceStatusText: String {
-        if isProtectedAppleMusicPlayback, workspace != .output {
-            return String(localized: "apple_music_protected_audio")
-        }
-        switch workspace {
-        case .ai:
-            if agent.phase.isWorking {
-                return String(localized: "mono_audio_tuning")
-            }
-            return agent.proposal?.profileName ?? String(localized: "ai_lab_not_analyzed")
-        case .custom:
-            guard eqManager.isEnabled else { return String(localized: "settings_off") }
-            guard !eqManager.isAIManagedPresetActive else {
-                return String(localized: "eq_custom")
-            }
-            return eqManager.currentPreset?.name ?? String(localized: "eq_custom")
-        case .enhancement:
-            let managed: [MonoNextFeature] = [.spatialLive, .dna, .recovery]
-            let active = managed.filter { suite.isEnabled($0) }.count
-            return String(format: String(localized: "mono_suite_running_count"), active, managed.count)
-        case .output:
-            if eqManager.isHearingCorrectionEnabled {
-                return String(localized: "sound_hearing_enabled")
-            }
-            if eqManager.selectedHeadphoneProfileID != "off" {
-                return String(localized: "sound_output_profile_active")
-            }
-            return airPods.connection.isConnected
-                ? airPods.selectedDeviceModel.title
-                : eqManager.currentOutputKind.title
         }
     }
 

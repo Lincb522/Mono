@@ -136,6 +136,35 @@ struct MonoApp: App {
         UICollectionView.appearance().backgroundColor = .clear
     }
     
+    var body: some Scene {
+        let root = MonoRootView(settings: settings)
+        // SwiftUI may evaluate this factory during asynchronous graph updates.
+        // Only return a view value here; state access belongs to MonoRootView.body.
+        return WindowGroup { @Sendable in
+            root
+        }
+    }
+
+    /// 检测 App 是否为重新安装，若是则清除上次残留的 Keychain 数据
+    private static func cleanupKeychainIfNeeded() {
+        let hasLaunchedKey = "mono_has_launched_before"
+        if !UserDefaults.standard.bool(forKey: hasLaunchedKey) {
+            // 根据要求，永久不删残留 Keychain 数据以保留设备 UDID 等标识
+            // KeychainHelper.deleteAll()
+            UserDefaults.standard.set(true, forKey: hasLaunchedKey)
+            #if DEBUG
+            print("[App] 检测到全新安装，保留原有 Keychain 数据")
+            #endif
+        }
+    }
+
+}
+
+/// Keep actor-owned state out of WindowGroup's escaping content factory.
+@MainActor
+private struct MonoRootView: View {
+    @ObservedObject var settings: SettingsManager
+
     /// App 根层只跟随用户选择的深浅色模式。
     /// 封面亮度只用于播放器/背景内部的前景色判断，不能反向驱动整棵视图树切换
     /// `.preferredColorScheme`，否则封面取色波动时会导致页面背景在深浅色之间闪烁。
@@ -143,8 +172,8 @@ struct MonoApp: App {
         return settings.preferredColorScheme
     }
 
-    var body: some Scene {
-        WindowGroup {
+    var body: some View {
+        Group {
             if ProcessInfo.processInfo.environment["MONO_UNIT_TESTS"] == "1" {
                 Color.clear
             } else {
@@ -311,17 +340,4 @@ struct MonoApp: App {
         }
     }
 
-    /// 检测 App 是否为重新安装，若是则清除上次残留的 Keychain 数据
-    private static func cleanupKeychainIfNeeded() {
-        let hasLaunchedKey = "mono_has_launched_before"
-        if !UserDefaults.standard.bool(forKey: hasLaunchedKey) {
-            // 根据要求，永久不删残留 Keychain 数据以保留设备 UDID 等标识
-            // KeychainHelper.deleteAll()
-            UserDefaults.standard.set(true, forKey: hasLaunchedKey)
-            #if DEBUG
-            print("[App] 检测到全新安装，保留原有 Keychain 数据")
-            #endif
-        }
-    }
-    
 }

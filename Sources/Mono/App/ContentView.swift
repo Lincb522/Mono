@@ -61,7 +61,7 @@ public struct ContentView: View {
                 ListeningReportPopupOverlay()
                     .zIndex(65)
 
-                // 浆糊专属问候弹窗（特定 Token 生效，与更新日志错峰弹出）
+                // 浆糊专属问候弹窗（专属或全权限 Token 生效，与更新日志错峰弹出）
                 SpecialGreetingOverlay()
                     .zIndex(70)
 
@@ -184,7 +184,7 @@ public struct ContentView: View {
                     PersonalFMView()
                 }
                 .fullScreenCover(isPresented: $showNormalPlayer) {
-                    FullScreenPlayerView()
+                    FullScreenPlayerView(isPresented: showNormalPlayer)
                 }
                 .fullScreenCover(isPresented: $showImmersivePlayer) {
                     AriaStageView()

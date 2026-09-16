@@ -31,12 +31,8 @@ struct MonoSuiteSettingsView: View {
 
     var body: some View {
         presentationRoot
-        .onAppear {
-            refreshCoverAccent()
-        }
-        .onChange(of: player.currentSong?.id) { _, _ in
-            refreshCoverAccent()
-        }
+        .onAppear { refreshCoverAccent() }
+        .onChange(of: player.currentSong?.coverUrl?.absoluteString) { _, _ in refreshCoverAccent() }
         .fullScreenCover(isPresented: $showsRecoveryHistory) {
             MonoRecoveryHistoryView(accent: accent)
         }

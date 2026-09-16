@@ -259,6 +259,8 @@ Packages/Audio/ffmpeg-swift/scripts/*
 *.pdf
 *.json
 !Sources/Mono/Resources/mono_audio_tuning_knowledge.json
+!Sources/Mono/Resources/Bloub-LICENSE.txt
+!Sources/Mono/Views/Player/Bloud/DESIGN.md
 !Packages/Icons/MonoGlyphIcons/**/*.json
 /artifacts/web-reverse
 __pycache__/

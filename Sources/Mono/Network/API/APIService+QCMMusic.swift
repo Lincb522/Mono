@@ -34,6 +34,16 @@ extension APIService {
 // MARK: - qcm歌曲平台信息
 
 extension APIService {
+    func fetchQQSongGenreTags(song: Song) -> AnyPublisher<[String], Error> {
+        asyncToPublisher { [weak self] in
+            guard let self else { return [] }
+            let labels = try await self.withContentSession { client in
+                try await client.songLabels(songId: song.id)
+            }
+            return SongGenreMetadata.clean(Self.qqLabelTexts(in: labels))
+        }
+    }
+
     /// 直接读取 qcm 的歌曲详情、专辑简介、制作信息与标签，不经过 Mono AI。
     func fetchQQSongPlatformDetail(song: Song) -> AnyPublisher<PlatformSongDetail, Error> {
         asyncToPublisher { [weak self] in

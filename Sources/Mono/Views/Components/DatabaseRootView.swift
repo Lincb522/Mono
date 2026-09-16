@@ -5,7 +5,7 @@ struct DatabaseRootView<Content: View>: View {
     @ObservedObject private var database = DatabaseManager.shared
     @ObservedObject private var store = DatabaseManager.shared.store
     @State private var showsSaveError = false
-    @ViewBuilder let content: () -> Content
+    @ViewBuilder let content: @MainActor () -> Content
 
     var body: some View {
         Group {

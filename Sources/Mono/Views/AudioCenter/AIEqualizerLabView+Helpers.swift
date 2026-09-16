@@ -14,12 +14,8 @@ extension AIEqualizerLabView {
     }
 
     var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(Color.white.opacity(0.05))
-            .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
-            }
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(MonoSoundCenterStyle.surface)
     }
 
     var backdrop: some View {

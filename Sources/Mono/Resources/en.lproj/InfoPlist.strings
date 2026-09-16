@@ -5,3 +5,4 @@
 "NSHealthUpdateUsageDescription" = "HealthKit is used only to read audiograms and headphone audio exposure data. Mono does not write or modify health data.";
 "NSMotionUsageDescription" = "Let AirPods spatial listening follow head movement and keep sound stable during activity.";
 "NSPhotoLibraryAddUsageDescription" = "Save the sign-in QR code to your photo library.";
+"NSCameraUsageDescription" = "Use the front camera to let characters follow your fingertips and face position. Images are processed on this device and are not saved or uploaded.";

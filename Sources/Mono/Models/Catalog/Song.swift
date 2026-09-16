@@ -74,6 +74,8 @@ struct Song: Identifiable, Codable, Hashable, Equatable, Sendable {
     var appleMusicID: String?
     /// Apple Music ISRC，用于目录恢复和跨来源精确匹配。
     var appleMusicISRC: String?
+    /// Catalog genre/mood tags or embedded file genres, never inferred from audio.
+    var genreTags: [String]? = nil
     
     enum CodingKeys: String, CodingKey {
         case id, name, ar, al, dt, fee, mv
@@ -82,7 +84,7 @@ struct Song: Identifiable, Codable, Hashable, Equatable, Sendable {
         case localRelativePath, localImportedAt
         case qishuiTrackId
         case kugouHash, kugouAlbumID, kugouAlbumAudioID
-        case appleMusicID, appleMusicISRC
+        case appleMusicID, appleMusicISRC, genreTags
         case podcastCoverUrl
         case podcastRadioId
         case podcastRadioName

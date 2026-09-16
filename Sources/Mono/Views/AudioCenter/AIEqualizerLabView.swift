@@ -10,6 +10,7 @@ struct AIEqualizerLabView: View {
     @StateObject var eqManager = EQManager.shared
     @StateObject var coverColors = CoverColorExtractor()
     @Environment(\.accessibilityReduceMotion) var reduceMotion
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     @Environment(\.monoSoundCenterLayout) var centerLayout
     @Namespace var controlSelectionNamespace
     @State var expandedMeasurementGroups: Set<AIEqualizerMeasurementGroup> = []
@@ -20,6 +21,7 @@ struct AIEqualizerLabView: View {
     @State var isShowingClearAllProposalsConfirmation = false
     @State var comparisonProposal: AIEqualizerSavedProposal?
     @State var selectedWorkspace: AIEqualizerWorkspace = .tuning
+    @State var selectedCurveBand: Int?
 
     init(isEmbedded: Bool = false) {
         self.isEmbedded = isEmbedded
@@ -74,8 +76,9 @@ struct AIEqualizerLabView: View {
             Text(String(localized: "ai_lab_clear_all_proposals_message"))
         }
         .onAppear { refreshCoverAccent() }
+        .onChange(of: player.currentSong?.coverUrl?.absoluteString) { _, _ in refreshCoverAccent() }
         .onChange(of: player.currentSong?.id) { _, _ in
-            refreshCoverAccent()
+            selectedCurveBand = nil
             selectedWorkspace = .tuning
             expandedMeasurementGroups.removeAll()
             isProposalParameterExpanded = false

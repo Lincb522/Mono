@@ -28,6 +28,8 @@ struct PlayerMoreMenu: View {
     var onQuality: (() -> Void)? = nil
     var onEQ: () -> Void
     var onTheme: (() -> Void)? = nil
+    var bloudGazeControl: BloudGazeMenuControl? = nil
+    var palette: MonoMoreMenuPalette? = nil
     
     @ObservedObject private var player = PlayerManager.shared
     @ObservedObject private var sleepTimer = PlayerManager.shared.sleepAndFade
@@ -56,7 +58,11 @@ struct PlayerMoreMenu: View {
     /// 子级页面关闭时，Sheet 的绑定会先复位；单独保留转场状态，避免菜单短暂重绘。
     @State private var isPresentingChild = false
 
-    private let textColor: Color = .monoTextPrimary
+    private var textColor: Color { palette?.text ?? .monoTextPrimary }
+    private var secondaryColor: Color { palette?.secondary ?? .monoTextSecondary }
+    private var accentColor: Color { palette?.accent ?? .monoAccent }
+    private var accentForeground: Color { palette?.onAccent ?? .monoAccentForeground }
+    private var separatorColor: Color { palette?.separator ?? .monoSeparator }
 
     /// 自定义开关不能再借用正文色透明度：部分主题会覆盖正文色，导致
     /// 深色菜单里的关闭轨道和滑块一起发白。这里使用明确的深浅色语义色。
@@ -243,6 +249,7 @@ struct PlayerMoreMenu: View {
         MonoMoreMenuPanel(
             title: String(localized: "player_more_title"),
             isDarkBackground: isDarkBackground,
+            palette: palette,
             closeAction: closeMenu
         ) {
             ScrollView {
@@ -258,6 +265,7 @@ struct PlayerMoreMenu: View {
         MonoMoreMenuPanel(
             title: String(localized: "player_more_title"),
             isDarkBackground: isDarkBackground,
+            palette: palette,
             closeAction: closeMenu
         ) {
             ScrollView {
@@ -273,6 +281,7 @@ struct PlayerMoreMenu: View {
 
     private var landscapeMenuContent: some View {
         VStack(alignment: .leading, spacing: 12) {
+            if let bloudGazeControl { menuGroup { bloudGazeControl } }
             landscapeQuickActionGrid
 
             landscapeThemeCard
@@ -345,7 +354,7 @@ struct PlayerMoreMenu: View {
 
                     Text(themeManager.currentTheme.displayName)
                         .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                        .foregroundColor(.monoTextSecondary)
+                        .foregroundColor(secondaryColor)
                         .lineLimit(1)
                 }
 
@@ -357,11 +366,11 @@ struct PlayerMoreMenu: View {
             .frame(maxWidth: .infinity, minHeight: 54)
             .background(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .fill(Color.monoAccent.opacity(0.10))
+                    .fill(accentColor.opacity(0.10))
             )
             .overlay {
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .stroke(Color.monoAccent.opacity(0.32), lineWidth: 0.7)
+                    .stroke(accentColor.opacity(0.32), lineWidth: 0.7)
             }
             .contentShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
         }
@@ -378,7 +387,7 @@ struct PlayerMoreMenu: View {
     ) -> some View {
         Button(action: action) {
             VStack(spacing: 5) {
-                MonoIcon(icon: icon, size: 16, color: isEnabled ? .monoAccent : textColor.opacity(0.34))
+                MonoIcon(icon: icon, size: 16, color: isEnabled ? accentColor : textColor.opacity(0.34))
                     .monoIconArtwork(artwork?.rawValue)
                 Text(title)
                     .font(.system(size: 10.5, weight: .semibold, design: .rounded))
@@ -388,7 +397,7 @@ struct PlayerMoreMenu: View {
                 if let status, !status.isEmpty {
                     Text(status)
                         .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                        .foregroundColor(.monoTextSecondary.opacity(isEnabled ? 1 : 0.38))
+                        .foregroundColor(secondaryColor.opacity(isEnabled ? 1 : 0.38))
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
                 }
@@ -400,7 +409,7 @@ struct PlayerMoreMenu: View {
             )
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.monoSeparator.opacity(0.5), lineWidth: 0.5)
+                    .stroke(separatorColor.opacity(0.5), lineWidth: 0.5)
             }
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
@@ -414,6 +423,7 @@ struct PlayerMoreMenu: View {
                 inlineThemeChooserPage
             } else {
                 VStack(alignment: .leading, spacing: 10) {
+                    if let bloudGazeControl { menuGroup { bloudGazeControl } }
                     // 横屏收音机的主题入口固定在三点菜单首屏，
                     // 不依赖菜单滚动到播放器分组后才能触发。
                     if presentsThemeInline {
@@ -614,7 +624,7 @@ struct PlayerMoreMenu: View {
 
                     Text(themeManager.currentTheme.displayName)
                         .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                        .foregroundColor(.monoTextSecondary)
+                        .foregroundColor(secondaryColor)
                         .lineLimit(1)
                 }
                 .padding(.horizontal, 4)
@@ -643,12 +653,12 @@ struct PlayerMoreMenu: View {
             HStack(spacing: 6) {
                 Text(theme.displayName)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(isSelected ? .monoAccent : textColor.opacity(0.86))
+                    .foregroundColor(isSelected ? accentColor : textColor.opacity(0.86))
                     .lineLimit(1)
                     .minimumScaleFactor(0.74)
 
                 if isSelected {
-                    MonoIcon(icon: .checkmark, size: 9, color: .monoAccent, lineWidth: 2)
+                    MonoIcon(icon: .checkmark, size: 9, color: accentColor, lineWidth: 2)
                 }
             }
             .padding(.horizontal, 10)
@@ -657,7 +667,7 @@ struct PlayerMoreMenu: View {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .fill(
                         isSelected
-                            ? Color.monoAccent.opacity(0.13)
+                            ? accentColor.opacity(0.13)
                             : textColor.opacity(0.045)
                     )
             )
@@ -665,8 +675,8 @@ struct PlayerMoreMenu: View {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .stroke(
                         isSelected
-                            ? Color.monoAccent.opacity(0.5)
-                            : Color.monoSeparator.opacity(0.45),
+                            ? accentColor.opacity(0.5)
+                            : separatorColor.opacity(0.45),
                         lineWidth: 0.5
                     )
             }
@@ -743,7 +753,7 @@ struct PlayerMoreMenu: View {
                     } else {
                         Text(status)
                             .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                            .foregroundColor(.monoTextSecondary.opacity(isEnabled ? 1 : 0.34))
+                            .foregroundColor(secondaryColor.opacity(isEnabled ? 1 : 0.34))
                             .lineLimit(1)
                             .minimumScaleFactor(0.72)
                             .monospacedDigit()
@@ -753,7 +763,7 @@ struct PlayerMoreMenu: View {
                 MonoIcon(
                     icon: .chevronRight,
                     size: 10,
-                    color: .monoTextSecondary.opacity(isEnabled ? 0.62 : 0.22)
+                    color: secondaryColor.opacity(isEnabled ? 0.62 : 0.22)
                 )
             }
             .padding(.horizontal, 11)
@@ -787,13 +797,13 @@ struct PlayerMoreMenu: View {
                 Spacer(minLength: 0)
 
                 Capsule(style: .continuous)
-                    .fill(isOn.wrappedValue ? Color.monoAccent : toggleOffTrackColor)
+                    .fill(isOn.wrappedValue ? accentColor : toggleOffTrackColor)
                     .frame(width: 30, height: 18)
                     .overlay(alignment: isOn.wrappedValue ? .trailing : .leading) {
                         Circle()
                             .fill(
                                 isOn.wrappedValue
-                                    ? Color.monoAccentForeground
+                                    ? accentForeground
                                     : toggleOffThumbColor
                             )
                             .frame(width: 14, height: 14)
@@ -836,7 +846,7 @@ struct PlayerMoreMenu: View {
             .buttonStyle(.plain)
 
             Rectangle()
-                .fill(Color.monoSeparator.opacity(0.8))
+                .fill(separatorColor.opacity(0.8))
                 .frame(width: 0.5, height: 22)
 
             Button {
@@ -861,7 +871,7 @@ struct PlayerMoreMenu: View {
             icon: icon,
             size: 14,
             color: isActive
-                ? .monoAccent
+                ? accentColor
                 : textColor.opacity(isEnabled ? 0.78 : 0.3)
         )
         .frame(width: 26, height: 26)
@@ -869,7 +879,7 @@ struct PlayerMoreMenu: View {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
                 .fill(
                     isActive
-                        ? Color.monoAccent.opacity(0.13)
+                        ? accentColor.opacity(0.13)
                         : textColor.opacity(isEnabled ? 0.04 : 0.02)
                 )
         )
@@ -877,7 +887,7 @@ struct PlayerMoreMenu: View {
 
     private var menuDivider: some View {
         Rectangle()
-            .fill(Color.monoSeparator.opacity(0.72))
+            .fill(separatorColor.opacity(0.72))
             .frame(height: 0.5)
             .padding(.leading, 47)
     }
@@ -894,7 +904,7 @@ struct PlayerMoreMenu: View {
         )
         .overlay {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.monoSeparator.opacity(0.52), lineWidth: 0.5)
+                .stroke(separatorColor.opacity(0.52), lineWidth: 0.5)
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
@@ -906,7 +916,7 @@ struct PlayerMoreMenu: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(title)
                 .font(.system(size: 10.5, weight: .semibold, design: .rounded))
-                .foregroundColor(.monoTextSecondary)
+                .foregroundColor(secondaryColor)
                 .padding(.horizontal, 4)
 
             content()
@@ -941,7 +951,7 @@ struct PlayerMoreMenu: View {
                 if let status, !status.isEmpty {
                     Text(status)
                         .font(.system(size: 9.5, weight: .medium, design: .rounded))
-                        .foregroundColor(.monoTextSecondary.opacity(isEnabled ? 1 : 0.38))
+                        .foregroundColor(secondaryColor.opacity(isEnabled ? 1 : 0.38))
                         .lineLimit(1)
                         .minimumScaleFactor(0.76)
                         .monospacedDigit()

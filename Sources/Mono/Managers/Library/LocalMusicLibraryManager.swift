@@ -976,7 +976,8 @@ final class LocalMusicLibraryManager: ObservableObject {
             qqArtistMid: nil,
             qqMaxQuality: nil,
             localRelativePath: relativePath,
-            localImportedAt: importedAt
+            localImportedAt: importedAt,
+            genreTags: await SongGenreMetadata.localTags(in: metadata)
         )
 
         let searchCandidates = metadataSearchCandidates(
@@ -1313,6 +1314,7 @@ final class LocalMusicLibraryManager: ObservableObject {
         mergedSong.qishuiTrackId = qishuiSong?.qishuiTrackId ?? baseSong.qishuiTrackId
         mergedSong.localRelativePath = baseSong.localRelativePath
         mergedSong.localImportedAt = baseSong.localImportedAt
+        mergedSong.genreTags = baseSong.genreTags
         return mergedSong
     }
 

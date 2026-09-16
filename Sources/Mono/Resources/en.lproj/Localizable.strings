@@ -2894,3 +2894,122 @@
 
 
 "playback_progress" = "Playback Progress";
+
+/* Sound center console */
+"mono_audio_bands" = "Bands";
+"mono_audio_adjust" = "Adjust";
+"mono_audio_eq_curve" = "EQ curve";
+"mono_audio_current_eq" = "Current EQ";
+"mono_audio_ai_curve" = "AI proposal";
+"mono_audio_low" = "Low";
+"mono_audio_mid" = "Mid";
+"mono_audio_high" = "High";
+"mono_audio_semitones" = "Semitones";
+"mono_audio_frequency" = "Frequency";
+
+"ai_lab_retune" = "Retune";
+
+// Bloud player
+"player_bloud_description" = "A round character that moves with the rhythm and follows your touch";
+"player_bloud_expressions" = "Expressions";
+"player_bloud_follow_song" = "Character expression";
+"player_bloud_empty" = "No song playing";
+"player_bloud_seek" = "Playback position, drag around the ring";
+"player_bloud_expression_calm" = "Calm";
+"player_bloud_expression_attentive" = "Attentive";
+"player_bloud_expression_surprised" = "Surprised";
+"player_bloud_expression_excited" = "Excited";
+"player_bloud_expression_happy" = "Happy";
+"player_bloud_expression_laughing" = "Laughing";
+"player_bloud_expression_angry" = "Angry";
+"player_bloud_expression_sad" = "Sad";
+"player_bloud_expression_scared" = "Scared";
+"player_bloud_expression_suspicious" = "Suspicious";
+"player_bloud_expression_confused" = "Confused";
+"player_bloud_expression_curious" = "Curious";
+"player_bloud_expression_proud" = "Proud";
+"player_bloud_expression_shy" = "Shy";
+"player_bloud_expression_bored" = "Bored";
+"player_bloud_expression_sleepy" = "Sleepy";
+"player_bloud_like" = "Like";
+"player_bloud_unlike" = "Unlike";
+
+"player_bloud_gaze_follow" = "Gaze tracking";
+"player_bloud_gaze_follow_hint" = "Follow your fingertips and face position using the front camera.";
+"player_bloud_camera_permission" = "Allow camera access in Settings to follow your fingertips and face.";
+"player_bloud_camera_settings" = "Open Settings";
+"player_bloud_camera_retry" = "Retry";
+"player_bloud_camera_unavailable" = "The front camera is unavailable. Try again on a device with a front camera.";
+"player_bloud_camera_failed" = "Gaze following stopped. Try again.";
+"player_bloud_camera_interrupted" = "Camera access was interrupted. Try again when the camera is available.";
+
+"player_bloud_expression_dreamy" = "Dreamy";
+
+"player_bloud_expression_playful" = "Playful";
+
+"player_bloud_expression_determined" = "Determined";
+
+"player_bloud_expression_tender" = "Tender";
+
+"player_bloud_expression_amazed" = "Amazed";
+
+"player_bloud_expression_skeptical" = "Skeptical";
+
+"player_bloud_expression_blissful" = "Blissful";
+
+"player_bloud_expression_wink" = "Wink";
+
+"player_bloud_companion" = "Character & Expressions";
+
+"player_bloud_character" = "Character";
+
+"player_bloud_color" = "Character Color";
+
+"player_bloud_reset_color" = "Reset Color";
+
+"player_paw_pet" = "Pet PAW";
+
+"player_paw_expression_soft" = "Gentle";
+"player_paw_expression_bright" = "Happy";
+"player_paw_expression_beaming" = "Smiley";
+"player_paw_expression_delighted" = "Delighted";
+"player_paw_expression_curious" = "Curious";
+"player_paw_expression_listening" = "Listening";
+"player_paw_expression_hopeful" = "Hopeful";
+"player_paw_expression_bashful" = "Bashful";
+"player_paw_expression_cozy" = "Cozy";
+"player_paw_expression_drowsy" = "Drowsy";
+"player_paw_expression_sleeping" = "Napping";
+"player_paw_expression_puzzled" = "Puzzled";
+"player_paw_expression_pout" = "Pouting";
+"player_paw_expression_pleading" = "Puppy Eyes";
+"player_paw_expression_unimpressed" = "Unimpressed";
+"player_paw_expression_sulky" = "Sulky";
+"player_paw_expression_astonished" = "Amazed";
+"player_paw_expression_alert" = "Alert";
+"player_paw_expression_playful" = "Playful";
+"player_paw_expression_wink" = "Wink";
+"player_paw_expression_blep" = "Blep";
+"player_paw_expression_proud" = "Proud";
+"player_paw_expression_dreamy" = "Daydreaming";
+"player_paw_expression_affectionate" = "Affectionate";
+
+"player_color_body" = "Body";
+"player_color_eyes" = "Eyes";
+"player_color_blush" = "Blush";
+"player_color_ears" = "Inner ears";
+"player_color_muzzle" = "Muzzle";
+"player_color_tongue" = "Tongue";
+"player_color_outline" = "Outline and mouth";
+"player_color_nose" = "Nose";
+"player_color_stripes" = "Markings";
+"player_color_whiskers" = "Whiskers";
+"player_color_cover" = "Use cover colors";
+"player_color_reset" = "Reset";
+"player_color_reset_part" = "Reset %@ color";
+
+"player_character_editor" = "Character settings";
+"player_character_colors" = "Colors";
+
+"跃字" = "Kinetic Poster";
+"粗字海报与错位字墙" = "Bold lyric posters and staggered type walls";

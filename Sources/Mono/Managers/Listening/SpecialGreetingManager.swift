@@ -1,4 +1,4 @@
-//  浆糊专属彩蛋 —— 仅对特定 Token 生效：
+//  浆糊专属彩蛋 —— 对专属 Token 与全权限 Token 生效：
 //  · 每次打开 App 弹一句「今天是喜欢浆糊的第 N 天」（自 2025-05-09 起算）；
 //  · 每年 12 月 1 日（阳历）与农历十月十七弹生日祝福；
 //  · 与更新日志弹窗错峰：日志先弹，关掉后彩蛋再上。
@@ -73,6 +73,7 @@ final class SpecialGreetingManager: ObservableObject {
     // MARK: - 判定
 
     private var isSpecialUser: Bool {
+        if AppConfig.Features.fullDeveloperToolsEnabled { return true }
         guard let token = SecureConfig.apiToken?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased(),

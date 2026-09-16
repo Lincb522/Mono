@@ -2,6 +2,7 @@ import SwiftUI
 
 /// 全屏播放器 - 路由层，根据主题切换不同布局
 struct FullScreenPlayerView: View {
+    var isPresented = true
     @ObservedObject var player = CurrentSongPresentationModel.shared
     
     @ObservedObject private var themeManager = PlayerThemeManager.shared
@@ -41,6 +42,8 @@ struct FullScreenPlayerView: View {
                     AquaPlayerLayout()
                 case .breathing:
                     BreathingPlayerLayout()
+                case .bloud:
+                    BloudPlayerLayout(isPresented: isPresented)
                 case .cassette:
                     CassettePlayerLayout()
                 case .radio:
@@ -102,7 +105,7 @@ struct FullScreenPlayerView: View {
             } else {
                 ThemeRenderBackdrop(theme: .default)
             }
-        case .muji, .capsule, .petWhite, .minimalWhite:
+        case .muji, .capsule, .petWhite, .minimalWhite, .bloud:
             Color.clear
         default:
             if settings.usesPlayerCoverBackground && !MinimalWhiteStyle.isActive {
@@ -114,7 +117,7 @@ struct FullScreenPlayerView: View {
     }
 
     private var playerColorScheme: ColorScheme {
-        if themeManager.currentTheme == .classic || themeManager.currentTheme.hasCustomBackground {
+        if themeManager.currentTheme == .classic || themeManager.currentTheme == .bloud || themeManager.currentTheme.hasCustomBackground {
             return settings.nativeColorScheme
         }
         return envColorScheme

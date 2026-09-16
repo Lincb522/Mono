@@ -5,3 +5,4 @@
 "NSHealthUpdateUsageDescription" = "HealthKit 仅用于读取听力图与耳机声暴露数据；Mono 不会写入或修改健康数据";
 "NSMotionUsageDescription" = "用于让 AirPods 空间聆听跟随头部转动，并根据活动状态稳定声音";
 "NSPhotoLibraryAddUsageDescription" = "保存二维码到相册以便扫码登录";
+"NSCameraUsageDescription" = "使用前置摄像头，让角色跟随手指和人脸的位置。画面仅在本机处理，不保存或上传。";
